@@ -1,18 +1,36 @@
 <script>
 
-	let {children, isOpen = $bindable(), title = 'MODAL DIALOG'} = $props();
+	let {
+		children,
+		isOpen = $bindable(),
+		title = 'MODAL DIALOG',
+		ok = 'OK',
+		cancel = 'CANCEL',
+		okAction=async ()=>{},
+		cancelAction=()=>{}
+	} = $props();
 	//export let isOpen = false;
-	const closeModal = () => (isOpen = false);
+
+	const onOk = async () => {
+		const is_ok = await okAction();
+		if (is_ok) {
+			isOpen = false;
+		}
+	};
+
+	const onCancel = () => {
+		cancelAction();
+		isOpen = false;
+	}
 </script>
 
-{#if isOpen}
-	<div class="modal modal-open">
-		<div class="modal-box">
-			<h2 class="font-bold text-lg">{title}</h2>
-			<p class="py-4">{@render children()}</p>
-			<div class="modal-action">
-				<button class="btn btn-primary" onclick={closeModal}>Close</button>
-			</div>
+<div class="modal" class:modal-open={isOpen}>
+	<div class="modal-box">
+		<h2 class="font-bold text-lg">{title}</h2>
+		<div class="py-4">{@render children()}</div>
+		<div class="modal-action flex">
+			<button class="btn btn-primary" onclick={onCancel}>{cancel}</button>
+			<button class="btn btn-secondary" onclick={onOk}>{ok}</button>
 		</div>
 	</div>
-{/if}
+</div>
