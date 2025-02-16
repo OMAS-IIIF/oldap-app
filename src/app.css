@@ -1,0 +1,30 @@
+@import 'tailwindcss';
+@import '$lib/components/basic_gui/dropdown/dropdown.css';
+
+@theme {
+    --color-mint-500: oklch(0.72 0.11 178);
+    --color-oldap-bg: var(--color-indigo-300);
+    --color-oldap-bg-dark: var(--color-indigo-950);
+    --color-oldap-fg: var(--color-black);
+    --color-oldap-fg-dark: var(--color-white);
+    --color-oldap-hover: var(--color-indigo-200);
+    --color-oldap-hover-dark: var(--color-indigo-700);
+
+    --spacing-oldap-header-height: 56px;
+    --spacing-oldap-footer-height: 56px;
+
+
+}
+
+.oldap-header {
+    @apply absolute left-0 top-0 right-0 h-oldap-header-height flex flex-row items-center p-3 bg-oldap-bg dark:bg-oldap-bg-dark text-oldap-fg dark:text-oldap-fg-dark;
+}
+
+.oldap-content-area {
+    @apply absolute left-0 top-oldap-header-height right-0 bottom-oldap-footer-height bg-amber-50;
+}
+
+.oldap-footer {
+    @apply absolute left-0 bottom-0 right-0 h-oldap-footer-height flex flex-row items-center p-3 bg-oldap-bg dark:bg-oldap-bg-dark text-oldap-fg dark:text-oldap-fg-dark;
+}
+
