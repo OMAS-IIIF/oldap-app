@@ -2,10 +2,6 @@
 	let { children } = $props();
 </script>
 
-<style>
-
-</style>
-
-<div class="oldap-header">
+<div class="oldap-header-right">
 	{@render children()}
 </div>

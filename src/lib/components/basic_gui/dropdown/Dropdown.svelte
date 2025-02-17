@@ -5,7 +5,6 @@
 
 
 	function toggleDropdown() {
-		console.log("===> isOpen", isOpen);
 		isOpen = !isOpen;
 	}
 

@@ -1,9 +1,10 @@
+
 .oldap-dropdown {
     @apply inline-flex w-full justify-center gap-x-1.5 rounded-md bg-white px-3 py-1 text-xs font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50;
 }
 
 .oldap-dropdown-menu {
-    @apply absolute left-0 z-10 mt-2 origin-top-right rounded-md bg-white ring-1 shadow-lg ring-black/5 focus:outline-hidden overflow-auto max-h-oldap-menu!;
+    @apply absolute z-10 mt-2 origin-top-right rounded-md bg-white ring-1 shadow-lg ring-black/5 focus:outline-hidden overflow-auto max-h-oldap-menu! ;
 }
 
 .oldap-dropdown-menu-in {

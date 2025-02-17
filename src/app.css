@@ -17,7 +17,18 @@
 }
 
 .oldap-header {
+/*
     @apply absolute left-0 top-0 right-0 h-oldap-header-height flex flex-row gap-x-4 items-center p-3 bg-oldap-bg dark:bg-oldap-bg-dark text-oldap-fg dark:text-oldap-fg-dark;
+*/
+    @apply absolute left-0 top-0 right-0 h-oldap-header-height bg-oldap-bg dark:bg-oldap-bg-dark text-oldap-fg dark:text-oldap-fg-dark;
+}
+
+.oldap-header-left {
+    @apply absolute left-0 top-0 right-0 flex flex-row h-full gap-x-4 items-center p-3
+}
+
+.oldap-header-right {
+    @apply absolute right-0 top-0 right-0 flex flex-row-reverse h-full gap-x-4 items-center p-3
 }
 
 .oldap-content-area {
