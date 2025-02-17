@@ -3,7 +3,7 @@
 }
 
 .oldap-dropdown-menu {
-    @apply absolute left-0 z-10 mt-2 origin-top-right rounded-md bg-white ring-1 shadow-lg ring-black/5 focus:outline-hidden max-h-32! overflow-auto;
+    @apply absolute left-0 z-10 mt-2 origin-top-right rounded-md bg-white ring-1 shadow-lg ring-black/5 focus:outline-hidden overflow-auto max-h-oldap-menu!;
 }
 
 .oldap-dropdown-menu-in {

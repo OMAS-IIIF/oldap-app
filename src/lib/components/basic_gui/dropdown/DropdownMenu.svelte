@@ -15,10 +15,8 @@
 	}
 
 	$effect(() => {
-		if (isOpen) {
-			if (drop_down_menu) {
-				drop_down_menu.scrollTop = 0;
-			}
+		if (isOpen && drop_down_menu) {
+			drop_down_menu.scrollTop = 0;
 		}
 	});
 

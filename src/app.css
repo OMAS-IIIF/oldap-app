@@ -12,7 +12,7 @@
 
     --spacing-oldap-header-height: 56px;
     --spacing-oldap-footer-height: 56px;
-
+    --spacing-oldap-menu: calc(var(--spacing) * 32);
 
 }
 
