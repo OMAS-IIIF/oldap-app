@@ -1,9 +1,22 @@
 <script lang="ts">
-	let { href = null, initials = null } = $props();
+	let { src = null, initials = null } = $props();
+
+	let class_str: string;
+
+	if (src) {
+		class_str = "";
+	}
+	else if (initials) {
+		class_str = "inline-flex size-10 items-center justify-center rounded-full bg-gray-500";
+	}
+	else {
+		class_str = "inline-block size-10 overflow-hidden rounded-full bg-gray-100";
+	}
 </script>
 
-<span class="inline-block size-8 overflow-hidden rounded-full bg-gray-300">
-	{#if href}
+<span class={class_str}>
+	{#if src}
+		<img class="inline-block size-10 rounded-full" src={src} alt="" />
 	{:else if initials}
 		 <span class="text-medium font-medium text-white">LR</span>
 	{:else}
