@@ -9,7 +9,7 @@
 	let position_class = $state('left-0');
 
 	function close_menu(event: Event) {
-		if ((event?.target as HTMLElement)?.closest(".oldap-dropdown")?.id == menubutton_id) {
+		if ((event?.target as HTMLElement)?.closest(".dd-menu")?.id == menubutton_id) {
 			return;
 		}
 		isOpen = false;

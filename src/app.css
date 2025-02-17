@@ -3,18 +3,36 @@
 
 @theme {
     --color-mint-500: oklch(0.72 0.11 178);
+
     --color-oldap-bg: var(--color-indigo-300);
     --color-oldap-bg-dark: var(--color-indigo-950);
+    --color-oldap-bg2: var(--color-indigo-50);
+    --color-oldap-bg2-dark: oklch(0.05 0.06 0.25);
     --color-oldap-fg: var(--color-black);
     --color-oldap-fg-dark: var(--color-white);
     --color-oldap-hover: var(--color-indigo-200);
     --color-oldap-hover-dark: var(--color-indigo-700);
+
+    --color-oldap-button: var(--color-indigo-600);
+    --color-oldap-button-dark: var(--color-indigo-500);
+    --color-oldap-button-hover: var(--color-indigo-400);
+    --color-oldap-button-hover-dark: var(--color-indigo-700);
 
     --spacing-oldap-header-height: 56px;
     --spacing-oldap-footer-height: 56px;
     --spacing-oldap-menu: calc(var(--spacing) * 32);
 
 }
+
+.oldap-button {
+    @apply inline-flex w-full justify-center gap-x-1 rounded-sm
+    bg-oldap-button dark:bg-oldap-button-dark px-2 py-1
+    font-semibold text-oldap-fg dark:text-oldap-fg-dark shadow-xs
+    hover:bg-oldap-button-hover dark:hover:bg-oldap-button-hover-dark
+    focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-950;
+}
+
+
 
 .oldap-header {
 /*
@@ -32,7 +50,7 @@
 }
 
 .oldap-content-area {
-    @apply absolute left-0 top-oldap-header-height right-0 bottom-oldap-footer-height bg-amber-50;
+    @apply absolute left-0 top-oldap-header-height right-0 bottom-oldap-footer-height bg-oldap-bg2 dark:bg-oldap-bg2-dark text-oldap-fg dark:text-oldap-fg-dark;
 }
 
 .oldap-footer {
