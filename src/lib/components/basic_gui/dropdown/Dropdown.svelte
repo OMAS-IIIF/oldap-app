@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { setContext } from 'svelte';
-	import Button from '$lib/components/basic_gui/Buttons/Button.svelte';
+	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
 
 	let { children, isOpen = $bindable(), buttonText, id = crypto.randomUUID()} = $props();
 

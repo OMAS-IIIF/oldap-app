@@ -4,9 +4,10 @@
 	import '../app.css';
 	import MainWin from '$lib/components/oldap/MainWin.svelte';
 
+	let { children } = $props();
 
 </script>
 
 <ParaglideJS {i18n}>
-	<MainWin>GAGA</MainWin>
+	<MainWin>{@render children()}</MainWin>
 </ParaglideJS>

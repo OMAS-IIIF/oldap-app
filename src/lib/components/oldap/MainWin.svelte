@@ -9,15 +9,48 @@ import Header from '$lib/components/basic_gui/header/Header.svelte';
 import DropdownButtonItem from '$lib/components/basic_gui/dropdown/DropdownButtonItem.svelte';
 import RightHeader from '$lib/components/basic_gui/header/RightHeader.svelte';
 import Footer from '$lib/components/basic_gui/footer/Footer.svelte';
-import Button from '$lib/components/basic_gui/Buttons/Button.svelte';
-import AvatarButton from '$lib/components/basic_gui/Buttons/AvatarButton.svelte';
+import AvatarButton from '$lib/components/basic_gui/buttons/AvatarButton.svelte';
+import DialogWin from '$lib/components/basic_gui/dialogwin/DialogWin.svelte';
+import Login from '$lib/components/basic_gui/login/Login.svelte';
+import { apiClient } from '$lib/shared/apiClient';
+import type { AuthInfo } from '$lib/interfaces/authinfo';
 
 let { children } = $props();
 let menuIsOpen = $state(false);
+let loginIsOpen = $state(false)
 
 let test = (event: Event) => {
 	console.log(event)
 }
+
+let do_login = (userid: string, password: string) => {
+	console.log(userid, password)
+	const config_auth = {
+		headers: {
+			'Accept': 'application/json',
+			'Content-Type': 'application/json; utf-8',
+		},
+		params: { userId: userid },
+	}
+	const data = {password: password as string};
+	apiClient.postAdminauthUserId(data, config_auth)
+		.then(authdata => {
+			if (authdata.token) {
+				const authinfo: AuthInfo = {
+					userid: userid,
+					token: authdata.token,
+				}
+				sessionStorage.setItem('authinfo', JSON.stringify(authinfo));
+			}
+			else {
+				console.log("NO TOKEN!!!!")
+			}
+		})
+	.catch(err => {
+		console.log(err);
+	})
+};
+
 </script>
 <div class="oldap-body">
 	<Header size="text-xs lg:text-base ">
@@ -39,12 +72,10 @@ let test = (event: Event) => {
 			<div>header2</div>
 		</LeftHeader>
 		<RightHeader>
-			<!--<Button>
-				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-					<path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-				</svg>
-			</Button>-->
-			<AvatarButton initials="LR"></AvatarButton>
+			<AvatarButton initials="LR" onclick={(event: MouseEvent) => {loginIsOpen = true;}}></AvatarButton>
+			<DialogWin bind:isopen={loginIsOpen} title="Login">
+				<Login onsubmit={do_login} bind:isopen={loginIsOpen} />
+			</DialogWin>
 		</RightHeader>
 	</Header>
 	<ContentArea>

@@ -6,7 +6,7 @@
 
     --color-oldap-bg: var(--color-indigo-300);
     --color-oldap-bg-dark: var(--color-indigo-950);
-    --color-oldap-bg2: var(--color-indigo-50);
+    --color-oldap-bg2: var(--color-indigo-100);
     --color-oldap-bg2-dark: oklch(0.05 0.06 0.25);
     --color-oldap-fg: var(--color-black);
     --color-oldap-fg-dark: var(--color-white);
