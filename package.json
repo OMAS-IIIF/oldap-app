@@ -44,6 +44,7 @@
 	},
 	"dependencies": {
 		"@inlang/paraglide-sveltekit": "^0.15.5",
-		"@zodios/core": "^10.9.6"
+		"@zodios/core": "^10.9.6",
+		"crypto-js": "^4.2.0"
 	}
 }

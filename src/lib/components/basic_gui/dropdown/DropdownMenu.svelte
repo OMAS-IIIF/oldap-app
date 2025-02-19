@@ -2,14 +2,14 @@
 
 	import { getContext, onMount } from 'svelte';
 
-	let { children, position = 'left', isOpen = $bindable() , id = null } = $props();
+	let { children, position = 'left', isOpen = $bindable() , name = "", id = null } = $props();
 
-	let menubutton_id = getContext('menubutton_id');
+	//let menubutton_id = getContext(name);
 	let drop_down_menu: HTMLElement | undefined = $state();
 	let position_class = $state('left-0');
 
-	function close_menu(event: Event) {
-		if ((event?.target as HTMLElement)?.closest(".dd-menu")?.id == menubutton_id) {
+	function close_menu(event: Event, name: string) {
+		if ((event.target as HTMLElement).classList.contains(name)) {
 			return;
 		}
 		isOpen = false;
@@ -35,7 +35,7 @@
 </script>
 
 
-<svelte:window onclick={close_menu} />
+<svelte:window onclick={(event) => close_menu(event, name)} />
 <div bind:this={drop_down_menu} {id}
 		 class="{isOpen ? 'oldap-dropdown-menu-in' : 'oldap-dropdown-menu-out'} oldap-dropdown-menu {position_class}"
 		 role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">

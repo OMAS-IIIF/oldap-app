@@ -2,20 +2,21 @@
 	import { setContext } from 'svelte';
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
 
-	let { children, isOpen = $bindable(), buttonText, id = crypto.randomUUID()} = $props();
+	let { children, isOpen = $bindable(), buttonText, name = "", id = null} = $props();
 
 
 	function toggleDropdown() {
-		console.log('toggle dropdown');
+		console.log('toggle Button dropdown');
 		isOpen = !isOpen;
 	}
 
-	setContext('menubutton_id', id);
+	//setContext(name, id);
 
 </script>
+
 <div class="relative inline-block text-left">
 	<div>
-		<Button onclick={toggleDropdown} id={id} innerClass="dd-menu">
+		<Button onclick={toggleDropdown} {id} innerClass={name}>
 			{buttonText}
 			<svg class="-mr-1 size-5 text-oldap-fg dark:text-oldap-fg-dark" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"
 					 data-slot="icon">

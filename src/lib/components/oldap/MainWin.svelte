@@ -14,10 +14,20 @@ import DialogWin from '$lib/components/basic_gui/dialogwin/DialogWin.svelte';
 import Login from '$lib/components/basic_gui/login/Login.svelte';
 import { apiClient } from '$lib/shared/apiClient';
 import type { AuthInfo } from '$lib/interfaces/authinfo';
+import { OldapErrorApiFailure } from '$lib/oldap/errors/OldapErrorApiFailure';
+import { OldapUser } from '$lib/oldap/classes/user';
+import { userStore } from '$lib/stores/user';
+import { getGravatarUrl } from '$lib/helpers/getgravatar'
+import DropdownAvatar from '$lib/components/basic_gui/dropdown/DropdownAvatar.svelte';
+
 
 let { children } = $props();
 let menuIsOpen = $state(false);
-let loginIsOpen = $state(false)
+let loginIsOpen = $state(false);
+let avatarIsOpen = $state(false);
+let user: OldapUser | null = $state(null);
+let initials: string | undefined = $state(undefined);
+let src: string | undefined = $state(undefined);
 
 let test = (event: Event) => {
 	console.log(event)
@@ -41,10 +51,25 @@ let do_login = (userid: string, password: string) => {
 					token: authdata.token,
 				}
 				sessionStorage.setItem('authinfo', JSON.stringify(authinfo));
+				return authinfo;
 			}
-			else {
-				console.log("NO TOKEN!!!!")
+			throw new OldapErrorApiFailure("Got no token from login procedure");
+		})
+		.then(authinfo => {
+			const config_user = {
+				params: { userId: authinfo.userid },
+				headers: {
+					'Accept': 'application/json',
+					'Authorization': 'Bearer ' + authinfo.token,
+				},
 			}
+			return apiClient.getAdminuserUserId(config_user);
+		})
+		.then(userdata => {
+			user = OldapUser.fromOldapJson(userdata);
+			userStore.set(user);
+			console.log(user);
+			src = getGravatarUrl(user.email, 200);
 		})
 	.catch(err => {
 		console.log(err);
@@ -56,8 +81,8 @@ let do_login = (userid: string, password: string) => {
 	<Header size="text-xs lg:text-base ">
 		<LeftHeader>
 			<a href="/static"><img src="/images/oldap-logo.svg" class="me-3 h-6 sm:h-12" alt="OLDAP Logo" /></a>
-			<Dropdown bind:isOpen={menuIsOpen} buttonText="Test">
-				<DropdownMenu bind:isOpen={menuIsOpen}>
+			<Dropdown bind:isOpen={menuIsOpen} buttonText="Test" name="test-menu">
+				<DropdownMenu bind:isOpen={menuIsOpen} name="test-menu">
 					<DropdownLinkItem bind:isOpen={menuIsOpen} onclick={test} id="gaga">GAGA</DropdownLinkItem>
 					<DropdownLinkItem bind:isOpen={menuIsOpen} onclick={test} id="Gugus">Gugus</DropdownLinkItem>
 					<DropdownLinkItem bind:isOpen={menuIsOpen} onclick={test}>AllesodernichtshisthierdieFrage</DropdownLinkItem>
@@ -72,10 +97,18 @@ let do_login = (userid: string, password: string) => {
 			<div>header2</div>
 		</LeftHeader>
 		<RightHeader>
-			<AvatarButton initials="LR" onclick={(event: MouseEvent) => {loginIsOpen = true;}}></AvatarButton>
-			<DialogWin bind:isopen={loginIsOpen} title="Login">
-				<Login onsubmit={do_login} bind:isopen={loginIsOpen} />
-			</DialogWin>
+			{#if user}
+				<DropdownAvatar bind:isOpen={avatarIsOpen} {initials} {src} name="avatar"></DropdownAvatar>
+				<DropdownMenu bind:isOpen={avatarIsOpen} name="avatar">
+					<DropdownLinkItem bind:isOpen={avatarIsOpen} onclick={test} id="gagaX">GAGAX</DropdownLinkItem>
+					<DropdownLinkItem bind:isOpen={avatarIsOpen} onclick={test} id="gugusX">GAGAX</DropdownLinkItem>
+				</DropdownMenu>
+			{:else}
+				<AvatarButton {initials} {src} onclick={(event: MouseEvent) => {loginIsOpen = true;}}></AvatarButton>
+				<DialogWin bind:isopen={loginIsOpen} title="Login">
+					<Login onsubmit={do_login} bind:isopen={loginIsOpen} />
+				</DialogWin>
+			{/if}
 		</RightHeader>
 	</Header>
 	<ContentArea>
