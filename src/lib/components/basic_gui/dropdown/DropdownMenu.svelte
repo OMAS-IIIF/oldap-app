@@ -1,14 +1,15 @@
 <script lang="ts">
 
-	import { getContext, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 
-	let { children, position = 'left', isOpen = $bindable() , name = "", id = null } = $props();
+	let { children, position = 'left', isOpen = $bindable() , name = "", id = null, grouping = false } = $props();
 
 	//let menubutton_id = getContext(name);
 	let drop_down_menu: HTMLElement | undefined = $state();
 	let position_class = $state('left-0');
 
 	function close_menu(event: Event, name: string) {
+		console.log("====>", name)
 		if ((event.target as HTMLElement).classList.contains(name)) {
 			return;
 		}
@@ -37,9 +38,9 @@
 
 <svelte:window onclick={(event) => close_menu(event, name)} />
 <div bind:this={drop_down_menu} {id}
-		 class="{isOpen ? 'oldap-dropdown-menu-in' : 'oldap-dropdown-menu-out'} oldap-dropdown-menu {position_class}"
+		 class="{isOpen ? 'oldap-dropdown-menu-in' : 'oldap-dropdown-menu-out'} oldap-dropdown-menu {position_class} "
 		 role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
-	<div class="py-1" role="none">
+	<div class="{grouping ? 'divide-y divide-gray-300' : ''} py-1" role="none">
 		{@render children()}
 	</div>
 </div>

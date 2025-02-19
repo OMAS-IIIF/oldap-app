@@ -19,7 +19,7 @@
     --color-oldap-button-hover-dark: var(--color-indigo-700);
 
     --spacing-oldap-header-height: 56px;
-    --spacing-oldap-footer-height: 56px;
+    --spacing-oldap-footer-height: 32px;
     --spacing-oldap-menu: calc(var(--spacing) * 32);
 
 }
@@ -33,11 +33,7 @@
 }
 
 
-
 .oldap-header {
-/*
-    @apply absolute left-0 top-0 right-0 h-oldap-header-height flex flex-row gap-x-4 items-center p-3 bg-oldap-bg dark:bg-oldap-bg-dark text-oldap-fg dark:text-oldap-fg-dark;
-*/
     @apply absolute left-0 top-0 right-0 h-oldap-header-height bg-oldap-bg dark:bg-oldap-bg-dark text-oldap-fg dark:text-oldap-fg-dark;
 }
 
@@ -50,10 +46,12 @@
 }
 
 .oldap-content-area {
-    @apply absolute left-0 top-oldap-header-height right-0 bottom-oldap-footer-height bg-oldap-bg2 dark:bg-oldap-bg2-dark text-oldap-fg dark:text-oldap-fg-dark;
+    @apply absolute left-0 top-oldap-header-height right-0 bottom-oldap-footer-height
+    bg-oldap-bg2 dark:bg-oldap-bg2-dark text-oldap-fg dark:text-oldap-fg-dark;
 }
 
 .oldap-footer {
-    @apply absolute left-0 bottom-0 right-0 h-oldap-footer-height flex flex-row items-center p-3 bg-oldap-bg dark:bg-oldap-bg-dark text-oldap-fg dark:text-oldap-fg-dark;
+    @apply absolute left-0 bottom-0 right-0 h-oldap-footer-height flex flex-row items-center p-3
+    bg-oldap-bg dark:bg-oldap-bg-dark text-xs text-oldap-fg dark:text-oldap-fg-dark;
 }
 
