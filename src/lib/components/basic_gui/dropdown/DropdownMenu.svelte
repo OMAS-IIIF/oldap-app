@@ -2,7 +2,7 @@
 
 	import { onMount } from 'svelte';
 
-	let { children, position = 'left', isOpen = $bindable() , name = "", id = null, grouping = false } = $props();
+	let { children, position = 'left', isOpen = $bindable() , name = "", id = null, grouping = false, size = 'max-h-oldap-menu-base', transparent = false } = $props();
 
 	//let menubutton_id = getContext(name);
 	let drop_down_menu: HTMLElement | undefined = $state();
@@ -37,9 +37,9 @@
 
 <svelte:window onclick={(event) => close_menu(event, name)} />
 <div bind:this={drop_down_menu} {id}
-		 class="{isOpen ? 'oldap-dropdown-menu-in' : 'oldap-dropdown-menu-out'} oldap-dropdown-menu {position_class} "
+		 class="{isOpen ? 'oldap-dropdown-menu-in' : 'oldap-dropdown-menu-out'} oldap-dropdown-menu {size} {position_class} {transparent ? 'bg-transparent!' : 'ring-1 shadow-lg ring-black/5'}"
 		 role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
-	<div class="{grouping ? 'divide-y divide-gray-300' : ''} py-1" role="none">
+	<div class="{grouping ? 'divide-y divide-gray-300' : ''} py-1 {transparent ? 'bg-transparent!' : ''}" role="none">
 		{@render children()}
 	</div>
 </div>

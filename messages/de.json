@@ -1,4 +1,11 @@
 {
-	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"hello_world": "Hello, {name} from de!"
+    "$schema": "https://inlang.com/schema/inlang-message-format",
+    "hello_world": "Hello, {name} from de!",
+    "user_id": "User ID",
+    "password": "Passwort",
+    "forgot_passwd": "Passwort vergessen?",
+    "sign_in": "Anmelden",
+    "no_reg": "Noch nicht registriert?",
+    "apply_for_acc": "Ein Konto beantragen",
+    "about": "\u00dcber"
 }

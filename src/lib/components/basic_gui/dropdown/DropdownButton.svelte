@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
 
-	let { children, isOpen = $bindable(), buttonText, name = "", id = null, round = false} = $props();
+	let { children, isOpen = $bindable(), buttonText = $bindable(), name = "", id = null, round = false} = $props();
 
 	function toggleDropdown() {
 		console.log('toggle Button dropdown');

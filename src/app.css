@@ -12,11 +12,15 @@
     --color-oldap-fg-dark: var(--color-white);
     --color-oldap-hover: var(--color-indigo-200);
     --color-oldap-hover-dark: var(--color-indigo-700);
+    --color-oldap-focus: var(--color-purple-800);
+    --color-oldap-focus-dark: var(--color-purple-300);
 
     --color-oldap-button: var(--color-indigo-600);
     --color-oldap-button-dark: var(--color-indigo-500);
     --color-oldap-button-hover: var(--color-indigo-400);
     --color-oldap-button-hover-dark: var(--color-indigo-700);
+    --color-oldap-button-: var(--color-indigo-900);
+    --color-oldap-button-outline-dark: var(--color-indigo-900);
 
     --color-oldap-error-bg: var(--color-red-600);
     --color-oldap-error-fg: var(--color-yellow-300);
@@ -24,7 +28,11 @@
 
     --spacing-oldap-header-height: 56px;
     --spacing-oldap-footer-height: 32px;
-    --spacing-oldap-menu: calc(var(--spacing) * 32);
+
+    /* maximal height of dropdown menu */
+    --spacing-oldap-menu-sm: calc(var(--spacing) * 16);
+    --spacing-oldap-menu-base: calc(var(--spacing) * 32);
+    --spacing-oldap-menu-lg: calc(var(--spacing) * 64);
 
 }
 
@@ -37,8 +45,8 @@
 }
 
 .oldap-button-round {
-    @apply rounded-full bg-indigo-600 p-1.5  text-xs text-white shadow-xs
-    hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600
+    @apply rounded-full bg-oldap-button dark:bg-oldap-button-dark p-1.5  text-xs text-white shadow-xs w-7 h-7
+    hover:bg-oldap-button-hover dark:bg-oldap-button-hover-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600
 }
 
 
