@@ -9,7 +9,6 @@
 	let position_class = $state('left-0');
 
 	function close_menu(event: Event, name: string) {
-		console.log("====>", name)
 		if ((event.target as HTMLElement).classList.contains(name)) {
 			return;
 		}

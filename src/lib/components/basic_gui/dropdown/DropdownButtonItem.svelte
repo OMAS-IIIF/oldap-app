@@ -1,6 +1,6 @@
 <script lang="ts">
 
-	let { children, isOpen = $bindable(), id = null, onclick = undefined } = $props();
+	let { children, isOpen = $bindable(), id = null, onclick = undefined, round = false } = $props();
 
 
 	let myevent = (event: MouseEvent) => {
@@ -12,6 +12,6 @@
 	}
 </script>
 
-<button {id} onclick={myevent} class="oldap-dropdown-linkitem" role="menuitem" tabindex="-1">
+<button {id} onclick={myevent} class="{round ? 'oldap-dropdown-rbutton-item' : 'oldap-dropdown-linkitem'}" role="menuitem" tabindex="-1">
 	{@render children()}
 </button>

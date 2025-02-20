@@ -20,6 +20,10 @@ import { userStore } from '$lib/stores/user';
 import { getGravatarUrl } from '$lib/helpers/getgravatar'
 import DropdownAvatar from '$lib/components/basic_gui/dropdown/DropdownAvatar.svelte';
 import DropdownLabel from '$lib/components/basic_gui/dropdown/DropdownLabel.svelte';
+import { process_api_error } from '$lib/helpers/process_api_error';
+import { errorInfoStore } from '$lib/stores/errorinfo';
+import ErrorMsg from '$lib/components/oldap/ErrorMsg.svelte';
+import { availableLanguageTags, languageTag } from "$lib/paraglide/runtime.js"
 
 
 let { children } = $props();
@@ -27,6 +31,9 @@ let menuIsOpen = $state(false);
 let loginIsOpen = $state(false);
 let avatarIsOpen = $state(false);
 let projectsIsOpen = $state(false);
+let langSelOpen = $state(false);
+let current_lang = $state(languageTag());
+
 let user: OldapUser | null = $state(null);
 let initials: string | undefined = $state(undefined);
 let src: string | undefined = $state(undefined);
@@ -74,8 +81,9 @@ let do_login = (userid: string, password: string) => {
 			src = getGravatarUrl(user.email, 200);
 		})
 	.catch(err => {
-		console.log(err);
-	})
+		const errobj = process_api_error(err);
+		errorInfoStore.set(errobj);
+	});
 };
 
 let do_logout = () => {
@@ -133,6 +141,15 @@ let do_logout = () => {
 					<DropdownLinkItem bind:isOpen={projectsIsOpen} onclick={test} id="oldap">OLDAP</DropdownLinkItem>
 				</DropdownMenu>
 			</DropdownLabel>
+
+			<DropdownButton bind:isOpen={langSelOpen} buttonText={current_lang} name="lang-menu" round={true}>
+				<DropdownMenu bind:isOpen={langSelOpen} name="lang-menu">
+					{#each availableLanguageTags as lang}
+						<DropdownButtonItem bind:isOpen={langSelOpen} onclick={test} round={true}>{lang}</DropdownButtonItem>
+					{/each}
+				</DropdownMenu>
+			</DropdownButton>
+
 		</RightHeader>
 	</Header>
 	<ContentArea>
@@ -141,4 +158,5 @@ let do_logout = () => {
 	<Footer>
 		<div>© Lukas & Manuel Rosenthaler (2025)</div>
 	</Footer>
+	<ErrorMsg></ErrorMsg>
 </div>

@@ -11,7 +11,8 @@
 
 <div class="relative inline-block text-left">
 	<div>
-		<a href="/" onclick={toggleDropdown}>{labelText}
+		<a href="/" onclick={toggleDropdown} class="flex items-center text-nowrap {name}">
+			{labelText}
 			<svg class="-mr-1 size-5 text-oldap-fg dark:text-oldap-fg-dark {name}" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"
 					 data-slot="icon">
 				<path fill-rule="evenodd"
