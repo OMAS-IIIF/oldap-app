@@ -13,6 +13,7 @@ import ErrorMsg from '$lib/components/oldap/ErrorMsg.svelte';
 import LangSelector from '$lib/components/basic_gui/langselector/LangSelector.svelte';
 import * as m from '$lib/paraglide/messages.js';
 import User from '$lib/components/oldap/User.svelte';
+import Projects from '$lib/components/oldap/Projects.svelte';
 
 let { children } = $props();
 let projectsIsOpen = $state(false);
@@ -40,11 +41,14 @@ let test = (event: Event) => {
 			<!-- language selector -->
 			<LangSelector />
 			<!-- project selector -->
+			<!--
 			<DropdownLabel bind:isOpen={projectsIsOpen} name="projects" labelText="Projects">
 				<DropdownMenu bind:isOpen={projectsIsOpen} position="left" name="projects">
 					<DropdownLinkItem bind:isOpen={projectsIsOpen} onclick={test} id="oldap">OLDAP</DropdownLinkItem>
 				</DropdownMenu>
 			</DropdownLabel>
+			-->
+			<Projects />
 
 		</RightHeader>
 	</Header>

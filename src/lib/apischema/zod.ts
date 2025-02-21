@@ -458,6 +458,33 @@ export const endpoints = makeApi([
 	},
 	{
 		method: "get",
+		path: "/admin/project/get",
+		alias: "getAdminprojectget",
+		description: `Get all project data from the project iri`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "iri",
+				type: "Query",
+				schema: z.string().optional()
+			},
+		],
+		response: z.object({ projectIri: z.string(), creator: z.string(), created: z.string(), contributor: z.string(), modified: z.string(), label: LangString, comment: LangString, message: z.string(), shortName: z.string().regex(/^[a-zA-Z_][a-zA-Z0-9._-]*$/), "namespace IRI": z.string(), "project start": z.string(), "project end": z.string() }).partial().passthrough(),
+		errors: [
+			{
+				status: 403,
+				description: `Unauthorized`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 404,
+				description: `Not Found`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+		]
+	},
+	{
+		method: "get",
 		path: "/admin/project/getid",
 		alias: "getAdminprojectgetid",
 		description: `Get the project shortname from the project IRI`,
@@ -662,7 +689,7 @@ export const endpoints = makeApi([
 		method: "get",
 		path: "/admin/user/get",
 		alias: "getAdminuserget",
-		description: `Get all user data from an userIri`,
+		description: `Get all user data from the user Iri`,
 		requestFormat: "json",
 		parameters: [
 			{

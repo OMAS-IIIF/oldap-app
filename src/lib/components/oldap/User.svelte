@@ -6,7 +6,7 @@
 	import Login from '$lib/components/basic_gui/login/Login.svelte';
 	import DialogWin from '$lib/components/basic_gui/dialogwin/DialogWin.svelte';
 	import AvatarButton from '$lib/components/basic_gui/buttons/AvatarButton.svelte';
-	import type { AuthInfo } from '$lib/interfaces/authinfo';
+	import type { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { OldapErrorApiFailure } from '$lib/oldap/errors/OldapErrorApiFailure';
 	import { OldapUser } from '$lib/oldap/classes/user';
 	import { getGravatarUrl } from '$lib/helpers/getgravatar';
@@ -23,7 +23,6 @@
 	let loginIsOpen = $state(false);
 
 	let do_login = (userid: string, password: string) => {
-		console.log(userid, password)
 		const config_auth = {
 			headers: {
 				'Accept': 'application/json',
