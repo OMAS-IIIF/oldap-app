@@ -32,6 +32,9 @@ let test = (event: Event) => {
 			<a href="/"><img src="/images/oldap-logo.svg" class="me-3 h-6 sm:h-12" alt="OLDAP Logo" /></a>
 			<div>OLDAP</div>
 			<a href="/about" class="hover:underline">{m.about()}</a>
+			{#if user}
+				<a href="/admin" class="hover:underline">{m.admin()}</a>
+			{/if}
 		</LeftHeader>
 
 		<!-- right side of header -->
@@ -40,14 +43,8 @@ let test = (event: Event) => {
 
 			<!-- language selector -->
 			<LangSelector />
+
 			<!-- project selector -->
-			<!--
-			<DropdownLabel bind:isOpen={projectsIsOpen} name="projects" labelText="Projects">
-				<DropdownMenu bind:isOpen={projectsIsOpen} position="left" name="projects">
-					<DropdownLinkItem bind:isOpen={projectsIsOpen} onclick={test} id="oldap">OLDAP</DropdownLinkItem>
-				</DropdownMenu>
-			</DropdownLabel>
-			-->
 			<Projects />
 
 		</RightHeader>

@@ -4,6 +4,7 @@
 		innerClass = "", ariaExpanded = null, ariaHaspopup = null} = $props();
 
 	let class_str: string = $state('')
+	let avatar_error = $state(false);
 
 	if (src) {
 		class_str = "";
@@ -23,7 +24,10 @@
 	<button class={class_str}
 					onclick={onclick || undefined}>
 		{#if src}
-			<img {id} class="{innerClass} inline-block size-10 rounded-full" src={src} alt="" />
+			<img {id} class="{innerClass} inline-block size-10 rounded-full" src={src} alt="" onerror={() => {avatar_error = true}} />
+			{#if avatar_error}
+				<span {id} class="{innerClass} text-medium font-medium text-white">{initials}</span>
+			{/if}
 		{:else if initials}
 			 <span {id} class="{innerClass} text-medium font-medium text-white">{initials}</span>
 		{:else}

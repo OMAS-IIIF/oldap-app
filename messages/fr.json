@@ -3,9 +3,10 @@
     "hello_world": "Hello, {name} from fr!",
     "user_id": "ID utilisateur",
     "password": "Mot de passe",
-    "forgot_passwd": "Mot de passe oubli\u00e9 ?",
+    "forgot_passwd": "Mot de passe oublié ?",
     "sign_in": "S'inscrire",
-    "no_reg": "Vous n'\u00eates pas encore inscrit ?",
+    "no_reg": "Vous n'êtes pas encore inscrit ?",
     "apply_for_acc": "Demande d'ouverture de compte",
-    "about": "A propos de"
+    "about": "A propos de",
+    "admin": "Administration"
 }

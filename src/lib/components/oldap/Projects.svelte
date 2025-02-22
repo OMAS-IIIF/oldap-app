@@ -13,9 +13,14 @@
 	import { OldapProject } from '$lib/oldap/classes/project';
 	import { languageTag } from '$lib/paraglide/runtime';
 	import { onMount } from 'svelte';
+	import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
+	import { projectStore } from '$lib/stores/project';
+	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 
 	let projectsIsOpen = $state(false);
+	let current_project_id = $state<string | null>(null);
 	let lang = $state(languageTag());
+	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
 
 	let projects: Record<string, OldapProject> = $state<Record<string, OldapProject>>({});
 
@@ -54,19 +59,34 @@
 					console.log(err);
 				}
 			}
+			for (const k in projects) {
+				current_project_id = projects[k].projectShortName.toString();
+				break;
+			}
+		}
+		else {
+			current_project_id = null;
+			projectStore.set(null);
 		}
 	});
 
-	const test = () => {
-
+	const set_current_project = (project_id: string): void => {
+		current_project_id = project_id;
+		projectStore.set(projects[project_id]);
 	}
+
 </script>
 
 
-<DropdownLabel bind:isOpen={projectsIsOpen} name="projects" labelText="Projects">
+<DropdownLabel bind:isOpen={projectsIsOpen} name="projects"
+							 labelText={current_project_id ? projects[current_project_id].label[langobj] : 'Projects'}>
 	<DropdownMenu bind:isOpen={projectsIsOpen} position="left" name="projects">
 		{#each Object.entries(projects) as [key, value]}
-			<DropdownLinkItem bind:isOpen={projectsIsOpen} onclick={test} id="oldap">{value?.label?.[lang] ?? key}</DropdownLinkItem>
+			<DropdownLinkItem bind:isOpen={projectsIsOpen}
+												onclick={() => set_current_project(key)} id="oldap"
+												selected={key == current_project_id}>
+				{value?.label?.[langobj] ?? key}
+			</DropdownLinkItem>
 		{/each}
 	</DropdownMenu>
 </DropdownLabel>
