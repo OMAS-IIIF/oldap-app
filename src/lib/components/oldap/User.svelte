@@ -58,6 +58,7 @@
 				userStore.set(user);
 				console.log(user);
 				src = getGravatarUrl(user.email, 200);
+				initials = user.givenName[0] + user.familyName[0]
 			})
 			.catch(err => {
 				const errobj = process_api_error(err);

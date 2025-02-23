@@ -17,6 +17,10 @@
 	}
 	class_str += ` ${innerClass} aria-expanded=${ariaExpanded || undefined} aria-haspopup=${ariaHaspopup || undefined}`;
 
+	const no_avatar = () => {
+		console.log("NO AVATAR IMAGE", initials);
+		avatar_error = true;
+	}
 
 </script>
 
@@ -24,7 +28,7 @@
 	<button class={class_str}
 					onclick={onclick || undefined}>
 		{#if src}
-			<img {id} class="{innerClass} inline-block size-10 rounded-full" src={src} alt="" onerror={() => {avatar_error = true}} />
+			<img {id} class="{innerClass} inline-block size-10 rounded-full" src={src} alt="" onerror={no_avatar} />
 			{#if avatar_error}
 				<span {id} class="{innerClass} text-medium font-medium text-white">{initials}</span>
 			{/if}
