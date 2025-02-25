@@ -39,7 +39,7 @@
 .oldap-button {
     @apply inline-flex w-full justify-center gap-x-1 rounded-sm
     bg-oldap-button dark:bg-oldap-button-dark px-2 py-1
-    font-semibold text-oldap-fg dark:text-oldap-fg-dark shadow-xs
+    text-oldap-fg dark:text-oldap-fg-dark shadow-xs
     hover:bg-oldap-button-hover dark:hover:bg-oldap-button-hover-dark
     focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-950;
 }
@@ -49,6 +49,9 @@
     hover:bg-oldap-button-hover dark:bg-oldap-button-hover-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600
 }
 
+.oldap-body {
+    @apply absolute top-0 bottom-0 left-0 right-0 overflow-hidden
+}
 
 .oldap-header {
     @apply absolute left-0 top-0 right-0 h-oldap-header-height bg-oldap-bg dark:bg-oldap-bg-dark text-oldap-fg dark:text-oldap-fg-dark;

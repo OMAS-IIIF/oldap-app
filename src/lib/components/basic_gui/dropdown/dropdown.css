@@ -1,6 +1,6 @@
 
 .oldap-dropdown {
-    @apply inline-flex w-full justify-center gap-x-1 rounded-md
+    @apply inline-flex w-full justify-center rounded-md
     bg-oldap-button dark:bg-oldap-button-dark px-3 py-1 font-semibold text-oldap-fg dark:text-oldap-fg-dark ring-1
     shadow-xs ring-gray-300 ring-inset hover:bg-oldap-button-hover dark:hover:bg-oldap-button-hover-dark;
 }
