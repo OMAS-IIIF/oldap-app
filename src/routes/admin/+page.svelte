@@ -3,20 +3,65 @@
 	import Tabs, { type TabsType } from '$lib/components/basic_gui/tabs/Tabs.svelte';
 	import { userStore } from '$lib/stores/user';
 	import { projectStore } from '$lib/stores/project';
-	import type { OldapUser } from '$lib/oldap/classes/user';
+	import type { InProject, OldapUser } from '$lib/oldap/classes/user';
 	import Table from '$lib/components/basic_gui/table/Table.svelte';
 	import { contentAreaHeight } from '$lib/stores/contentarea_h';
+	import type { OldapProject } from '$lib/oldap/classes/project';
+	import { AuthInfo } from '$lib/oldap/classes/authinfo';
+	import { onMount } from 'svelte';
+	import { apiClient } from '$lib/shared/apiClient';
+	import { api_get_config } from '$lib/helpers/api_config';
+	import * as m from '$lib/paraglide/messages.js'
+	import { AdminPermission } from '$lib/oldap/enums/admin_permissions';
+
+	type UsersList = {[key: string]: OldapUser};
 
 	let tabs: TabsType = $state({});
-	let user: OldapUser | null = $state(null);
-	let selected = $state('');
+	let administrator: OldapUser | null = $state(null);
+	let project: OldapProject | null = $state(null);
+	let selected_tab = $state('');
 
-	let tabs_height = $state(50); // TODO: Where does this "50" comes from....!
+	let tabs_height = $state(100); // just an arbitrary value
 	let table_height = $state(($contentAreaHeight || 200) - (() => tabs_height)() - 25);
 
+	let authinfo: AuthInfo;
+
+	onMount(() => {
+		authinfo = AuthInfo.fromString(sessionStorage.getItem('authinfo'));
+	});
+
+	//
+	// the logged in user changed
+	//
 	userStore.subscribe((userinfo) => {
 		if (userinfo) {
-			user = userinfo;
+			administrator = userinfo;
+			let in_project: InProject | undefined = undefined;
+			administrator.inProject?.forEach((inProject) => {
+				if (inProject.project.toString() === project?.projectIri.toString()) {
+					in_project = inProject;
+				}
+			});
+			if (administrator.isRoot) {
+				tabs = {
+					users: m.users(),
+					lists: m.lists(),
+					models: m.datamodel(),
+					permsets: m.permsets()
+				}
+			}
+			else {
+				if (in_project) {
+					(in_project as InProject).permissions.forEach((x) => {
+						switch (x) {
+							case AdminPermission.ADMIN_USERS: tabs['users'] = m.users(); break;
+							case AdminPermission.ADMIN_LISTS: tabs['lists'] = m.lists(); break;
+							case AdminPermission.ADMIN_MODEL: tabs['models'] = m.datamodel(); break;
+							case AdminPermission.ADMIN_PERMISSION_SETS: tabs['permsets'] = m.permsets(); break;
+						}
+					});
+			}
+
 			tabs = {
 				users: 'Users',
 				lists: 'Lists',
@@ -29,10 +74,28 @@
 		}
 	});
 
+	//
+	// the project chosen has changed
+	//
 	projectStore.subscribe((projectinfo) => {
-
+		if (projectinfo) {
+			project = projectinfo;
+		}
 	});
 
+	let userlist = $derived.by(() => {
+		ulist = {};
+
+		if (administrator && project) {
+			if (administrator.isRoot) {
+				let usersearch = api_get_config(authinfo, { inProject: project?.projectIri?.toString() });
+				apiClient.getAdminusersearch(usersearch)
+
+			}
+		}
+
+		return ulist;
+	});
 
 	//
 	// act on changes of the contentAreaHeight
@@ -53,7 +116,7 @@
 
 </script>
 
-<Tabs tabs={tabs} bind:selected={selected} bind:height={tabs_height}></Tabs>
-{#if selected === 'users'}
+<Tabs tabs={tabs} bind:selected={selected_tab} bind:height={tabs_height}></Tabs>
+{#if selected_tab === 'users'}
 	<Table height={table_height}></Table>
 {/if}

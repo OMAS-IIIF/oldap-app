@@ -8,5 +8,9 @@
     "no_reg": "Not yet registered?",
     "apply_for_acc": "Apply for an account",
     "about": "About",
-    "admin": "Administration"
+    "admin": "Administration",
+    "users": "Users",
+    "lists": "Lists",
+    "datamodel": "Datamodel",
+    "permsets": "Permission sets"
 }

@@ -8,5 +8,9 @@
     "no_reg": "Non siete ancora registrati?",
     "apply_for_acc": "Richiedere un account",
     "about": "Circa",
-    "admin": "Amministrazione"
+    "admin": "Amministrazione",
+    "users": "Utenti",
+    "lists": "Elenchi",
+    "datamodel": "Modello di dati",
+    "permsets": "Set di autorizzazioni"
 }

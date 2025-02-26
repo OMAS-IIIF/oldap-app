@@ -7,6 +7,10 @@
     "sign_in": "Anmelden",
     "no_reg": "Noch nicht registriert?",
     "apply_for_acc": "Ein Konto beantragen",
-    "about": "Über",
-    "admin": "Verwaltung"
+    "about": "\u00dcber",
+    "admin": "Verwaltung",
+    "users": "Benutzer",
+    "lists": "Verzeichnisse",
+    "datamodel": "Datenmodell",
+    "permsets": "Daten-Berechtigungen"
 }
