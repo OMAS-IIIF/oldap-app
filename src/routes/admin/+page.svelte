@@ -13,8 +13,9 @@
 	import { api_get_config } from '$lib/helpers/api_config';
 	import * as m from '$lib/paraglide/messages.js'
 	import { AdminPermission } from '$lib/oldap/enums/admin_permissions';
+	import UsersList from '$lib/components/oldap/UsersList.svelte';
 
-	type UsersList = {[key: string]: OldapUser};
+	//type UsersList = {[key: string]: OldapUser};
 
 	let tabs: TabsType = $state({});
 	let administrator: OldapUser | null = $state(null);
@@ -35,6 +36,8 @@
 	//
 	userStore.subscribe((userinfo) => {
 		if (userinfo) {
+			//
+			// we determine which tabs the user has available depending on his/her admin permissions
 			administrator = userinfo;
 			let in_project: InProject | undefined = undefined;
 			administrator.inProject?.forEach((inProject) => {
@@ -49,25 +52,26 @@
 					models: m.datamodel(),
 					permsets: m.permsets()
 				}
-			}
-			else {
+			} else {
 				if (in_project) {
 					(in_project as InProject).permissions.forEach((x) => {
 						switch (x) {
-							case AdminPermission.ADMIN_USERS: tabs['users'] = m.users(); break;
-							case AdminPermission.ADMIN_LISTS: tabs['lists'] = m.lists(); break;
-							case AdminPermission.ADMIN_MODEL: tabs['models'] = m.datamodel(); break;
-							case AdminPermission.ADMIN_PERMISSION_SETS: tabs['permsets'] = m.permsets(); break;
+							case AdminPermission.ADMIN_USERS:
+								tabs['users'] = m.users();
+								break;
+							case AdminPermission.ADMIN_LISTS:
+								tabs['lists'] = m.lists();
+								break;
+							case AdminPermission.ADMIN_MODEL:
+								tabs['models'] = m.datamodel();
+								break;
+							case AdminPermission.ADMIN_PERMISSION_SETS:
+								tabs['permsets'] = m.permsets();
+								break;
 						}
 					});
+				}
 			}
-
-			tabs = {
-				users: 'Users',
-				lists: 'Lists',
-				models: 'Data model',
-				permsets: 'Permission sets'
-			};
 		}
 		else {
 			tabs = {};
@@ -83,19 +87,6 @@
 		}
 	});
 
-	let userlist = $derived.by(() => {
-		ulist = {};
-
-		if (administrator && project) {
-			if (administrator.isRoot) {
-				let usersearch = api_get_config(authinfo, { inProject: project?.projectIri?.toString() });
-				apiClient.getAdminusersearch(usersearch)
-
-			}
-		}
-
-		return ulist;
-	});
 
 	//
 	// act on changes of the contentAreaHeight
@@ -118,5 +109,5 @@
 
 <Tabs tabs={tabs} bind:selected={selected_tab} bind:height={tabs_height}></Tabs>
 {#if selected_tab === 'users'}
-	<Table height={table_height}></Table>
+	<UsersList table_height={table_height} {administrator} {project}/>
 {/if}

@@ -31,7 +31,7 @@
 	});
 
 	userStore.subscribe(async (user: OldapUser | null) => {
-		if (user !== null && user !== undefined) {
+		if (user && authinfo) {
 			console.log("USER=", user);
 
 			let project_iris: string[] | undefined;

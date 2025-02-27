@@ -1,8 +1,8 @@
 <script lang="ts">
 
-	import { onMount } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 
-	let { height } : { height: number } = $props();
+	let { children, height, title = 'Table' } : { children: Snippet, height: number, title: string } = $props();
 
 	let element: HTMLElement;
 	let hh: number = $state(0);
@@ -25,13 +25,15 @@
 
 <div class="px-4 sm:px-6 lg:px-8">
 	<div class="sm:flex sm:items-center" bind:this={element}>
-		<div class="sm:flex-auto">
-			<h1 class="text-base font-semibold text-gray-900 dark:text-gray-200">Users</h1>
+		<!-- <div class="sm:flex-auto basis-auto bg-green-500">-->
+		<div class="basis-auto">
+			<h1 class="text-base font-semibold text-gray-900 dark:text-gray-200">{title}</h1>
 			<p class="mt-2 text-sm text-gray-700 dark:text-gray-300">A list of all the users in your account including their name, title, email and role.</p>
 		</div>
-		<div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-			<!--<button type="button" class="block rounded-md bg-indigo-600 px-3 py-2 text-center text-xs font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Add user</button>-->
-			<button type="button" class="oldap-button">Add user</button>
+		<div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-auto grow">
+			<div class="flex flex-row gap-2 items-center justify-end">
+				{@render children?.()}
+			</div>
 		</div>
 	</div>
 	<div class="mt-1 flow-root">
