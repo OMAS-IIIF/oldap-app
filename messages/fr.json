@@ -12,5 +12,7 @@
     "users": "Utilisateurs",
     "lists": "Listes",
     "datamodel": "Mod\u00e8le de donn\u00e9es",
-    "permsets": "Jeux de permissions"
+    "permsets": "Jeux de permissions",
+    "add_user": "Ajouter un utilisateur",
+    "userlist_descr": "Liste de tous les utilisateurs"
 }

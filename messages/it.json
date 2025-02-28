@@ -12,5 +12,7 @@
     "users": "Utenti",
     "lists": "Elenchi",
     "datamodel": "Modello di dati",
-    "permsets": "Set di autorizzazioni"
+    "permsets": "Set di autorizzazioni",
+    "add_user": "Aggiungi utente",
+    "userlist_descr": "Elenco di tutti gli utenti"
 }

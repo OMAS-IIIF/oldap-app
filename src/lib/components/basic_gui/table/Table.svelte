@@ -2,7 +2,7 @@
 
 	import { onMount, type Snippet } from 'svelte';
 
-	let { children, height, title = 'Table' } : { children: Snippet, height: number, title: string } = $props();
+	let { height, title = 'Table', description = '', action_elements} : { height: number, title: string, description: string, action_elements: Snippet } = $props();
 
 	let element: HTMLElement;
 	let hh: number = $state(0);
@@ -25,14 +25,13 @@
 
 <div class="px-4 sm:px-6 lg:px-8">
 	<div class="sm:flex sm:items-center" bind:this={element}>
-		<!-- <div class="sm:flex-auto basis-auto bg-green-500">-->
 		<div class="basis-auto">
 			<h1 class="text-base font-semibold text-gray-900 dark:text-gray-200">{title}</h1>
-			<p class="mt-2 text-sm text-gray-700 dark:text-gray-300">A list of all the users in your account including their name, title, email and role.</p>
+			<p class="mt-2 text-sm text-gray-700 dark:text-gray-300">{description}</p>
 		</div>
 		<div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-auto grow">
 			<div class="flex flex-row gap-2 items-center justify-end">
-				{@render children?.()}
+				{@render action_elements?.()}
 			</div>
 		</div>
 	</div>
@@ -44,12 +43,14 @@
 						<thead class="bg-gray-50">
 						<tr>
 							<th scope="col" class="py-3.5 pr-3 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-6">Name</th>
+							<!--<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Name</th>-->
 							<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Title</th>
 							<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Email</th>
 							<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Role</th>
-							<th scope="col" class="relative py-3.5 pr-4 pl-3 sm:pr-6">
+							<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Action</th>
+							<!--<th scope="col" class="relative py-3.5 pr-4 pl-3 sm:pr-6">
 								<span class="sr-only">Edit</span>
-							</th>
+							</th>-->
 						</tr>
 						</thead>
 						<tbody class="divide-y divide-gray-200 bg-white">

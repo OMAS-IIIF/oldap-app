@@ -24,12 +24,16 @@ if (administrator && project) {
 
 </script>
 
-<Table height={table_height} title={m.users()}>
+{#snippet actions()}
 	<div class="flex flex-row items-center justify-end gap-4">
 		{#if administrator?.isRoot}
 			<span><Checkbox label="Show all users" position="left"/></span>
 		{/if}
-		<span><Button>Add user</Button></span>
+		<span><Button>{m.add_user()}</Button></span>
 	</div>
+{/snippet}
 
+<Table height={table_height} title={m.users()}
+			 description={m.userlist_descr()}
+			 action_elements={actions}>
 </Table>

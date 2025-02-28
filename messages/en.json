@@ -12,5 +12,7 @@
     "users": "Users",
     "lists": "Lists",
     "datamodel": "Datamodel",
-    "permsets": "Permission sets"
+    "permsets": "Permission sets",
+    "add_user": "Add user",
+    "userlist_descr": "List of all the users"
 }

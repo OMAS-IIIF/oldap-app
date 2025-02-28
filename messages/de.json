@@ -12,5 +12,7 @@
     "users": "Benutzer",
     "lists": "Verzeichnisse",
     "datamodel": "Datenmodell",
-    "permsets": "Daten-Berechtigungen"
+    "permsets": "Daten-Berechtigungen",
+    "add_user": "Benutzer hinzuf\u00fcgen",
+    "userlist_descr": "Liste aller Benutzer"
 }
