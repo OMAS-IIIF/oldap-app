@@ -1,17 +1,18 @@
 <script lang="ts">
 
-	let { on = $bindable(), onclick = null }: { on: boolean, onclick: () => void | null } = $props()
+	let { on = $bindable(), onclick = () => {}, id = null }: { on: boolean, onclick: () => void, id: string | null } = $props()
 
 	let is_on: boolean = $state(false);
 
 	let clicked = () => {
-		is_on = !is_on;
+		on = !on;
 		if (onclick) onclick();
 	}
 
 </script>
 
 <button type="button"
+				{id}
 				class="group relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 focus:outline-hidden"
 				role="switch"
 				aria-checked="false"
@@ -20,9 +21,8 @@
 	<span aria-hidden="true" class="pointer-events-none absolute size-full rounded-md bg-white"></span>
 	<!-- Enabled: "bg-indigo-600", Not Enabled: "bg-gray-200" -->
 	<span aria-hidden="true"
-				class="pointer-events-none absolute mx-auto h-4 w-9 rounded-full bg-gray-200 transition-colors duration-200 ease-in-out {is_on ? 'bg-indigo-600' : 'bg-gray-200'}">
-
+				class="pointer-events-none absolute mx-auto h-4 w-9 rounded-full bg-gray-200 transition-colors duration-200 ease-in-out {on ? 'bg-indigo-600' : 'bg-gray-200'}">
 	</span>
 	<!-- Enabled: "translate-x-5", Not Enabled: "translate-x-0" -->
-	<span aria-hidden="true" class="pointer-events-none absolute left-0 inline-block size-5 translate-x-0 transform rounded-full border border-gray-200 bg-white ring-0 shadow-sm transition-transform duration-200 ease-in-out {is_on ? 'translate-x-5' : 'translate-x-0'}"></span>
+	<span aria-hidden="true" class="pointer-events-none absolute left-0 inline-block size-5 translate-x-0 transform rounded-full border border-gray-200 bg-white ring-0 shadow-sm transition-transform duration-200 ease-in-out {on ? 'translate-x-5' : 'translate-x-0'}"></span>
 </button>
