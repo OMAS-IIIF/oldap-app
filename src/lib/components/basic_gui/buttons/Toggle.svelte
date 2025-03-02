@@ -1,6 +1,6 @@
 <script lang="ts">
 
-	let { on = $bindable(), onclick = () => {}, id = null }: { on: boolean, onclick: () => void, id: string | null } = $props()
+	let { on = $bindable(), onclick = null, id = null }: { on: boolean, onclick: (() => void) | null, id: string | null } = $props()
 
 	let is_on: boolean = $state(false);
 
