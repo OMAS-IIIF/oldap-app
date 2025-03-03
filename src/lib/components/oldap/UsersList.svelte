@@ -22,15 +22,17 @@ let { table_height, administrator = $bindable(), project = $bindable() } : {
 	project: OldapProject} = $props();
 
 let show_all_users = $state(false);
-let authinfo: AuthInfo;
+let authinfo: AuthInfo = $state();
 let users: OldapUser[] = $state([]);
+
 
 onMount(() => {
 	authinfo = AuthInfo.fromString(sessionStorage.getItem('authinfo'));
 });
 
 $effect(() => {
-	if (administrator && project && authinfo) {
+	let tmp_users: OldapUser[] = []
+	if (authinfo) {
 		let usersearch = api_get_config(authinfo);
 		if (!show_all_users) {
 			usersearch = { ...usersearch, queries: { inProject: project?.projectIri?.toString() } };
@@ -50,8 +52,6 @@ $effect(() => {
 		});
 	}
 });
-
-
 
 let headers: string[] = $state([
 	'User ID',
