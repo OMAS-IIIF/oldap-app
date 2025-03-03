@@ -109,5 +109,5 @@
 
 <Tabs tabs={tabs} bind:selected={selected_tab} bind:height={tabs_height}></Tabs>
 {#if selected_tab === 'users'}
-	<UsersList table_height={table_height} {administrator} {project}/>
+	<UsersList table_height={table_height} bind:administrator={administrator} bind:project={project}/>
 {/if}
