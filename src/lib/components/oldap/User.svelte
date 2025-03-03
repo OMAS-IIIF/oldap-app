@@ -4,7 +4,7 @@
 	import DropdownLinkItem from '$lib/components/basic_gui/dropdown/DropdownLinkItem.svelte';
 	import DropdownMenu from '$lib/components/basic_gui/dropdown/DropdownMenu.svelte';
 	import Login from '$lib/components/basic_gui/login/Login.svelte';
-	import DialogWin from '$lib/components/basic_gui/dialogwin/DialogWin.svelte';
+	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
 	import AvatarButton from '$lib/components/basic_gui/buttons/AvatarButton.svelte';
 	import type { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { OldapErrorApiFailure } from '$lib/oldap/errors/OldapErrorApiFailure';

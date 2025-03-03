@@ -15,6 +15,7 @@ import TableItem from '$lib/components/basic_gui/table/TableItem.svelte';
 import Toggle from '$lib/components/basic_gui/buttons/Toggle.svelte';
 import { AuthInfo } from '$lib/oldap/classes/authinfo';
 import { onMount } from 'svelte';
+import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
 
 let { table_height, administrator = $bindable(), project = $bindable() } : {
 	table_height: number,
@@ -24,6 +25,12 @@ let { table_height, administrator = $bindable(), project = $bindable() } : {
 let show_all_users = $state(false);
 let authinfo: AuthInfo = $state();
 let users: OldapUser[] = $state([]);
+let user_active: Record<string, boolean> = $state({});
+
+let confirmation_dialog: Confirmation;
+let confirmation_title = $state('');
+let confirmation_for_userid = $state('');
+let confirmation_for_state = $state('');
 
 
 onMount(() => {
@@ -43,6 +50,7 @@ $effect(() => {
 				let config_userdata = api_get_config(authinfo, { iri: x });
 				apiClient.getAdminuserget(config_userdata).then((userdata) => {
 					const user = OldapUser.fromOldapJson(userdata);
+					user_active[user.userId.toString()] = user.isActive;
 					users.push(user);
 					console.log(userdata);
 				});
@@ -52,6 +60,32 @@ $effect(() => {
 		});
 	}
 });
+
+const toggle_active = async (on: boolean, id: string): Promise<boolean> => {
+	confirmation_for_userid = id;
+	confirmation_title = on ? "Deactivate user" : "Activate user";
+	confirmation_for_state = on ? "inactive" : "active";
+	const ok = await confirmation_dialog.open()
+	if (ok) {
+		on = !on
+		const data = {isActive: on}
+		const config_change_isActive = {
+			headers: {
+				'Accept': 'application/json',
+				'Authorization': 'Bearer ' + authinfo.token,
+			},
+			params: { userId: id },
+		}
+		apiClient.postAdminuserUserId(data, config_change_isActive)
+			.then((result) => {
+				console.log(result);
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+	}
+	return on;
+};
 
 let headers: string[] = $state([
 	'User ID',
@@ -83,7 +117,9 @@ let headers: string[] = $state([
 				<TableItem>{user.familyName}</TableItem>
 				<TableItem>{user.givenName}</TableItem>
 				<TableItem>{user.email}</TableItem>
-				<TableItem><Toggle /></TableItem>
+				<TableItem>
+					<Toggle bind:on={user_active[user.userId.toString()]} id={user.userId.toString()} onclick={toggle_active}/>
+				</TableItem>
 				<TableItem>
 					<div class="flex flex-row items-center justify-left gap-2">
 					<Button round={true}>
@@ -102,3 +138,7 @@ let headers: string[] = $state([
 		{/each}
 	</TableBody>
 </Table>
+
+<Confirmation bind:this={confirmation_dialog} title={confirmation_title}>
+	Do You really want to change the isActive state of "{confirmation_for_userid}" to {confirmation_for_state}?
+</Confirmation>

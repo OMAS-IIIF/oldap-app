@@ -14,7 +14,7 @@ export interface InProject {
 export class OldapUser extends OldapObject {
 	#userIri: Iri;
 	#userId: NCName;
-	isActive?: boolean;
+	isActive: boolean;
 	familyName: string;
 	givenName: string;
 	email: string;
@@ -31,7 +31,7 @@ export class OldapUser extends OldapObject {
 							familyName: string,
 							givenName: string,
 							email: string,
-							isActive?: boolean,
+							isActive: boolean,
 							inProject?: InProject[],
 							hasPermissions?: QName[],
 							isRoot: boolean = false) {
@@ -65,7 +65,7 @@ export class OldapUser extends OldapObject {
 		const familyName = json.family_name;
 		const givenName = json.given_name;
 		const email = json.email;
-		const is_active = json?.isActive;
+		const is_active = json?.isActive || false;
 
 		let in_project: InProject[] | undefined = undefined;
 		if (json?.in_projects) {

@@ -1,12 +1,22 @@
+<!--
+@component
+
+#Confirmation
+
+This component opens a confirmation dialog...
+-->
 <script lang="ts">
 
-	let { on = $bindable(), onclick = null, id = null }: { on: boolean, onclick: (() => void) | null, id: string | null } = $props()
+	let { on = $bindable(), onclick = null, id = null }: { on: boolean, onclick: ((on: boolean, id:string) => Promise<boolean>) | null, id: string | null } = $props()
 
-	let is_on: boolean = $state(false);
+	let clicked = async () => {
 
-	let clicked = () => {
-		on = !on;
-		if (onclick) onclick();
+		if (onclick) {
+			on = await onclick(on, id || '');
+		}
+		else {
+			on = !on
+		}
 	}
 
 </script>
