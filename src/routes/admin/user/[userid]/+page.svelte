@@ -1,27 +1,29 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import { error } from '@sveltejs/kit';
+	import type { PageProps } from './$types';
 
-	let action: 'edit' | 'add';
-	const querystr = page.url.search?.substring(1);
-	console.log("Querystring: ", querystr);
-	const queries = querystr?.split('&');
-	if (queries) {
-		for (const query of queries) {
-			const [key, value] = query.split('=');
-			if (key === 'action') {
-				if (value === 'edit' || value === 'add') {
-					action = value;
-				}
-				else {
-					error(404, {
-						message: 'Not found..............'
-					});
-				}
-			}
-		}
-	}
+	let { data }: PageProps = $props();
+	let title = data.action === 'edit' ? "Edit user" : "Create user";
 
-	console.log(page);
 </script>
-<h1>User {action}</h1>
+
+<h1>{title} "{data.userid}"</h1>
+<form>
+	<div>
+		<label for="userid">User ID</label>
+		<input name="useif" id="userid">
+	</div>
+
+	<div>
+		<label for="familyname">Family name</label>
+		<input name="familyname" id="familyname">
+	</div>
+	<div>
+		<label for="givenname">Given name</label>
+		<input name="givenname" id="givenname">
+	</div>
+	<div>
+		<label for="email">Email</label>
+		<input name="email" id="enail">
+	</div>
+
+</form>

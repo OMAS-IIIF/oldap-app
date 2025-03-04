@@ -1,1 +1,9 @@
-ERRORERRORERRORERROR
+<script lang="ts">
+	import { page } from '$app/state';
+
+	import { afterNavigate } from '$app/navigation';
+
+
+</script>
+
+<h1>XXXXXXXXXX {page?.error.message}</h1>
