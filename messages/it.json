@@ -14,5 +14,6 @@
     "datamodel": "Modello di dati",
     "permsets": "Set di autorizzazioni",
     "add_user": "Aggiungi utente",
-    "userlist_descr": "Elenco di tutti gli utenti"
+    "userlist_descr": "Elenco di tutti gli utenti",
+    "confirm_state": "Si vuole davvero cambiare lo stato di \"{userid}\" in \"{state}\"?"
 }

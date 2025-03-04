@@ -14,5 +14,6 @@
     "datamodel": "Datenmodell",
     "permsets": "Daten-Berechtigungen",
     "add_user": "Benutzer hinzuf\u00fcgen",
-    "userlist_descr": "Liste aller Benutzer"
+    "userlist_descr": "Liste aller Benutzer",
+    "confirm_state": "M\u00f6chten Sie wirklich den Status von \"{userid}\" in \"{state}\" \u00e4ndern?"
 }

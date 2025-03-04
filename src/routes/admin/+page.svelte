@@ -76,6 +76,18 @@
 		else {
 			tabs = {};
 		}
+		if (tabs['users']) {
+			selected_tab = 'users';
+		}
+		else if (tabs['lists']) {
+			selected_tab = 'lists';
+		}
+		else if (tabs['models']) {
+			selected_tab = 'models';
+		}
+		else if (tabs['permsets']) {
+			selected_tab = 'permsets';
+		}
 	});
 
 	//

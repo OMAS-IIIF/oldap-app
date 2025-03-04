@@ -22,7 +22,6 @@
 			height = element.clientHeight;
 			const observer = new ResizeObserver(() => {
 				height = element.clientHeight;
-				console.log("============================++++++++++++++++++", height);
 			});
 			observer.observe(element);
 

@@ -14,5 +14,6 @@
     "datamodel": "Datamodel",
     "permsets": "Permission sets",
     "add_user": "Add user",
-    "userlist_descr": "List of all the users"
+    "userlist_descr": "List of all the users",
+    "confirm_state": "Do You really want to change the state of \"{userid}\" to \"{state}\"?"
 }
