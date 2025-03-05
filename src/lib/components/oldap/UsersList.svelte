@@ -84,6 +84,10 @@
 		return on;
 	};
 
+	/**
+	 * Returns a function that can be used for a onclick-action to navigate to the given route
+	 * @param url An URL to goto to...
+	 */
 	const goto_page = (url: string) => {
 		return () => {
 			goto(url);
@@ -105,7 +109,7 @@
 		{#if administrator?.isRoot}
 			<span><Checkbox label="Show all users" position="left" bind:checked={show_all_users} /></span>
 		{/if}
-		<span><Button innerClass="text-xs">{m.add_user()}</Button></span>
+		<span><Button innerClass="text-xs" onclick={goto_page("/admin/user")}>{m.add_user()}</Button></span>
 	</div>
 {/snippet}
 
@@ -125,7 +129,7 @@
 				</TableItem>
 				<TableItem>
 					<div class="flex flex-row items-center justify-left gap-2">
-						<Button round={true} onclick={goto_page(`/admin/user/${user.userId.toString()}?action=edit`)}>
+						<Button round={true} onclick={goto_page(`/admin/user/${user.userId.toString()}`)}>
 							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
 									 stroke="currentColor" class="size-4">
 								<path stroke-linecap="round" stroke-linejoin="round"

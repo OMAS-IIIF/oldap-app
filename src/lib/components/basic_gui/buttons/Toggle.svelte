@@ -1,9 +1,9 @@
 <!--
-@component
+@PageServer
 
 #Confirmation
 
-This component opens a confirmation dialog...
+This PageServer opens a confirmation dialog...
 -->
 <script lang="ts">
 

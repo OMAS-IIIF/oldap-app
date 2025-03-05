@@ -26,6 +26,14 @@
     --color-oldap-error-fg: var(--color-yellow-300);
     --color-oldap-error-border: var(--color-orange-500);
 
+    /* for input fields like "Textfield"... */
+    --color-input-text-valid: var(--color-black);
+    --color-input-text-invalid: var(--color-red-800);
+    --color-input-outline-valid: var(--color-indigo-500);
+    --color-input-outline-invalid: var(--color-orange-500);
+    --color-input-placeholder-valid: var(--color-gray-500);
+    --color-input-placeholder-invalid: var(--color-red-300);
+
     --spacing-oldap-header-height: 56px;
     --spacing-oldap-footer-height: 32px;
 

@@ -6,4 +6,4 @@
 
 </script>
 
-<h1>XXXXXXXXXX {page?.error.message}</h1>
+<h1>{page?.error.message}</h1>
