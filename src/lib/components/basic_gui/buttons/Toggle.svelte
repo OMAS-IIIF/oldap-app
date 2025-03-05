@@ -7,15 +7,15 @@ This PageServer opens a confirmation dialog...
 -->
 <script lang="ts">
 
-	let { on = $bindable(), onclick = null, id = null }: { on: boolean, onclick: ((on: boolean, id:string) => Promise<boolean>) | null, id: string | null } = $props()
+	let { toggle_state = $bindable(), onclick = undefined, id = undefined }: { toggle_state: boolean, onclick: ((on: boolean, id:string) => Promise<boolean>) | undefined, id: string | undefined } = $props()
 
 	let clicked = async () => {
 
 		if (onclick) {
-			on = await onclick(on, id || '');
+			toggle_state = await onclick(toggle_state, id || '');
 		}
 		else {
-			on = !on
+			toggle_state = !toggle_state
 		}
 	}
 
@@ -28,11 +28,11 @@ This PageServer opens a confirmation dialog...
 				aria-checked="false"
 				onclick={clicked}>
 	<span class="sr-only">Use setting</span>
-	<span aria-hidden="true" class="pointer-events-none absolute size-full rounded-md bg-white"></span>
+	<span aria-hidden="true" class="pointer-events-none absolute size-full rounded-md bg-white dark:bg-gray-800"></span>
 	<!-- Enabled: "bg-indigo-600", Not Enabled: "bg-gray-200" -->
 	<span aria-hidden="true"
-				class="pointer-events-none absolute mx-auto h-4 w-9 rounded-full bg-gray-200 transition-colors duration-200 ease-in-out {on ? 'bg-indigo-600' : 'bg-gray-200'}">
+				class="pointer-events-none absolute mx-auto h-4 w-9 rounded-full transition-colors duration-200 ease-in-out {toggle_state ? 'bg-toggle-state-on dark:bg-toggle-state-on-dark' : 'bg-toggle-state-off dark:bg-toggle-state-off-dark'}></span>'}">
 	</span>
 	<!-- Enabled: "translate-x-5", Not Enabled: "translate-x-0" -->
-	<span aria-hidden="true" class="pointer-events-none absolute left-0 inline-block size-5 translate-x-0 transform rounded-full border border-gray-200 bg-white ring-0 shadow-sm transition-transform duration-200 ease-in-out {on ? 'translate-x-5' : 'translate-x-0'}"></span>
+	<span aria-hidden="true" class="pointer-events-none absolute left-0 inline-block size-5 translate-x-0 transform rounded-full border border-toggle-lever-border dark:toggle-lever-border-dark bg-toggle-lever dark:bg-toggle-lever-dark ring-0 shadow-sm transition-transform duration-200 ease-in-out {toggle_state ? 'translate-x-5' : 'translate-x-0'}"></span>
 </button>

@@ -125,7 +125,7 @@
 				<TableItem>{user.givenName}</TableItem>
 				<TableItem>{user.email}</TableItem>
 				<TableItem>
-					<Toggle bind:on={user_active[user.userId.toString()]} id={user.userId.toString()} onclick={toggle_active} />
+					<Toggle bind:toggle_state={user_active[user.userId.toString()]} id={user.userId.toString()} onclick={toggle_active} />
 				</TableItem>
 				<TableItem>
 					<div class="flex flex-row items-center justify-left gap-2">

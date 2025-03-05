@@ -26,13 +26,37 @@
     --color-oldap-error-fg: var(--color-yellow-300);
     --color-oldap-error-border: var(--color-orange-500);
 
+    /* Toggle colors */
+    --color-toggle-state-on: var(--color-green-400);
+    --color-toggle-state-on-dark: var(--color-green-700);
+    --color-toggle-state-off: var(--color-red-400);
+    --color-toggle-state-off-dark: var(--color-red-700);
+    --color-toggle-lever: var(--color-indigo-300);
+    --color-toggle-lever-dark: var(--color-indigo-800);
+    --color-toggle-lever-border: var(--color-indigo-500);
+    --color-toggle-lever-border-dark: var(--color-indigo-500);
+
+
     /* for input fields like "Textfield"... */
+    --color-input-label-fg: var(--color-gray-900);
+    --color-input-label-fg-dark: var(--color-gray-50);
     --color-input-text-valid: var(--color-black);
+    --color-input-text-valid-dark: var(--color-black);
     --color-input-text-invalid: var(--color-red-800);
     --color-input-outline-valid: var(--color-indigo-500);
     --color-input-outline-invalid: var(--color-orange-500);
     --color-input-placeholder-valid: var(--color-gray-500);
     --color-input-placeholder-invalid: var(--color-red-300);
+
+    /* Table colors */
+    --color-table-header-bg: var(--color-gray-200);
+    --color-table-header-bg-dark: var(--color-gray-800);
+    --color-table-header-fg: var(--color-gray-900);
+    --color-table-header-fg-dark: var(--color-gray-400);
+    --color-table-body-bg: var(--color-gray-50);
+    --color-table-body-bg-dark: var(--color-gray-900);
+    --color-table-body-fg: var(--color-gray-900);
+    --color-table-body-fg-dark: var(--color-gray-100);
 
     --spacing-oldap-header-height: 56px;
     --spacing-oldap-footer-height: 32px;

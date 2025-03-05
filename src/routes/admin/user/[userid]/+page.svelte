@@ -6,6 +6,7 @@
 	import { api_config } from '$lib/helpers/api_config';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import Checkbox from '$lib/components/basic_gui/checkbox/Checkbox.svelte';
+	import Togglefield from '$lib/components/basic_gui/inputs/Togglefield.svelte';
 
 	let { data }: PageProps = $props();
 	let authinfo = AuthInfo.fromString(sessionStorage.getItem('authinfo'));
@@ -33,6 +34,6 @@
 		<Textfield type='text' label="Family name" name="familyName" id="familyName" placeholder="family name" required={true} value={user?.familyName} />
 		<Textfield type='text' label="Given name" name="givenName" id="givenName" placeholder="given name" required={true} value={user?.givenName} />
 		<Textfield type='email' label="Email" name="email" id="email" placeholder="john.doe@example.org" required={true} value={user?.email} pattern={email_pattern} />
-		<Checkbox label="isActive" name="isActive" />
+		<Togglefield label="Is active" name="isActive" id="isActive"/>
 	</form>
 </div>
