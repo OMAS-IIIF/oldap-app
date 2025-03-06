@@ -7,6 +7,7 @@
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import Checkbox from '$lib/components/basic_gui/checkbox/Checkbox.svelte';
 	import Togglefield from '$lib/components/basic_gui/inputs/Togglefield.svelte';
+	import Checkboxesfield from '$lib/components/basic_gui/inputs/Checkboxesfield.svelte';
 
 	let { data }: PageProps = $props();
 	let authinfo = AuthInfo.fromString(sessionStorage.getItem('authinfo'));
@@ -24,6 +25,8 @@
 			});
 	}
 
+	const admin_permissions = ['AAAA', 'BBBBB', 'CCCC', 'DDDDD', 'EEEEE'];
+
 
 </script>
 
@@ -35,5 +38,6 @@
 		<Textfield type='text' label="Given name" name="givenName" id="givenName" placeholder="given name" required={true} value={user?.givenName} />
 		<Textfield type='email' label="Email" name="email" id="email" placeholder="john.doe@example.org" required={true} value={user?.email} pattern={email_pattern} />
 		<Togglefield label="Is active" name="isActive" id="isActive"/>
+		<Checkboxesfield id= "adminperms" label="Admin permissions" items={admin_permissions} name="adminperm" />
 	</form>
 </div>
