@@ -1,3 +1,4 @@
+
 export enum AdminPermission {
 	ADMIN_OLDAP = 'oldap:ADMIN_OLDAP', // Quasi root permission. This user can do everything (**dangerous!**)
 	ADMIN_USERS = 'oldap:ADMIN_USERS', // Allows to add/modify/delete users for the project this permission is given for
@@ -9,5 +10,11 @@ export enum AdminPermission {
 }
 
 export function stringToAdminPermission(value: string): AdminPermission | undefined {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	return Object.entries(AdminPermission).find(([_, v]) => v === value)?.[1] as AdminPermission | undefined;
+}
+
+export function keyToAdminPermission(key: string): AdminPermission | undefined {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	return Object.entries(AdminPermission).find(([k, v]) => k === key)?.[1] as AdminPermission | undefined;
 }
