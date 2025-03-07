@@ -15,5 +15,15 @@
     "permsets": "Permission sets",
     "add_user": "Add user",
     "userlist_descr": "List of all the users",
-    "confirm_state": "Do You really want to change the state of \"{userid}\" to \"{state}\"?"
+    "confirm_state": "Do You really want to change the state of \"{userid}\" to \"{state}\"?",
+    "edit": "Edit",
+    "add": "Add",
+    "project": "Project",
+    "family_name": "Family name",
+    "given_name": "Given name",
+    "email": "Email",
+    "is_active": "Is active",
+    "projects": "Projects",
+    "perprojperms": "Administrative permissions per project",
+    "action": "Action"
 }

@@ -15,5 +15,15 @@
     "permsets": "Set di autorizzazioni",
     "add_user": "Aggiungi utente",
     "userlist_descr": "Elenco di tutti gli utenti",
-    "confirm_state": "Si vuole davvero cambiare lo stato di \"{userid}\" in \"{state}\"?"
+    "confirm_state": "Si vuole davvero cambiare lo stato di \"{userid}\" in \"{state}\"?",
+    "edit": "Modifica",
+    "add": "Aggiungi",
+    "project": "Progetto",
+    "family_name": "Nome della famiglia",
+    "given_name": "Nome",
+    "email": "Email",
+    "is_active": "È attivo",
+    "projects": "Progetti",
+    "perprojperms": "Autorizzazioni amministrative per progetto",
+    "action": "Azione"
 }

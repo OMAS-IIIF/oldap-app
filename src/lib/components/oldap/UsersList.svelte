@@ -16,6 +16,7 @@
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { onMount } from 'svelte';
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
 
 	let { table_height, administrator = $bindable(), project = $bindable() }: {
 		table_height: number,
@@ -116,7 +117,11 @@
 <Table height={table_height} title={m.users()}
 			 description={m.userlist_descr()}
 			 action_elements={actions}>
-	<TableHeader {headers}></TableHeader>
+	<TableHeader>
+		{#each headers as header}
+			<TableColumnTitle>{header}</TableColumnTitle>
+		{/each}
+	</TableHeader>
 	<TableBody>
 		{#each users as user}
 			<TableRow>
