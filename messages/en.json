@@ -25,5 +25,12 @@
     "is_active": "Is active",
     "projects": "Projects",
     "perprojperms": "Administrative permissions per project",
-    "action": "Action"
+    "action": "Action",
+    "superuser": "Superuser",
+    "adminusers": "Administrate users",
+    "adminpermsets": "Administrate ermission sets",
+    "adminres": "Override resource permissions",
+    "admindatamodel": "Modify data model",
+    "createres": "Create resources",
+    "adminlists": "Add/modify thesauri"
 }

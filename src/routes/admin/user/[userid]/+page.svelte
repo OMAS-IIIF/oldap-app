@@ -17,28 +17,45 @@
 	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
 	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
 	import { onMount } from 'svelte';
+	import { OldapProject } from '$lib/oldap/classes/project';
 
 	let { data }: PageProps = $props();
+
 	let authinfo: AuthInfo;
-	let user: OldapUser | null = $state(null);
+	let user = $state<OldapUser | null>(null);
 	const ncname_pattern = /^[A-Za-z_][A-Za-z0-9._-]*$/;
 	const email_pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 	let headers: string[] = [];
+	let projects = $state<OldapProject[]>([]);
 
 
 	onMount(() => {
 		authinfo = AuthInfo.fromString(sessionStorage.getItem('authinfo'));
+
+		if (data && data.userid) {
+			const config_userdata = api_config(authinfo, { userId: data.userid });
+			apiClient.getAdminuserUserId(config_userdata).then((jsondata) => {
+				user = OldapUser.fromOldapJson(jsondata);
+				if (user) {
+					user.inProject?.forEach(inProject => {
+						console.log(inProject);
+						const config_projectdata = api_config(authinfo, { iri: inProject.project.toString() });
+						apiClient.getAdminprojectget(config_projectdata).then((jsondata) => {
+							const project = OldapProject.fromOldapJson(jsondata);
+							projects.push(project);
+						})
+							.catch(error => {
+								console.log("====A=", error);
+							});
+					});
+				}
+			})
+				.catch(error => {
+					console.log("=====B=", error);
+				});
+			}
 	});
 
-	if (data && data.userid) {
-		let config_userdata = api_config(authinfo, { userId: data.userid });
-		apiClient.getAdminuserUserId(config_userdata).then((jsondata) => {
-			user = OldapUser.fromOldapJson(jsondata);
-		})
-			.catch(error => {
-				console.log(error);
-			});
-	}
 
 	headers.push(m.project());
 	Object.keys(AdminPermission).forEach(key => {
@@ -69,7 +86,7 @@
 			<TableHeader>
 				<TableColumnTitle>{m.project()}</TableColumnTitle>
 				<TableColumnTitle> <!-- ADMIN_OLDAP -->
-					<Tooltip text="Has root rights">
+					<Tooltip text={m.superuser()}>
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
 								 stroke="currentColor" class="size-4">
 							<path stroke-linecap="round" stroke-linejoin="round"
@@ -78,7 +95,7 @@
 					</Tooltip>
 				</TableColumnTitle>
 				<TableColumnTitle> <!-- ADMIN_USER -->
-					<Tooltip text="May admin users">
+					<Tooltip text={m.adminusers()}>
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
 								 stroke="currentColor" class="size-4">
 							<path stroke-linecap="round" stroke-linejoin="round"
@@ -87,7 +104,7 @@
 					</Tooltip>
 				</TableColumnTitle>
 				<TableColumnTitle> <!-- ADMIN_PERMISSION_SETS -->
-					<Tooltip text="May admin permission sets">
+					<Tooltip text={m.adminpermsets()}>
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
 								 stroke="currentColor" class="size-4">
 							<path stroke-linecap="round" stroke-linejoin="round"
@@ -97,16 +114,14 @@
 					</Tooltip>
 				</TableColumnTitle>
 				<TableColumnTitle> <!-- ADMIN_RESOURCES -->
-					<Tooltip text="May override resource permissions">
-						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-								 stroke="currentColor" class="size-4">
-							<path stroke-linecap="round" stroke-linejoin="round"
-										d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
+					<Tooltip text={m.adminres()}>
+						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
 						</svg>
 					</Tooltip>
 				</TableColumnTitle>
 				<TableColumnTitle> <!-- ADMIN_MODEL -->
-					<Tooltip text="May modify data model">
+					<Tooltip text={m.admindatamodel()}>
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
 								 stroke="currentColor" class="size-4">
 							<path stroke-linecap="round" stroke-linejoin="round"
@@ -116,7 +131,7 @@
 					</Tooltip>
 				</TableColumnTitle>
 				<TableColumnTitle> <!-- ADMIN_CREATE -->
-					<Tooltip text="May create new resources">
+					<Tooltip text={m.createres()}>
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
 								 stroke="currentColor" class="size-4">
 							<path stroke-linecap="round" stroke-linejoin="round"
@@ -125,7 +140,7 @@
 					</Tooltip>
 				</TableColumnTitle>
 				<TableColumnTitle> <!-- ADMIN_LISTS -->
-					<Tooltip text="May admin thesdauri">
+					<Tooltip text={m.adminlists()}>
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
 								 stroke="currentColor" class="size-4">
 							<path stroke-linecap="round" stroke-linejoin="round"
@@ -136,6 +151,17 @@
 
 			</TableHeader>
 			<TableBody>
+				{#each projects as project}
+					<TableRow>
+						<TableItem>{project.projectShortName}</TableItem>
+						<TableItem><input type="checkbox"></TableItem>
+						<TableItem><input type="checkbox"></TableItem>
+						<TableItem>
+							<Button round={true}>XXX</Button>
+						</TableItem>
+					</TableRow>
+				{/each}
+				<!--
 				<TableRow>
 					<TableItem>HyperHamlet</TableItem>
 					<TableItem><input type="checkbox"></TableItem>
@@ -168,6 +194,7 @@
 						<Button round={true}>XXX</Button>
 					</TableItem>
 				</TableRow>
+				-->
 			</TableBody>
 		</Table>
 	</form>

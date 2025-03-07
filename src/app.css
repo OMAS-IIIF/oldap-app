@@ -107,3 +107,8 @@
     bg-oldap-bg dark:bg-oldap-bg-dark text-xs text-oldap-fg dark:text-oldap-fg-dark;
 }
 
+.oldap-tooltip {
+    @apply absolute px-2 py-0.5 rounded-lg text-[8px] text-nowrap z-9999
+    bg-oldap-bg dark:bg-oldap-bg-dark text-oldap-fg dark:text-oldap-fg-dark outline outline-indigo-700
+}
+

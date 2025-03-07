@@ -25,5 +25,12 @@
     "is_active": "Ist aktiv",
     "projects": "Projekte",
     "perprojperms": "Verwaltungsberechtigungen pro Projekt",
-    "action": "Aktion"
+    "action": "Aktion",
+    "superuser": "Superuser",
+    "adminusers": "Benutzer verwalten",
+    "adminpermsets": "Erlaubnissätze verwalten",
+    "adminres": "Ressourcenberechtigungen außer Kraft setzen",
+    "admindatamodel": "Datenmodell modifizieren",
+    "createres": "Ressourcen erstellen",
+    "adminlists": "Hinzufügen/Ändern von Thesauri"
 }

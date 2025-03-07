@@ -43,7 +43,6 @@
 		"vitest": "^3.0.0"
 	},
 	"dependencies": {
-		"@floating-ui/dom": "^1.6.13",
 		"@inlang/paraglide-sveltekit": "^0.15.5",
 		"@zodios/core": "^10.9.6",
 		"crypto-js": "^4.2.0"

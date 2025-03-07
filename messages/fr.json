@@ -25,5 +25,12 @@
     "is_active": "Est actif",
     "projects": "Projets",
     "perprojperms": "Autorisations administratives par projet",
-    "action": "Action"
+    "action": "Action",
+    "superuser": "Superutilisateur",
+    "adminusers": "Administrer les utilisateurs",
+    "adminpermsets": "Administrer les jeux d'autorisations",
+    "adminres": "Remplacer les autorisations sur les ressources",
+    "admindatamodel": "Modifier le modèle de données",
+    "createres": "Créer des ressources",
+    "adminlists": "Ajouter/modifier des thésaurus"
 }
