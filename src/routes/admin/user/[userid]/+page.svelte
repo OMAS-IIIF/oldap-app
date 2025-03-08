@@ -3,7 +3,7 @@
 	import Textfield from '$lib/components/basic_gui/inputs/Textfield.svelte';
 	import { apiClient } from '$lib/shared/apiClient';
 	import { OldapUser } from '$lib/oldap/classes/user';
-	import { api_config } from '$lib/helpers/api_config';
+	import { api_config, api_get_config } from '$lib/helpers/api_config';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import Togglefield from '$lib/components/basic_gui/inputs/Togglefield.svelte';
 	import TableHeader from '$lib/components/basic_gui/table/TableHeader.svelte';
@@ -25,7 +25,7 @@
 	let user = $state<OldapUser | null>(null);
 	const ncname_pattern = /^[A-Za-z_][A-Za-z0-9._-]*$/;
 	const email_pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-	let headers: string[] = [];
+	let checked = $state<boolean[]>([]);
 	let projects = $state<OldapProject[]>([]);
 
 
@@ -38,8 +38,7 @@
 				user = OldapUser.fromOldapJson(jsondata);
 				if (user) {
 					user.inProject?.forEach(inProject => {
-						console.log(inProject);
-						const config_projectdata = api_config(authinfo, { iri: inProject.project.toString() });
+						const config_projectdata = api_get_config(authinfo, { iri: inProject.project.toString() });
 						apiClient.getAdminprojectget(config_projectdata).then((jsondata) => {
 							const project = OldapProject.fromOldapJson(jsondata);
 							projects.push(project);
@@ -49,6 +48,13 @@
 							});
 					});
 				}
+				console.log(user);
+				Object.keys(AdminPermission).forEach((key) => {
+					const p = AdminPermission[key as keyof typeof AdminPermission]
+					checked.push(false); //TODO!!!!!!!
+					//checked.push(AdminPermission[key as keyof typeof AdminPermission]);
+				});
+
 			})
 				.catch(error => {
 					console.log("=====B=", error);
@@ -56,12 +62,6 @@
 			}
 	});
 
-
-	headers.push(m.project());
-	Object.keys(AdminPermission).forEach(key => {
-		headers.push(key.substring(6));
-	});
-	headers.push(m.action());
 
 </script>
 {#snippet actions()}
@@ -153,9 +153,10 @@
 			<TableBody>
 				{#each projects as project}
 					<TableRow>
-						<TableItem>{project.projectShortName}</TableItem>
-						<TableItem><input type="checkbox"></TableItem>
-						<TableItem><input type="checkbox"></TableItem>
+						<TableItem>{project.projectShortName.toString()}</TableItem>
+						{#each checked as perm}
+							<TableItem><input type="checkbox"></TableItem>
+						{/each}
 						<TableItem>
 							<Button round={true}>XXX</Button>
 						</TableItem>
