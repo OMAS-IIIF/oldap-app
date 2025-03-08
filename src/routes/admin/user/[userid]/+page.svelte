@@ -3,6 +3,7 @@
 	import Textfield from '$lib/components/basic_gui/inputs/Textfield.svelte';
 	import { apiClient } from '$lib/shared/apiClient';
 	import { OldapUser } from '$lib/oldap/classes/user';
+	import { userStore } from '$lib/stores/user';
 	import { api_config, api_get_config } from '$lib/helpers/api_config';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import Togglefield from '$lib/components/basic_gui/inputs/Togglefield.svelte';
@@ -23,38 +24,74 @@
 
 	let authinfo: AuthInfo;
 	let user = $state<OldapUser | null>(null);
+	let administrator = $state<OldapUser | null>(null);
 	const ncname_pattern = /^[A-Za-z_][A-Za-z0-9._-]*$/;
 	const email_pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-	let checked = $state<boolean[]>([]);
+	let checked = $state<{[key: string]: boolean[]}>({});
 	let projects = $state<OldapProject[]>([]);
 
+	const allPermissions = Object.keys(AdminPermission)
+		.map(key => AdminPermission[key as keyof typeof AdminPermission]);
+
+	userStore.subscribe((admin) => {
+		administrator = admin;
+	})
 
 	onMount(() => {
 		authinfo = AuthInfo.fromString(sessionStorage.getItem('authinfo'));
 
+		//
+		// get all projects
+		//
+		if (administrator) {
+			if (administrator.isRoot) {
+				// get all projects as selectable...
+				const psearch_config = api_get_config(authinfo);
+				apiClient.getAdminprojectsearch(psearch_config).then((data) => {
+					console.log(data);
+				})
+			}
+			else {
+				// get only projects from admin as selectable...
+			}
+			console.log("FOUND ADMINISTRATOR :-)", administrator);
+		}
+		else {
+			console.log("NO ADMINISTRATOR :-(");
+		}
+
+
 		if (data && data.userid) {
+			//
+			// first we get the user data
+			//
 			const config_userdata = api_config(authinfo, { userId: data.userid });
 			apiClient.getAdminuserUserId(config_userdata).then((jsondata) => {
 				user = OldapUser.fromOldapJson(jsondata);
 				if (user) {
 					user.inProject?.forEach(inProject => {
+						//
+						// now let's get for each project the user is in the project data...
+						//
 						const config_projectdata = api_get_config(authinfo, { iri: inProject.project.toString() });
 						apiClient.getAdminprojectget(config_projectdata).then((jsondata) => {
 							const project = OldapProject.fromOldapJson(jsondata);
-							projects.push(project);
+							projects.push(project); // push the project onto the array of projects the user is member of
+							checked[project.projectShortName.toString()] = [];
+							allPermissions.forEach(permission => {
+								if (inProject.permissions.includes(permission)) {
+									checked[project.projectShortName.toString()].push(true);
+								}
+								else {
+									checked[project.projectShortName.toString()].push(false);
+								}
+							});
 						})
 							.catch(error => {
 								console.log("====A=", error);
 							});
 					});
 				}
-				console.log(user);
-				Object.keys(AdminPermission).forEach((key) => {
-					const p = AdminPermission[key as keyof typeof AdminPermission]
-					checked.push(false); //TODO!!!!!!!
-					//checked.push(AdminPermission[key as keyof typeof AdminPermission]);
-				});
-
 			})
 				.catch(error => {
 					console.log("=====B=", error);
@@ -66,7 +103,7 @@
 </script>
 {#snippet actions()}
 	<div class="flex flex-row items-center justify-end gap-4">
-		<span><Button innerClass="text-xs" >Add project</Button></span>
+		<span><Button innerClass="text-xs">Add project</Button></span>
 	</div>
 {/snippet}
 
@@ -81,8 +118,8 @@
 							 required={true} value={user?.givenName} />
 		<Textfield type='email' label={m.email()} name="email" id="email" placeholder="john.doe@example.org" required={true}
 							 value={user?.email} pattern={email_pattern} />
-		<Togglefield label={m.is_active()} name="isActive" id="isActive" />
-		<Table title={m.projects()} description={m.perprojperms()} action_elements={actions}>
+		<Togglefield label={m.is_active()} name="isActive" id="isActive" toggle_state={user?.isActive}/>
+		<Table label={m.projects()} description={m.perprojperms()} padding={false} action_elements={actions}>
 			<TableHeader>
 				<TableColumnTitle>{m.project()}</TableColumnTitle>
 				<TableColumnTitle> <!-- ADMIN_OLDAP -->
@@ -115,8 +152,10 @@
 				</TableColumnTitle>
 				<TableColumnTitle> <!-- ADMIN_RESOURCES -->
 					<Tooltip text={m.adminres()}>
-						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-							<path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+								 stroke="currentColor" class="size-4">
+							<path stroke-linecap="round" stroke-linejoin="round"
+										d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
 						</svg>
 					</Tooltip>
 				</TableColumnTitle>
@@ -148,54 +187,27 @@
 						</svg>
 					</Tooltip>
 				</TableColumnTitle>
+				<TableColumnTitle>{m.action()}</TableColumnTitle>
 
 			</TableHeader>
 			<TableBody>
 				{#each projects as project}
 					<TableRow>
 						<TableItem>{project.projectShortName.toString()}</TableItem>
-						{#each checked as perm}
-							<TableItem><input type="checkbox"></TableItem>
+						{#each checked[project.projectShortName.toString()] as perm}
+							<TableItem><input type="checkbox" checked="{perm}"></TableItem>
 						{/each}
 						<TableItem>
-							<Button round={true}>XXX</Button>
+							<Button round={true}>
+								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+										 stroke="currentColor" class="size-4">
+									<path stroke-linecap="round" stroke-linejoin="round"
+												d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+								</svg>
+							</Button>
 						</TableItem>
 					</TableRow>
 				{/each}
-				<!--
-				<TableRow>
-					<TableItem>HyperHamlet</TableItem>
-					<TableItem><input type="checkbox"></TableItem>
-					<TableItem><input type="checkbox"></TableItem>
-					<TableItem>
-						<Button round={true}>XXX</Button>
-					</TableItem>
-				</TableRow>
-				<TableRow>
-					<TableItem>SwissBritNet</TableItem>
-					<TableItem><input type="checkbox"></TableItem>
-					<TableItem><input type="checkbox"></TableItem>
-					<TableItem>
-						<Button round={true}>XXX</Button>
-					</TableItem>
-				</TableRow>
-				<TableRow>
-					<TableItem>XYZ</TableItem>
-					<TableItem><input type="checkbox"></TableItem>
-					<TableItem><input type="checkbox"></TableItem>
-					<TableItem>
-						<Button round={true}>XXX</Button>
-					</TableItem>
-				</TableRow>
-				<TableRow>
-					<TableItem>XYZ</TableItem>
-					<TableItem><input type="checkbox"></TableItem>
-					<TableItem><input type="checkbox"></TableItem>
-					<TableItem>
-						<Button round={true}>XXX</Button>
-					</TableItem>
-				</TableRow>
-				-->
 			</TableBody>
 		</Table>
 	</form>

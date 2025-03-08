@@ -2,7 +2,7 @@
 
 	import { onMount, type Snippet } from 'svelte';
 
-	let { children, height, title = 'Table', description = '', action_elements} : { children: Snippet, height: number, title: string, description: string, action_elements: Snippet } = $props();
+	let { children, height, title = null, label = null, description = '', padding = true, action_elements} : { children: Snippet, height: number, title: string | null, label: string | null, description: string, padding: boolean, action_elements: Snippet } = $props();
 
 	let element: HTMLElement;
 	let hh: number = $state(0);
@@ -23,10 +23,14 @@
 </script>
 
 
-<div class="px-4 sm:px-6 lg:px-8">
+<div class={padding ? "px-4 sm:px-6 lg:px-8": ""}>
 	<div class="sm:flex sm:items-center" bind:this={element}>
 		<div class="basis-auto">
-			<h1 class="text-base font-semibold text-gray-900 dark:text-gray-200">{title}</h1>
+			{#if title}
+				<h1 class="text-base font-semibold text-gray-900 dark:text-gray-200">{title}</h1>
+			{:else if label}
+				<span class="text-sm text-gray-900 dark:text-gray-200">{label}</span>
+			{/if}
 			<p class="mt-2 text-sm text-gray-700 dark:text-gray-300">{description}</p>
 		</div>
 		<div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-auto grow">

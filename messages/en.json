@@ -28,7 +28,7 @@
     "action": "Action",
     "superuser": "Superuser",
     "adminusers": "Administrate users",
-    "adminpermsets": "Administrate ermission sets",
+    "adminpermsets": "Administrate permission sets",
     "adminres": "Override resource permissions",
     "admindatamodel": "Modify data model",
     "createres": "Create resources",
