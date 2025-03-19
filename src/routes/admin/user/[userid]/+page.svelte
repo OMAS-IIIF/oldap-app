@@ -4,7 +4,7 @@
 	import { apiClient } from '$lib/shared/apiClient';
 	import { OldapUser } from '$lib/oldap/classes/user';
 	import { userStore } from '$lib/stores/user';
-	import { api_config, api_get_config } from '$lib/helpers/api_config';
+	import { api_config, api_get_config, api_notget_config } from '$lib/helpers/api_config';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import Togglefield from '$lib/components/basic_gui/inputs/Togglefield.svelte';
 	import TableHeader from '$lib/components/basic_gui/table/TableHeader.svelte';
@@ -19,6 +19,9 @@
 	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
 	import { onMount } from 'svelte';
 	import { OldapProject } from '$lib/oldap/classes/project';
+	import DropdownButton from '$lib/components/basic_gui/dropdown/DropdownButton.svelte';
+	import DropdownButtonItem from '$lib/components/basic_gui/dropdown/DropdownButtonItem.svelte';
+	import DropdownMenu from '$lib/components/basic_gui/dropdown/DropdownMenu.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -28,7 +31,12 @@
 	const ncname_pattern = /^[A-Za-z_][A-Za-z0-9._-]*$/;
 	const email_pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 	let checked = $state<{[key: string]: boolean[]}>({});
-	let projects = $state<OldapProject[]>([]);
+	//let user_in_projects = $state<OldapProject[]>([]);
+	//let assignable_projects = $state<OldapProject[]>([]);
+	let addProjOpen = $state(false);
+
+	let user_in_projects = $state<Record<string, OldapProject>>({});
+	let assignable_projects = $state<Record<string, OldapProject>>({});
 
 	const allPermissions = Object.keys(AdminPermission)
 		.map(key => AdminPermission[key as keyof typeof AdminPermission]);
@@ -37,73 +45,169 @@
 		administrator = admin;
 	})
 
-	onMount(() => {
+	$inspect(assignable_projects, user_in_projects);
+
+
+	onMount(async () => {
 		authinfo = AuthInfo.fromString(sessionStorage.getItem('authinfo'));
 
 		//
-		// get all projects
+		// fill "all_projects_iris" containing all the project iri's the current administrator may assign to the given user
 		//
-		if (administrator) {
+		let all_projects_iris: string[] = [];
+		if (administrator) { // the administrator has to be defined...
 			if (administrator.isRoot) {
-				// get all projects as selectable...
 				const psearch_config = api_get_config(authinfo);
-				apiClient.getAdminprojectsearch(psearch_config).then((data) => {
-					console.log(data);
-				})
+				try {
+					const projs = await apiClient.getAdminprojectsearch(psearch_config);
+					projs.forEach(p => {
+						if (p.projectIri) {
+							console.log("p=", p.projectIri);
+							all_projects_iris.push(p.projectIri);
+							console.log("****ALL-PROJECT-IRIS", all_projects_iris);
+						}
+					});
+				}
+				catch (error) {
+					console.log("===X=", error);
+				}
 			}
 			else {
-				// get only projects from admin as selectable...
+				administrator?.inProject?.forEach(in_project => {
+					if (in_project.permissions.includes(AdminPermission.ADMIN_USERS)) {
+						all_projects_iris.push(in_project.project.toString());
+					}
+				});
 			}
-			console.log("FOUND ADMINISTRATOR :-)", administrator);
-		}
-		else {
-			console.log("NO ADMINISTRATOR :-(");
 		}
 
+		//
+		// now retrieve all projects data from the triplestore
+		//
+		let all_projects: Record<string, OldapProject> = {};
+		const promises = all_projects_iris.map(async iri => {
+			const config_projectdata = api_get_config(authinfo, { iri: iri });
+			try {
+				const jsondata = await apiClient.getAdminprojectget(config_projectdata);
+				const project = OldapProject.fromOldapJson(jsondata);
+				return { iri: project.projectIri.toString(), project };
+			} catch (error) {
+				console.log("===Y=", error);
+				return null;
+			}
+		});
+		const results = await Promise.all(promises);
+		all_projects = Object.fromEntries(results.filter(p => p !== null).map(({ iri, project }) => [iri, project]));
 
-		if (data && data.userid) {
+		if (data?.userid) {
 			//
 			// first we get the user data
 			//
-			const config_userdata = api_config(authinfo, { userId: data.userid });
-			apiClient.getAdminuserUserId(config_userdata).then((jsondata) => {
+			const config_userdata = api_notget_config(authinfo, { userId: data.userid });
+			try {
+				const jsondata = await apiClient.getAdminuserUserId(config_userdata);
 				user = OldapUser.fromOldapJson(jsondata);
 				if (user) {
+					Object.entries(all_projects).forEach(([p_iri, value]) => {
+						let tmp = false;
+						user?.inProject?.forEach(in_project => {
+							if (in_project.project.toString() === p_iri) {
+								user_in_projects[p_iri] = value;
+								checked[p_iri] = [];
+								allPermissions.forEach(permission => {
+									if (in_project.permissions.includes(permission)) {
+										checked[p_iri].push(true);
+									} else {
+										checked[p_iri].push(false);
+									}
+								});
+								tmp = true;
+							}
+						});
+						if (!tmp) {
+							assignable_projects[p_iri] = value;
+						}
+					});
+
 					user.inProject?.forEach(inProject => {
-						//
-						// now let's get for each project the user is in the project data...
-						//
-						const config_projectdata = api_get_config(authinfo, { iri: inProject.project.toString() });
-						apiClient.getAdminprojectget(config_projectdata).then((jsondata) => {
-							const project = OldapProject.fromOldapJson(jsondata);
-							projects.push(project); // push the project onto the array of projects the user is member of
+						if (inProject.project.toString() in all_projects) {
+							const project = all_projects[inProject.project.toString()]
+							user_in_projects[inProject.project.toString()] = project;
 							checked[project.projectShortName.toString()] = [];
 							allPermissions.forEach(permission => {
 								if (inProject.permissions.includes(permission)) {
 									checked[project.projectShortName.toString()].push(true);
-								}
-								else {
+								} else {
 									checked[project.projectShortName.toString()].push(false);
 								}
 							});
-						})
-							.catch(error => {
-								console.log("====A=", error);
-							});
+						} else {
+							console.log("=======-------->", inProject)
+							assignable_projects[inProject.project.toString()] = all_projects[inProject.project.toString()];
+						}
 					});
 				}
-			})
-				.catch(error => {
-					console.log("=====B=", error);
-				});
+			} catch(error) {
+				console.log("===Z=", error);
 			}
+		}
+
+		//
+		// get all projects
+		//
+		/*
+		if (administrator) {
+			if (administrator.isRoot) {
+				// get all projects as selectable...
+				const psearch_config = api_get_config(authinfo);
+				apiClient.getAdminprojectsearch(psearch_config).then((projs) => {
+					projs.forEach((assignable_p) => {
+						console.log("assignable_p=", assignable_p);
+						console.log(user_in_projects)
+						// first we check if the project is already assigned to the user...
+						let p_assigned = false;
+						user_in_projects.forEach(user_in_p => {
+							console.log("===>", assignable_p.projectIri, user_in_p.projectIri.toString())
+							if (assignable_p.projectIri === user_in_p.projectIri.toString()) {
+								p_assigned = true;
+							}
+						});
+						if (!p_assigned) {
+							const config_projectdata = api_get_config(authinfo, { iri: assignable_p.projectIri || '' });
+							apiClient.getAdminprojectget(config_projectdata).then((jsondata) => {
+								const project = OldapProject.fromOldapJson(jsondata);
+								assignable_projects.push(project);
+							});
+						}
+					});
+				})
+					.catch(error => {
+						console.log("=====C=", error);
+					})
+			}
+			else {
+				// get only projects from admin as selectable...
+			}
+		}
+		else {
+			console.log("NO ADMINISTRATOR :-(");
+		}
+    */
 	});
 
 
 </script>
 {#snippet actions()}
 	<div class="flex flex-row items-center justify-end gap-4">
-		<span><Button innerClass="text-xs">Add project</Button></span>
+		<span>
+			<DropdownButton bind:isOpen={addProjOpen} buttonText="Add project" name="add-proj-menu">
+				<DropdownMenu bind:isOpen={addProjOpen} name="add-proj-menu" size="" transparent={false}>
+				{#each Object.entries(assignable_projects) as [iri, ap]}
+					<DropdownButtonItem bind:isOpen={addProjOpen} onclick={() => {}}>{ap.projectShortName.toString()}</DropdownButtonItem>
+				{/each}
+				</DropdownMenu>
+			</DropdownButton>
+		</span>
 	</div>
 {/snippet}
 
@@ -124,10 +228,8 @@
 				<TableColumnTitle>{m.project()}</TableColumnTitle>
 				<TableColumnTitle> <!-- ADMIN_OLDAP -->
 					<Tooltip text={m.superuser()}>
-						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-								 stroke="currentColor" class="size-4">
-							<path stroke-linecap="round" stroke-linejoin="round"
-										d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437 1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008Z" />
+						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
 						</svg>
 					</Tooltip>
 				</TableColumnTitle>
@@ -191,7 +293,7 @@
 
 			</TableHeader>
 			<TableBody>
-				{#each projects as project}
+				{#each Object.entries(user_in_projects) as [iri, project]}
 					<TableRow>
 						<TableItem>{project.projectShortName.toString()}</TableItem>
 						{#each checked[project.projectShortName.toString()] as perm}

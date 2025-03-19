@@ -6,7 +6,7 @@
 }
 
 .oldap-dropdown-menu {
-    @apply absolute z-10 mt-2 origin-top-right rounded-md bg-white focus:outline-hidden overflow-auto;
+    @apply absolute z-1000 mt-2 origin-top-right rounded-md bg-white focus:outline-hidden overflow-auto;
 }
 
 .oldap-dropdown-menu-in {
