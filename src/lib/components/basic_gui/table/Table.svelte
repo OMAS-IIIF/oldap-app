@@ -2,7 +2,7 @@
 
 	import { onMount, type Snippet } from 'svelte';
 
-	let { children, height, title = null, label = null, description = '', padding = true, action_elements} : { children: Snippet, height: number, title: string | null, label: string | null, description: string, padding: boolean, action_elements: Snippet } = $props();
+	let { children, height = 0, title = '', label = null, description = '', padding = true, action_elements}: { children: Snippet, height?: number, title?: string, label?: string | null, description?: string, padding?: boolean, action_elements: Snippet } = $props();
 
 	let element: HTMLElement;
 	let hh: number = $state(0);
@@ -10,7 +10,7 @@
 	let table_height = $derived(height - hh);
 
 	onMount(() => {
-		if (element) {
+		if (element && (height > 0)) {
 			const observer = new ResizeObserver(() => {
 				hh = element.clientHeight;
 			});
@@ -42,11 +42,19 @@
 	<div class="mt-1 flow-root">
 		<div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
 			<div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+				{#if height > 0}
 				<div class="overflow-hidden ring-1 shadow-sm ring-black/5 sm:rounded-lg overflow-y-auto" style:max-height={table_height}px>
 					<table class="min-w-full divide-y divide-gray-300">
 						{@render children()}
 					</table>
 				</div>
+				{:else}
+					<div class="overflow-hidden ring-1 shadow-sm ring-black/5 sm:rounded-lg overflow-y-auto">
+						<table class="min-w-full divide-y divide-gray-300">
+							{@render children()}
+						</table>
+					</div>
+				{/if}
 			</div>
 		</div>
 	</div>

@@ -4,7 +4,7 @@
 	import { apiClient } from '$lib/shared/apiClient';
 	import { OldapUser } from '$lib/oldap/classes/user';
 	import { userStore } from '$lib/stores/user';
-	import { api_config, api_get_config, api_notget_config } from '$lib/helpers/api_config';
+	import { api_get_config, api_notget_config } from '$lib/helpers/api_config';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import Togglefield from '$lib/components/basic_gui/inputs/Togglefield.svelte';
 	import TableHeader from '$lib/components/basic_gui/table/TableHeader.svelte';
@@ -22,6 +22,8 @@
 	import DropdownButton from '$lib/components/basic_gui/dropdown/DropdownButton.svelte';
 	import DropdownButtonItem from '$lib/components/basic_gui/dropdown/DropdownButtonItem.svelte';
 	import DropdownMenu from '$lib/components/basic_gui/dropdown/DropdownMenu.svelte';
+	import { errorInfoStore } from '$lib/stores/errorinfo';
+	import { process_api_error } from '$lib/helpers/process_api_error';
 
 	let { data }: PageProps = $props();
 
@@ -30,7 +32,7 @@
 	let administrator = $state<OldapUser | null>(null);
 	const ncname_pattern = /^[A-Za-z_][A-Za-z0-9._-]*$/;
 	const email_pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-	let checked = $state<{[key: string]: boolean[]}>({});
+	let checked = $state<{[key: string]: Record<AdminPermission, boolean>}>({});
 	//let user_in_projects = $state<OldapProject[]>([]);
 	//let assignable_projects = $state<OldapProject[]>([]);
 	let addProjOpen = $state(false);
@@ -69,7 +71,8 @@
 					});
 				}
 				catch (error) {
-					console.log("===X=", error);
+					errorInfoStore.set(process_api_error(error as Error));
+					return null;
 				}
 			}
 			else {
@@ -92,7 +95,7 @@
 				const project = OldapProject.fromOldapJson(jsondata);
 				return { iri: project.projectIri.toString(), project };
 			} catch (error) {
-				console.log("===Y=", error);
+				errorInfoStore.set(process_api_error(error as Error));
 				return null;
 			}
 		});
@@ -108,17 +111,21 @@
 				const jsondata = await apiClient.getAdminuserUserId(config_userdata);
 				user = OldapUser.fromOldapJson(jsondata);
 				if (user) {
+
 					Object.entries(all_projects).forEach(([p_iri, value]) => {
 						let tmp = false;
 						user?.inProject?.forEach(in_project => {
 							if (in_project.project.toString() === p_iri) {
 								user_in_projects[p_iri] = value;
-								checked[p_iri] = [];
+								checked[p_iri]  = {} as Record<AdminPermission, boolean>;
 								allPermissions.forEach(permission => {
+
 									if (in_project.permissions.includes(permission)) {
-										checked[p_iri].push(true);
+										console.log("+====>", permission);
+										checked[p_iri][permission] = true;
 									} else {
-										checked[p_iri].push(false);
+										console.log("-====>", permission);
+										checked[p_iri][permission] = false;
 									}
 								});
 								tmp = true;
@@ -128,71 +135,13 @@
 							assignable_projects[p_iri] = value;
 						}
 					});
-
-					user.inProject?.forEach(inProject => {
-						if (inProject.project.toString() in all_projects) {
-							const project = all_projects[inProject.project.toString()]
-							user_in_projects[inProject.project.toString()] = project;
-							checked[project.projectShortName.toString()] = [];
-							allPermissions.forEach(permission => {
-								if (inProject.permissions.includes(permission)) {
-									checked[project.projectShortName.toString()].push(true);
-								} else {
-									checked[project.projectShortName.toString()].push(false);
-								}
-							});
-						} else {
-							console.log("=======-------->", inProject)
-							assignable_projects[inProject.project.toString()] = all_projects[inProject.project.toString()];
-						}
-					});
 				}
 			} catch(error) {
-				console.log("===Z=", error);
+				errorInfoStore.set(process_api_error(error as Error));
+				return null;
 			}
 		}
 
-		//
-		// get all projects
-		//
-		/*
-		if (administrator) {
-			if (administrator.isRoot) {
-				// get all projects as selectable...
-				const psearch_config = api_get_config(authinfo);
-				apiClient.getAdminprojectsearch(psearch_config).then((projs) => {
-					projs.forEach((assignable_p) => {
-						console.log("assignable_p=", assignable_p);
-						console.log(user_in_projects)
-						// first we check if the project is already assigned to the user...
-						let p_assigned = false;
-						user_in_projects.forEach(user_in_p => {
-							console.log("===>", assignable_p.projectIri, user_in_p.projectIri.toString())
-							if (assignable_p.projectIri === user_in_p.projectIri.toString()) {
-								p_assigned = true;
-							}
-						});
-						if (!p_assigned) {
-							const config_projectdata = api_get_config(authinfo, { iri: assignable_p.projectIri || '' });
-							apiClient.getAdminprojectget(config_projectdata).then((jsondata) => {
-								const project = OldapProject.fromOldapJson(jsondata);
-								assignable_projects.push(project);
-							});
-						}
-					});
-				})
-					.catch(error => {
-						console.log("=====C=", error);
-					})
-			}
-			else {
-				// get only projects from admin as selectable...
-			}
-		}
-		else {
-			console.log("NO ADMINISTRATOR :-(");
-		}
-    */
 	});
 
 
@@ -202,7 +151,7 @@
 		<span>
 			<DropdownButton bind:isOpen={addProjOpen} buttonText="Add project" name="add-proj-menu">
 				<DropdownMenu bind:isOpen={addProjOpen} name="add-proj-menu" size="" transparent={false}>
-				{#each Object.entries(assignable_projects) as [iri, ap]}
+				{#each Object.values(assignable_projects) as ap}
 					<DropdownButtonItem bind:isOpen={addProjOpen} onclick={() => {}}>{ap.projectShortName.toString()}</DropdownButtonItem>
 				{/each}
 				</DropdownMenu>
@@ -222,7 +171,7 @@
 							 required={true} value={user?.givenName} />
 		<Textfield type='email' label={m.email()} name="email" id="email" placeholder="john.doe@example.org" required={true}
 							 value={user?.email} pattern={email_pattern} />
-		<Togglefield label={m.is_active()} name="isActive" id="isActive" toggle_state={user?.isActive}/>
+		<Togglefield label={m.is_active()} id="isActive" toggle_state={user?.isActive}/>
 		<Table label={m.projects()} description={m.perprojperms()} padding={false} action_elements={actions}>
 			<TableHeader>
 				<TableColumnTitle>{m.project()}</TableColumnTitle>
@@ -293,12 +242,16 @@
 
 			</TableHeader>
 			<TableBody>
-				{#each Object.entries(user_in_projects) as [iri, project]}
+				{#each Object.values(user_in_projects) as project}
 					<TableRow>
 						<TableItem>{project.projectShortName.toString()}</TableItem>
-						{#each checked[project.projectShortName.toString()] as perm}
-							<TableItem><input type="checkbox" checked="{perm}"></TableItem>
-						{/each}
+						<TableItem><input type="checkbox" bind:checked={checked[project.projectIri.toString()][AdminPermission.ADMIN_OLDAP]}></TableItem>
+						<TableItem><input type="checkbox" bind:checked={checked[project.projectIri.toString()][AdminPermission.ADMIN_USERS]}></TableItem>
+						<TableItem><input type="checkbox" bind:checked={checked[project.projectIri.toString()][AdminPermission.ADMIN_PERMISSION_SETS]}></TableItem>
+						<TableItem><input type="checkbox" bind:checked={checked[project.projectIri.toString()][AdminPermission.ADMIN_RESOURCES]}></TableItem>
+						<TableItem><input type="checkbox" bind:checked={checked[project.projectIri.toString()][AdminPermission.ADMIN_MODEL]}></TableItem>
+						<TableItem><input type="checkbox" bind:checked={checked[project.projectIri.toString()][AdminPermission.ADMIN_CREATE]}></TableItem>
+						<TableItem><input type="checkbox" bind:checked={checked[project.projectIri.toString()][AdminPermission.ADMIN_LISTS]}></TableItem>
 						<TableItem>
 							<Button round={true}>
 								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
