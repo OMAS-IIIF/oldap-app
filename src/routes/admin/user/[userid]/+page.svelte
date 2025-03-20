@@ -25,6 +25,9 @@
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
 
+	type ProjRef = {iri: string, sname: string};
+	type CheckedState = {[key: string]: Record<AdminPermission, boolean>};
+
 	let { data }: PageProps = $props();
 
 	let authinfo: AuthInfo;
@@ -32,13 +35,11 @@
 	let administrator = $state<OldapUser | null>(null);
 	const ncname_pattern = /^[A-Za-z_][A-Za-z0-9._-]*$/;
 	const email_pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-	let checked = $state<{[key: string]: Record<AdminPermission, boolean>}>({});
-	//let user_in_projects = $state<OldapProject[]>([]);
-	//let assignable_projects = $state<OldapProject[]>([]);
+	let user_in_projects = $state<ProjRef[]>([]);
+	let assignable_projects = $state<ProjRef[]>([]);
+	let checked = $state<CheckedState>({});
 	let addProjOpen = $state(false);
 
-	let user_in_projects = $state<Record<string, OldapProject>>({});
-	let assignable_projects = $state<Record<string, OldapProject>>({});
 
 	const allPermissions = Object.keys(AdminPermission)
 		.map(key => AdminPermission[key as keyof typeof AdminPermission]);
@@ -52,7 +53,6 @@
 
 	onMount(async () => {
 		authinfo = AuthInfo.fromString(sessionStorage.getItem('authinfo'));
-
 		//
 		// fill "all_projects_iris" containing all the project iri's the current administrator may assign to the given user
 		//
@@ -66,7 +66,6 @@
 						if (p.projectIri) {
 							console.log("p=", p.projectIri);
 							all_projects_iris.push(p.projectIri);
-							console.log("****ALL-PROJECT-IRIS", all_projects_iris);
 						}
 					});
 				}
@@ -83,7 +82,6 @@
 				});
 			}
 		}
-
 		//
 		// now retrieve all projects data from the triplestore
 		//
@@ -112,14 +110,13 @@
 				user = OldapUser.fromOldapJson(jsondata);
 				if (user) {
 
-					Object.entries(all_projects).forEach(([p_iri, value]) => {
+					Object.keys(all_projects).forEach((p_iri) => {
 						let tmp = false;
 						user?.inProject?.forEach(in_project => {
 							if (in_project.project.toString() === p_iri) {
-								user_in_projects[p_iri] = value;
+								user_in_projects.push({iri: p_iri, sname: all_projects[p_iri].projectShortName.toString()});
 								checked[p_iri]  = {} as Record<AdminPermission, boolean>;
 								allPermissions.forEach(permission => {
-
 									if (in_project.permissions.includes(permission)) {
 										console.log("+====>", permission);
 										checked[p_iri][permission] = true;
@@ -132,7 +129,7 @@
 							}
 						});
 						if (!tmp) {
-							assignable_projects[p_iri] = value;
+							assignable_projects.push({iri: p_iri, sname: all_projects[p_iri].projectShortName.toString()});
 						}
 					});
 				}
@@ -140,9 +137,30 @@
 				errorInfoStore.set(process_api_error(error as Error));
 				return null;
 			}
+			assignable_projects = assignable_projects.sort((a, b) => a.sname.localeCompare(b.sname));
+			user_in_projects = user_in_projects.sort((a, b) => a.sname.localeCompare(b.sname));
 		}
 
 	});
+
+	const add_project = (proj_ref: ProjRef) => {
+		checked[proj_ref.iri] = {} as Record<AdminPermission, boolean>;
+		allPermissions.forEach(permission => {
+			checked[proj_ref.iri][permission] = false;
+		});
+		assignable_projects = assignable_projects.filter(item => item.iri !== proj_ref.iri);
+		user_in_projects.push(proj_ref);
+		assignable_projects = assignable_projects.sort((a, b) => a.sname.localeCompare(b.sname));
+		user_in_projects = user_in_projects.sort((a, b) => a.sname.localeCompare(b.sname));
+	};
+
+	const remove_project = (proj_ref: ProjRef) => {
+		delete checked[proj_ref.iri];
+		user_in_projects = user_in_projects.filter(item => item.iri !== proj_ref.iri);
+		assignable_projects.push(proj_ref);
+		assignable_projects = assignable_projects.sort((a, b) => a.sname.localeCompare(b.sname));
+		user_in_projects = user_in_projects.sort((a, b) => a.sname.localeCompare(b.sname));
+	};
 
 
 </script>
@@ -151,8 +169,8 @@
 		<span>
 			<DropdownButton bind:isOpen={addProjOpen} buttonText="Add project" name="add-proj-menu">
 				<DropdownMenu bind:isOpen={addProjOpen} name="add-proj-menu" size="" transparent={false}>
-				{#each Object.values(assignable_projects) as ap}
-					<DropdownButtonItem bind:isOpen={addProjOpen} onclick={() => {}}>{ap.projectShortName.toString()}</DropdownButtonItem>
+				{#each assignable_projects as p_ref}
+					<DropdownButtonItem bind:isOpen={addProjOpen} onclick={() => {add_project(p_ref)}}>{p_ref.sname}</DropdownButtonItem>
 				{/each}
 				</DropdownMenu>
 			</DropdownButton>
@@ -242,18 +260,18 @@
 
 			</TableHeader>
 			<TableBody>
-				{#each Object.values(user_in_projects) as project}
+				{#each user_in_projects as p_ref}
 					<TableRow>
-						<TableItem>{project.projectShortName.toString()}</TableItem>
-						<TableItem><input type="checkbox" bind:checked={checked[project.projectIri.toString()][AdminPermission.ADMIN_OLDAP]}></TableItem>
-						<TableItem><input type="checkbox" bind:checked={checked[project.projectIri.toString()][AdminPermission.ADMIN_USERS]}></TableItem>
-						<TableItem><input type="checkbox" bind:checked={checked[project.projectIri.toString()][AdminPermission.ADMIN_PERMISSION_SETS]}></TableItem>
-						<TableItem><input type="checkbox" bind:checked={checked[project.projectIri.toString()][AdminPermission.ADMIN_RESOURCES]}></TableItem>
-						<TableItem><input type="checkbox" bind:checked={checked[project.projectIri.toString()][AdminPermission.ADMIN_MODEL]}></TableItem>
-						<TableItem><input type="checkbox" bind:checked={checked[project.projectIri.toString()][AdminPermission.ADMIN_CREATE]}></TableItem>
-						<TableItem><input type="checkbox" bind:checked={checked[project.projectIri.toString()][AdminPermission.ADMIN_LISTS]}></TableItem>
+						<TableItem>{p_ref.sname}</TableItem>
+						<TableItem><input type="checkbox" bind:checked={checked[p_ref.iri][AdminPermission.ADMIN_OLDAP]}></TableItem>
+						<TableItem><input type="checkbox" bind:checked={checked[p_ref.iri][AdminPermission.ADMIN_USERS]}></TableItem>
+						<TableItem><input type="checkbox" bind:checked={checked[p_ref.iri][AdminPermission.ADMIN_PERMISSION_SETS]}></TableItem>
+						<TableItem><input type="checkbox" bind:checked={checked[p_ref.iri][AdminPermission.ADMIN_RESOURCES]}></TableItem>
+						<TableItem><input type="checkbox" bind:checked={checked[p_ref.iri][AdminPermission.ADMIN_MODEL]}></TableItem>
+						<TableItem><input type="checkbox" bind:checked={checked[p_ref.iri][AdminPermission.ADMIN_CREATE]}></TableItem>
+						<TableItem><input type="checkbox" bind:checked={checked[p_ref.iri][AdminPermission.ADMIN_LISTS]}></TableItem>
 						<TableItem>
-							<Button round={true}>
+							<Button round={true} onclick={() => {remove_project(p_ref)}}>
 								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
 										 stroke="currentColor" class="size-4">
 									<path stroke-linecap="round" stroke-linejoin="round"
