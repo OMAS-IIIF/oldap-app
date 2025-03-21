@@ -80,7 +80,7 @@
 
 <DropdownLabel bind:isOpen={projectsIsOpen} name="projects"
 							 labelText={current_project_id ? projects[current_project_id].label[langobj] : 'Projects'}>
-	<DropdownMenu bind:isOpen={projectsIsOpen} position="left" name="projects">
+	<DropdownMenu bind:isOpen={projectsIsOpen} position="left" name="projects" id="projects-id">
 		{#each Object.entries(projects) as [key, value]}
 			<DropdownLinkItem bind:isOpen={projectsIsOpen}
 												onclick={() => set_current_project(key)} id="oldap"

@@ -28,7 +28,7 @@
 </script>
 
 <DropdownButton bind:isOpen={langSelOpen} bind:buttonText={current_lang} name="lang-menu" round={true}>
-	<DropdownMenu bind:isOpen={langSelOpen} name="lang-menu" size="" transparent={true}>
+	<DropdownMenu bind:isOpen={langSelOpen} name="lang-menu" id="lang-menu-id" size="" transparent={true}>
 		{#each availableLanguageTags as lang}
 			<DropdownButtonItem bind:isOpen={langSelOpen} onclick={() => {change_lang(lang)}} round={true} selected={lang == current_lang}>{lang}</DropdownButtonItem>
 		{/each}

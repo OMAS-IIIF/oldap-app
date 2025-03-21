@@ -82,7 +82,7 @@
 
 {#if user}
 	<DropdownAvatar bind:isOpen={avatarIsOpen} {initials} {src} name="avatar">
-		<DropdownMenu bind:isOpen={avatarIsOpen} position="right" name="avatar" grouping={true}>
+		<DropdownMenu bind:isOpen={avatarIsOpen} position="right" name="avatar" id="avatar-id" grouping={true}>
 			<div role="none">
 				<DropdownLinkItem bind:isOpen={avatarIsOpen} onclick={do_logout} id="logout">Sign out</DropdownLinkItem>
 			</div>

@@ -168,7 +168,7 @@
 	<div class="flex flex-row items-center justify-end gap-4">
 		<span>
 			<DropdownButton bind:isOpen={addProjOpen} buttonText="Add project" name="add-proj-menu" innerClass="text-xs">
-				<DropdownMenu bind:isOpen={addProjOpen} name="add-proj-menu" size="" transparent={false}>
+				<DropdownMenu bind:isOpen={addProjOpen} name="add-proj-menu" id="add-proj-menu-id" size="" transparent={false}>
 				{#each assignable_projects as p_ref}
 					<DropdownButtonItem bind:isOpen={addProjOpen} onclick={() => {add_project(p_ref)}}>{p_ref.sname}</DropdownButtonItem>
 				{/each}

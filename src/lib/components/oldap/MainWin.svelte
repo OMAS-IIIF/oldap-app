@@ -1,14 +1,11 @@
 <script lang="ts">
 
-import DropdownMenu from '$lib/components/basic_gui/dropdown/DropdownMenu.svelte';
-import DropdownLinkItem from '$lib/components/basic_gui/dropdown/DropdownLinkItem.svelte';
 import LeftHeader from '$lib/components/basic_gui/header/LeftHeader.svelte';
 import ContentArea from '$lib/components/basic_gui/ContentArea.svelte';
 import Header from '$lib/components/basic_gui/header/Header.svelte';
 import RightHeader from '$lib/components/basic_gui/header/RightHeader.svelte';
 import Footer from '$lib/components/basic_gui/footer/Footer.svelte';
 import { OldapUser } from '$lib/oldap/classes/user';
-import DropdownLabel from '$lib/components/basic_gui/dropdown/DropdownLabel.svelte';
 import ErrorMsg from '$lib/components/oldap/ErrorMsg.svelte';
 import LangSelector from '$lib/components/basic_gui/langselector/LangSelector.svelte';
 import * as m from '$lib/paraglide/messages.js';
@@ -16,13 +13,8 @@ import User from '$lib/components/oldap/User.svelte';
 import Projects from '$lib/components/oldap/Projects.svelte';
 
 let { children } = $props();
-let projectsIsOpen = $state(false);
 
 let user: OldapUser | null = $state(null);
-
-let test = (event: Event) => {
-	console.log(event)
-}
 
 </script>
 

@@ -12,6 +12,7 @@
 	if (innerClass.includes("text-xs")) {
 		chevron_size = "size-4"
 	}
+	innerClass += ` ${name}`;
 
 </script>
 
