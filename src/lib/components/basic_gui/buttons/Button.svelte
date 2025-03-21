@@ -1,6 +1,6 @@
 <script lang="ts">
 
-	let { children, onclick = null, id = null, innerClass = "", ariaExpanded = null, ariaHaspopup = null, round = false } = $props();
+	let { children, onclick = null, id = null, innerClass = "", ariaExpanded = null, ariaHaspopup = null, round = false, } = $props();
 
 </script>
 

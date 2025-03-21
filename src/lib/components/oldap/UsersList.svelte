@@ -17,6 +17,8 @@
 	import { onMount } from 'svelte';
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
 	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
+	import { errorInfoStore } from '$lib/stores/errorinfo';
+	import { process_api_error } from '$lib/helpers/process_api_error';
 
 	let { table_height, administrator = $bindable(), project = $bindable() }: {
 		table_height: number,
@@ -25,8 +27,10 @@
 	} = $props();
 
 	let show_all_users = $state(false);
-	let authinfo: AuthInfo = $state();
-	let users: OldapUser[] = $state([]);
+	let authinfo = $state<AuthInfo>();
+	//let users: OldapUser[] = $state([]);
+	let users = $state<Record<string, OldapUser>>({});
+	let user_list = $state<string[]>([]);
 	let user_active: Record<string, boolean> = $state({});
 
 	let confirmation_dialog: Confirmation;
@@ -45,19 +49,29 @@
 			if (!show_all_users) {
 				usersearch = { ...usersearch, queries: { inProject: project?.projectIri?.toString() } };
 			}
-			users = [];
-			apiClient.getAdminusersearch(usersearch).then((iris) => {
-				iris.forEach((x) => {
-					let config_userdata = api_get_config(authinfo, { iri: x });
-					apiClient.getAdminuserget(config_userdata).then((userdata) => {
-						const user = OldapUser.fromOldapJson(userdata);
-						user_active[user.userId.toString()] = user.isActive;
-						users.push(user);
-						console.log(userdata);
+			apiClient.getAdminusersearch(usersearch)
+				.then((iris) => {
+					users = {} as Record<string, OldapUser>;
+					const promises = iris.map(iri => {
+						const config_userdata = api_get_config(authinfo, { iri: iri });
+						return apiClient.getAdminuserget(config_userdata);
 					});
-				});
-			}).catch((err) => {
-				console.log('ERROR', err);
+					Promise.all(promises)
+						.then((results) => {
+							results.forEach((userdata) => {
+								const user = OldapUser.fromOldapJson(userdata);
+								const uid = user.userId.toString();
+								user_active[uid] = user.isActive;
+								users[uid] = user;
+								user_list.push(uid);
+							});
+							user_list = user_list.sort((a, b) => a.localeCompare(b));
+						})
+						.catch((err) => {
+							errorInfoStore.set(process_api_error(err as Error));
+						});
+				}).catch((err) => {
+				errorInfoStore.set(process_api_error(err as Error));
 			});
 		}
 	});
@@ -123,18 +137,18 @@
 		{/each}
 	</TableHeader>
 	<TableBody>
-		{#each users as user}
+		{#each user_list as user_id}
 			<TableRow>
-				<TableItem>{user.userId.toString()}</TableItem>
-				<TableItem>{user.familyName}</TableItem>
-				<TableItem>{user.givenName}</TableItem>
-				<TableItem>{user.email}</TableItem>
+				<TableItem>{user_id}</TableItem>
+				<TableItem>{users[user_id].familyName}</TableItem>
+				<TableItem>{users[user_id].givenName}</TableItem>
+				<TableItem>{users[user_id].email}</TableItem>
 				<TableItem>
-					<Toggle bind:toggle_state={user_active[user.userId.toString()]} id={user.userId.toString()} onclick={toggle_active} />
+					<Toggle bind:toggle_state={user_active[user_id]} id={user_id} onclick={toggle_active} />
 				</TableItem>
 				<TableItem>
 					<div class="flex flex-row items-center justify-left gap-2">
-						<Button round={true} onclick={goto_page(`/admin/user/${user.userId.toString()}`)}>
+						<Button round={true} onclick={goto_page(`/admin/user/${user_id}`)}>
 							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
 									 stroke="currentColor" class="size-4">
 								<path stroke-linecap="round" stroke-linejoin="round"

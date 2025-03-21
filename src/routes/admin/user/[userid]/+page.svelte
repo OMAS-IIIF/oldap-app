@@ -48,9 +48,6 @@
 		administrator = admin;
 	})
 
-	$inspect(assignable_projects, user_in_projects);
-
-
 	onMount(async () => {
 		authinfo = AuthInfo.fromString(sessionStorage.getItem('authinfo'));
 		//
@@ -152,6 +149,7 @@
 		user_in_projects.push(proj_ref);
 		assignable_projects = assignable_projects.sort((a, b) => a.sname.localeCompare(b.sname));
 		user_in_projects = user_in_projects.sort((a, b) => a.sname.localeCompare(b.sname));
+		addProjOpen = false;
 	};
 
 	const remove_project = (proj_ref: ProjRef) => {
@@ -160,14 +158,16 @@
 		assignable_projects.push(proj_ref);
 		assignable_projects = assignable_projects.sort((a, b) => a.sname.localeCompare(b.sname));
 		user_in_projects = user_in_projects.sort((a, b) => a.sname.localeCompare(b.sname));
+		addProjOpen = false;
 	};
 
 
 </script>
+
 {#snippet actions()}
 	<div class="flex flex-row items-center justify-end gap-4">
 		<span>
-			<DropdownButton bind:isOpen={addProjOpen} buttonText="Add project" name="add-proj-menu">
+			<DropdownButton bind:isOpen={addProjOpen} buttonText="Add project" name="add-proj-menu" innerClass="text-xs">
 				<DropdownMenu bind:isOpen={addProjOpen} name="add-proj-menu" size="" transparent={false}>
 				{#each assignable_projects as p_ref}
 					<DropdownButtonItem bind:isOpen={addProjOpen} onclick={() => {add_project(p_ref)}}>{p_ref.sname}</DropdownButtonItem>
