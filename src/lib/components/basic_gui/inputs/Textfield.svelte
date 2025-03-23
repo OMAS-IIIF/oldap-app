@@ -3,13 +3,13 @@
 	import { error } from '@sveltejs/kit';
 
 	let {
-		label, name, id, type = 'text', placeholder = '', value = '', validate = undefined,
-		readonly = false, disabled = false, required = undefined, size = undefined, pattern = undefined,
+		label, name, id, type = 'text', placeholder = '', value = $bindable(), validate = undefined,
+		readonly = false, disabled = $bindable(false), required = undefined, size = undefined, pattern = undefined,
 	} = $props();
 
+
+
 	const allowed_types = ['text', 'password', 'email', 'number', 'search', 'tel', 'url'];
-	const invalid_class = "text-input-text-invalid outline-input-outline-invalid placeholder:text-input-placeholder-invalid focus:outline-oldap-focus";
-	const valid_class = "text-input-text-valid outline-input-outline-valid placeholder:text-input-placeholder-valid focus:outline-oldap-focus"
 	let thisele: HTMLInputElement | undefined= $state();
 	let invalid = $state(false);
 	let errortext = $state('');
@@ -45,7 +45,7 @@
 	<label for={id} class="block text-xs/4 font-medium text-input-label-fg dark:text-input-label-fg-dark">{label}</label>
 	<div class="mt-2 grid grid-cols-1">
 		<input bind:this={thisele} type={type} name={name} id={id} onblur={loose_focus} {disabled} {required} {readonly}
-					 class="col-start-1 row-start-1 block w-full rounded-md bg-oldap-bg dark:bg-oldap-bg-dark text-oldap-fg dark:text-oldap-fg-dark py-1.0 pr-10 pl-3 text-sm outline-1 -outline-offset-1 {invalid ? invalid_class : valid_class} focus:outline-2 focus:-outline-offset-2  sm:pr-9 sm:text-sm/6"
+					 class={disabled ? "py-1.0 oldap-textfield-common oldap-textfield-disabled" : (invalid ? "py-1.0 oldap-textfield-common oldap-textfield-invalid" : "py-1.0 oldap-textfield-common oldap-textfield-valid")}
 					 placeholder={placeholder} value={value} aria-invalid="true" aria-describedby={`${id}-error`}>
 		{#if invalid}
 			<svg class="pointer-events-none col-start-1 row-start-1 mr-3 size-5 self-center justify-self-end text-red-500 sm:size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" data-slot="icon">

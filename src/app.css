@@ -10,6 +10,8 @@
     --color-oldap-bg2-dark: oklch(0.05 0.06 0.25);
     --color-oldap-fg: var(--color-black);
     --color-oldap-fg-dark: var(--color-white);
+    --color-oldap-fg-disabled: var(--color-gray-700);
+    --color-oldap-fg-disbaled-dark: var(--color-gray-400);
     --color-oldap-hover: var(--color-indigo-200);
     --color-oldap-hover-dark: var(--color-indigo-700);
     --color-oldap-focus: var(--color-purple-800);
@@ -41,8 +43,11 @@
     --color-input-label-fg: var(--color-gray-900);
     --color-input-label-fg-dark: var(--color-gray-50);
     --color-input-text-valid: var(--color-black);
-    --color-input-text-valid-dark: var(--color-black);
+    --color-input-text-valid-dark: var(--color-white);
     --color-input-text-invalid: var(--color-red-800);
+    --color-input-text-invalid-dark: var(--color-red-400);
+    --color-input-text-disabled: var(--color-gray-700);
+    --color-input-text-disabled-dark: var(--color-gray-400);
     --color-input-outline-valid: var(--color-indigo-500);
     --color-input-outline-invalid: var(--color-orange-500);
     --color-input-placeholder-valid: var(--color-gray-500);
@@ -110,5 +115,26 @@
 .oldap-tooltip {
     @apply absolute px-2 py-0.5 rounded-lg text-[8px] text-nowrap z-9999
     bg-oldap-bg dark:bg-oldap-bg-dark text-oldap-fg dark:text-oldap-fg-dark outline outline-indigo-700
+}
+
+.oldap-textfield-common {
+    @apply col-start-1 row-start-1 block w-full rounded-md bg-oldap-bg dark:bg-oldap-bg-dark
+    pr-10 sm:pr-9 pl-3 text-sm sm:text-sm/6 outline-1 -outline-offset-1
+    focus:outline-2 focus:-outline-offset-2
+}
+
+.oldap-textfield-valid {
+    @apply text-input-text-valid dark:text-input-text-valid-dark
+    outline-input-outline-valid placeholder:text-input-placeholder-valid focus:outline-oldap-focus
+}
+
+.oldap-textfield-invalid {
+    @apply text-input-text-invalid dark:text-input-text-invalid-dark outline-input-outline-invalid
+    placeholder:text-input-placeholder-invalid focus:outline-oldap-focus
+}
+
+.oldap-textfield-disabled {
+    @apply text-input-text-disabled dark:text-input-text-disabled-dark
+    outline-input-outline-valid placeholder:text-input-placeholder-valid focus:outline-oldap-focus
 }
 

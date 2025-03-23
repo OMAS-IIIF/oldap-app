@@ -13,6 +13,6 @@
 </script>
 
 <div class="relative inline-block text-left">
-		<AvatarButton onclick={toggleDropdown} id={id} {initials} {src} innerClass={name} />
+		<AvatarButton onclick={toggleDropdown} id={id} {initials} {src} class={name} />
 	{@render children()}
 </div>

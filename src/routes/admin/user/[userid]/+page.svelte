@@ -33,8 +33,9 @@
 	let authinfo: AuthInfo;
 	let user = $state<OldapUser | null>(null);
 	let administrator = $state<OldapUser | null>(null);
-	const ncname_pattern = /^[A-Za-z_][A-Za-z0-9._-]*$/;
-	const email_pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+	const ncname_pattern: RegExp = /^[A-Za-z_][A-Za-z0-9._-]*$/;
+	const email_pattern: RegExp = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+	const iri_pattern: RegExp = /^(https?:\/\/|urn:)[^\s]+$/;
 	let user_in_projects = $state<ProjRef[]>([]);
 	let assignable_projects = $state<ProjRef[]>([]);
 	let checked = $state<CheckedState>({});
@@ -61,7 +62,6 @@
 					const projs = await apiClient.getAdminprojectsearch(psearch_config);
 					projs.forEach(p => {
 						if (p.projectIri) {
-							console.log("p=", p.projectIri);
 							all_projects_iris.push(p.projectIri);
 						}
 					});
@@ -97,16 +97,15 @@
 		const results = await Promise.all(promises);
 		all_projects = Object.fromEntries(results.filter(p => p !== null).map(({ iri, project }) => [iri, project]));
 
-		if (data?.userid) {
+		if (data?.userid !== 'new') {
 			//
-			// first we get the user data
+			// first we get the user data of the already existing user
 			//
 			const config_userdata = api_notget_config(authinfo, { userId: data.userid });
 			try {
 				const jsondata = await apiClient.getAdminuserUserId(config_userdata);
 				user = OldapUser.fromOldapJson(jsondata);
 				if (user) {
-
 					Object.keys(all_projects).forEach((p_iri) => {
 						let tmp = false;
 						user?.inProject?.forEach(in_project => {
@@ -115,10 +114,8 @@
 								checked[p_iri]  = {} as Record<AdminPermission, boolean>;
 								allPermissions.forEach(permission => {
 									if (in_project.permissions.includes(permission)) {
-										console.log("+====>", permission);
 										checked[p_iri][permission] = true;
 									} else {
-										console.log("-====>", permission);
 										checked[p_iri][permission] = false;
 									}
 								});
@@ -136,6 +133,15 @@
 			}
 			assignable_projects = assignable_projects.sort((a, b) => a.sname.localeCompare(b.sname));
 			user_in_projects = user_in_projects.sort((a, b) => a.sname.localeCompare(b.sname));
+		}
+		else {
+			//
+			// we want to create a new user...
+			//
+			Object.keys(all_projects).forEach((p_iri) => {
+				assignable_projects.push({iri: p_iri, sname: all_projects[p_iri].projectShortName.toString()});
+				assignable_projects = assignable_projects.sort((a, b) => a.sname.localeCompare(b.sname));
+			});
 		}
 
 	});
@@ -167,7 +173,7 @@
 {#snippet actions()}
 	<div class="flex flex-row items-center justify-end gap-4">
 		<span>
-			<DropdownButton bind:isOpen={addProjOpen} buttonText="Add project" name="add-proj-menu" innerClass="text-xs">
+			<DropdownButton bind:isOpen={addProjOpen} buttonText="Add project" name="add-proj-menu" class="text-xs">
 				<DropdownMenu bind:isOpen={addProjOpen} name="add-proj-menu" id="add-proj-menu-id" size="" transparent={false}>
 				{#each assignable_projects as p_ref}
 					<DropdownButtonItem bind:isOpen={addProjOpen} onclick={() => {add_project(p_ref)}}>{p_ref.sname}</DropdownButtonItem>
@@ -178,9 +184,17 @@
 	</div>
 {/snippet}
 
-<div class="absolute top-0 left-0 right-0 bottom-0 overflow-auto">
-	<h1>{data.userid ? m.edit() : m.add()} User "{data.userid}"</h1>
+<div class="absolute top-0 left-0 right-0 bottom-0 overflow-auto flex justify-center items-center">
+
 	<form class="max-w-128">
+		<h1>{data.userid !== 'new' ? m.edit()  : m.add()} User </h1>
+		{#if data?.userid === 'new'}
+			<Textfield type='text' label={m.user_id()} name="useriri" id="useriri" placeholder="user Iri" required={false}
+								 value='' pattern={iri_pattern} />
+		{:else}
+			<Textfield type='text' label={m.user_id()} name="useriri" id="useriri" placeholder="user Iri" required={false}
+								 value={user?.userIri} pattern={iri_pattern} disabled={true}/>
+		{/if}
 		<Textfield type='text' label={m.user_id()} name="userid" id="userid" placeholder="user id" required={true}
 							 value={user?.userId.toString()} pattern={ncname_pattern} />
 		<Textfield type='text' label={m.family_name()} name="familyName" id="familyName" placeholder="family name"
@@ -283,5 +297,9 @@
 				{/each}
 			</TableBody>
 		</Table>
+		<div class="flex justify-center gap-4 mt-6">
+			<Button class="mx-4 my-2 ">Cancel</Button>
+			<Button class="mx-4 my-2 ">Add</Button>
+		</div>
 	</form>
 </div>

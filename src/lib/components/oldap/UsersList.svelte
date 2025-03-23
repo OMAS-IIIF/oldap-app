@@ -124,7 +124,7 @@
 		{#if administrator?.isRoot}
 			<span><Checkbox label="Show all users" position="left" bind:checked={show_all_users} /></span>
 		{/if}
-		<span><Button innerClass="text-xs" onclick={goto_page("/admin/user")}>{m.add_user()}</Button></span>
+		<span><Button class="text-xs" onclick={goto_page("/admin/user")}>{m.add_user()}</Button></span>
 	</div>
 {/snippet}
 

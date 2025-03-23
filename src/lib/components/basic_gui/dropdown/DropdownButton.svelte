@@ -1,24 +1,23 @@
 <script lang="ts">
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
 
-	let { children, isOpen = $bindable(), buttonText = $bindable(), name = "", id = null, round = false, innerClass = ""} = $props();
+	let { children, isOpen = $bindable(), buttonText = $bindable(), name = "", id = null, round = false, class: userClass = ""} = $props();
 
 	function toggleDropdown() {
-		console.log('toggle Button dropdown');
 		isOpen = !isOpen;
 	}
 
 	let chevron_size = $state("size-5");
-	if (innerClass.includes("text-xs")) {
+	if (userClass.includes("text-xs")) {
 		chevron_size = "size-4"
 	}
-	innerClass += ` ${name}`;
+	userClass += ` ${name}`;
 
 </script>
 
 <div class="relative inline-block text-left">
 	<div>
-		<Button onclick={toggleDropdown} {id} innerClass={innerClass} {round}>
+		<Button onclick={toggleDropdown} {id} class={userClass} {round}>
 			{buttonText}
 			{#if !round}
 				<svg class="-mr-1 {chevron_size} text-oldap-fg dark:text-oldap-fg-dark {name}" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"

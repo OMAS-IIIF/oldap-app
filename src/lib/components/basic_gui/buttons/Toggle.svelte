@@ -7,7 +7,7 @@ This PageServer opens a confirmation dialog...
 -->
 <script lang="ts">
 
-	let { toggle_state = $bindable(), onclick = undefined, id = undefined }: { toggle_state: boolean, onclick: ((on: boolean, id:string) => Promise<boolean>) | undefined, id: string | undefined } = $props()
+	let { toggle_state = $bindable(), onclick = undefined, id = undefined, class: userClass = "" }: { toggle_state: boolean, onclick: ((on: boolean, id: string) => Promise<boolean>) | undefined, id?: string | undefined, class?: string  } = $props()
 
 	let clicked = async () => {
 
@@ -23,7 +23,7 @@ This PageServer opens a confirmation dialog...
 
 <button type="button"
 				{id}
-				class="group relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 focus:outline-hidden"
+				class="group relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 focus:outline-hidden {userClass}"
 				role="switch"
 				aria-checked="false"
 				onclick={clicked}>
