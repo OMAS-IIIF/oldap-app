@@ -4,7 +4,8 @@
 
 	let {
 		label, name, id, type = 'text', placeholder = '', value = $bindable(), validate = undefined,
-		readonly = false, disabled = $bindable(false), required = undefined, size = undefined, pattern = undefined,
+		readonly = false, disabled = $bindable(false), required = undefined, size = undefined,
+		pattern = undefined, class: userClass = ""
 	} = $props();
 
 
@@ -42,10 +43,10 @@
 </script>
 
 <div class="mt-3">
-	<label for={id} class="block text-xs/4 font-medium text-input-label-fg dark:text-input-label-fg-dark">{label}</label>
+	<label for={id} class="{required ? 'underline' : ''} block text-xs/4 font-medium text-input-label-fg dark:text-input-label-fg-dark">{label}:</label>
 	<div class="mt-2 grid grid-cols-1">
 		<input bind:this={thisele} type={type} name={name} id={id} onblur={loose_focus} {disabled} {required} {readonly}
-					 class={disabled ? "py-1.0 oldap-textfield-common oldap-textfield-disabled" : (invalid ? "py-1.0 oldap-textfield-common oldap-textfield-invalid" : "py-1.0 oldap-textfield-common oldap-textfield-valid")}
+					 class="py-1.0 oldap-textfield-common {disabled ? 'oldap-textfield-disabled' : (invalid ? 'oldap-textfield-invalid' : 'oldap-textfield-valid')} {userClass}"
 					 placeholder={placeholder} value={value} aria-invalid="true" aria-describedby={`${id}-error`}>
 		{#if invalid}
 			<svg class="pointer-events-none col-start-1 row-start-1 mr-3 size-5 self-center justify-self-end text-red-500 sm:size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" data-slot="icon">

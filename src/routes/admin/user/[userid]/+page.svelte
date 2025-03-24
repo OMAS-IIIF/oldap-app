@@ -41,6 +41,12 @@
 	let checked = $state<CheckedState>({});
 	let addProjOpen = $state(false);
 
+	let userIri = $state('');
+	let userId = $state('');
+	let familyName = $state('');
+	let givenName = $state('');
+	let email = $state('');
+
 
 	const allPermissions = Object.keys(AdminPermission)
 		.map(key => AdminPermission[key as keyof typeof AdminPermission]);
@@ -50,6 +56,7 @@
 	})
 
 	onMount(async () => {
+		user = null;
 		authinfo = AuthInfo.fromString(sessionStorage.getItem('authinfo'));
 		//
 		// fill "all_projects_iris" containing all the project iri's the current administrator may assign to the given user
@@ -106,6 +113,12 @@
 				const jsondata = await apiClient.getAdminuserUserId(config_userdata);
 				user = OldapUser.fromOldapJson(jsondata);
 				if (user) {
+					userIri = user.userIri.toString();
+					userId = user.userId.toString();
+					givenName = user.givenName;
+					familyName = user.familyName;
+					email = user.email;
+
 					Object.keys(all_projects).forEach((p_iri) => {
 						let tmp = false;
 						user?.inProject?.forEach(in_project => {
@@ -190,19 +203,19 @@
 		<h1>{data.userid !== 'new' ? m.edit()  : m.add()} User </h1>
 		{#if data?.userid === 'new'}
 			<Textfield type='text' label={m.user_id()} name="useriri" id="useriri" placeholder="user Iri" required={false}
-								 value='' pattern={iri_pattern} />
+								 bind:value={userIri} pattern={iri_pattern} />
 		{:else}
 			<Textfield type='text' label={m.user_id()} name="useriri" id="useriri" placeholder="user Iri" required={false}
-								 value={user?.userIri} pattern={iri_pattern} disabled={true}/>
+								 bind:value={userIri} pattern={iri_pattern} disabled={true}/>
 		{/if}
 		<Textfield type='text' label={m.user_id()} name="userid" id="userid" placeholder="user id" required={true}
-							 value={user?.userId.toString()} pattern={ncname_pattern} />
+							 bind:value={userId} pattern={ncname_pattern} />
 		<Textfield type='text' label={m.family_name()} name="familyName" id="familyName" placeholder="family name"
-							 required={true} value={user?.familyName} />
+							 required={true} bind:value={familyName} />
 		<Textfield type='text' label={m.given_name()} name="givenName" id="givenName" placeholder="given name"
-							 required={true} value={user?.givenName} />
+							 required={true} bind:value={givenName} />
 		<Textfield type='email' label={m.email()} name="email" id="email" placeholder="john.doe@example.org" required={true}
-							 value={user?.email} pattern={email_pattern} />
+							 bind:value={email} pattern={email_pattern} />
 		<Togglefield label={m.is_active()} id="isActive" toggle_state={user?.isActive}/>
 		<Table label={m.projects()} description={m.perprojperms()} padding={false} action_elements={actions}>
 			<TableHeader>
