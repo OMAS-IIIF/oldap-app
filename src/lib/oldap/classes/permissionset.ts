@@ -7,7 +7,7 @@ import { OldapProject } from '$lib/oldap/classes/project';
 import { OldapErrorInconsistency } from '$lib/oldap/errors/OldapErrorInconsistency';
 
 export class OldapPermissionSet extends OldapObject {
-	#permissionSetIri?: string;
+	#permissionSetIri: Iri;
 	#permissionSetId: NCName;
 	#definedByProject: Iri;
 	givesPermission: DataPermission;
@@ -20,12 +20,14 @@ export class OldapPermissionSet extends OldapObject {
 							created: Date,
 							contributor: Iri,
 							modified: Date,
+							permissionSetIri: Iri,
 							permissionSetId: NCName,
 							definedByProject: Iri,
 							givesPermission: DataPermission,
 							label?: LangString,
 							comment?: LangString) {
 		super(creator, created, contributor, modified);
+		this.#permissionSetIri = permissionSetIri;
 		this.#permissionSetId = permissionSetId;
 		this.#definedByProject = definedByProject;
 		this.givesPermission = givesPermission;
@@ -35,6 +37,10 @@ export class OldapPermissionSet extends OldapObject {
 
 	get permissionSetIri() {
 		return this.#permissionSetIri;
+	}
+
+	get permissionSetIriAsString() {
+		return this.#permissionSetIri.toLocaleString();
 	}
 
 	get permissionSetId() {
@@ -50,6 +56,7 @@ export class OldapPermissionSet extends OldapObject {
 		const created = new Date(json.created);
 		const contributor = new Iri(json.contributor);
 		const modified = new Date(json.modified);
+		const permissionSetIri = new Iri(json.permissionSetIri);
 		const permissionSetId = new NCName(json.permissionSetId);
 		const definedByProject = new Iri(json.definedByProject);
 		const givesPermission = stringToDataPermission(json.givesPermission);
@@ -59,7 +66,7 @@ export class OldapPermissionSet extends OldapObject {
 		if (!givesPermission) {
 			throw new OldapErrorInconsistency("No permission in permission set.");
 		}
-		return new OldapPermissionSet(creator, created, contributor, modified, permissionSetId, definedByProject,
-			givesPermission, label, comment);
+		return new OldapPermissionSet(creator, created, contributor, modified, permissionSetIri,
+			permissionSetId, definedByProject, givesPermission, label, comment);
 	}
 }

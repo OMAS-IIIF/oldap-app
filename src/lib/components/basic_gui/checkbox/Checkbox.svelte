@@ -6,8 +6,8 @@
 
 <div class="block">
 	{#if position === 'left'}
-		{label} <input type="checkbox" class="mx-2" {checked} {name} {id} {value} onchange={() => checked=!checked} />
+		{label} <input type="checkbox" class="mx-2" bind:checked={checked} {name} {id} {value} onchange={() => checked=!checked} />
 	{:else}
-		<input type="checkbox" class="mx-2" {checked} {name} {id} {value} onchange={() => checked=!checked} />{label}
+		<input type="checkbox" class="mx-2" bind:checked={checked} {name} {id} {value} onchange={() => checked=!checked} />{label}
 	{/if}
 </div>

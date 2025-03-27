@@ -44,6 +44,8 @@
 	const ncname_pattern: RegExp = /^[A-Za-z_][A-Za-z0-9._-]*$/;
 	const email_pattern: RegExp = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 	const iri_pattern: RegExp = /^(https?:\/\/|urn:)[^\s]+$/;
+	const password_pattern: RegExp = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+
 	let user_in_projects = $state<ProjRef[]>([]);
 	let assignable_projects = $state<ProjRef[]>([]);
 	let addProjOpen = $state(false);
@@ -54,6 +56,8 @@
 
 	let userIri = $state('');
 	let userId = $state('');
+	let password1 = $state('');
+	let password2 = $state('');
 	let familyName = $state('');
 	let givenName = $state('');
 	let email = $state('');
@@ -103,12 +107,12 @@
 			const results3 = await Promise.all(promises3);
 
 			let gaga = user?.hasPermissions?.map(item => item.toString()) || [];
-			console.log("*=*=*=*=*=**>", gaga);
+
 			permissionSets = results3.map(jsonobj => {
 				let tmp = OldapPermissionSet.fromOldapJson(jsonobj);
-				tmp.projectShortName = all_projects[tmp.definedByProject.toString()].projectShortName.toString();
+				tmp.projectShortName = all_projects[tmp.definedByProject.toString()]?.projectShortName.toString();
 				if (tmp?.permissionSetIri) {
-					user_permsets[tmp.permissionSetIri] = gaga.includes(tmp.permissionSetIri);
+					user_permsets[tmp.permissionSetIriAsString] = gaga.includes(tmp.permissionSetIriAsString);
 				}
 				return tmp;
 			});
@@ -116,6 +120,7 @@
 		catch (error) {
 			return Promise.reject(error);
 		}
+		console.log("-- user_permsets--:", $state.snapshot(user_permsets));
 	}
 
 	onMount(async () => {
@@ -250,6 +255,39 @@
 		addProjOpen = false;
 	};
 
+	const validate_password = (pw?: string): [boolean, string] => {
+		let ele1 = document.getElementById('password1') as HTMLInputElement;
+		if (ele1?.value !== pw) {
+			return [false, "Passwords do not match!"];
+		}
+		else {
+			return [true, "OK"];
+		}
+	}
+
+	const add_user = () => {
+		let userdata: Record<string, string | boolean | {project: string, permissions: string[]}[]> = {
+			givenName: ((p) => p)(givenName),
+			familyName: familyName,
+			email: email,
+			password: password1,
+			isActive: isActive,
+		};
+		let in_project: {project: string, permissions: string[]}[] = []
+		Object.entries(inProject).forEach(([iri, perms]) => {
+			let p: string[] = []
+			Object.entries(perms).forEach(([perm, is_set]) => {
+				if (is_set) {
+					let tmp = perm.split(':');
+					p.push(tmp[1]);
+				}
+			});
+			in_project.push({project: iri, permissions: p});
+		});
+		userdata.inProjects = in_project;
+		console.log("ADD_USER:", userdata);
+	}
+
 
 </script>
 
@@ -272,7 +310,7 @@
 	<form class="max-w-128">
 
 		{#if data?.userid === 'new'}
-			<Textfield type='text' label={m.user_id()} name="useriri" id="useriri" placeholder="user Iri" required={false}
+			<Textfield type='text' label={m.user_iri()} name="useriri" id="useriri" placeholder="user Iri" required={false}
 								 bind:value={userIri} pattern={iri_pattern} />
 		{:else}
 			<Textfield type='text' label={m.user_id()} name="useriri" id="useriri" placeholder="user Iri" required={false}
@@ -280,13 +318,17 @@
 		{/if}
 		<Textfield type='text' label={m.user_id()} name="userid" id="userid" placeholder="user id" required={true}
 							 bind:value={userId} pattern={ncname_pattern} />
+		<Textfield type='password' label={m.password()} name="password" id="password1" placeholder="password"
+							 required={data?.userid === 'new'} bind:value={password1} pattern={password_pattern} />
+		<Textfield type='password' label={m.password()} name="password" id="password2" placeholder="password"
+							 required={data?.userid === 'new'} bind:value={password2} validate={validate_password} />
 		<Textfield type='text' label={m.family_name()} name="familyName" id="familyName" placeholder="family name"
 							 required={true} bind:value={familyName} />
 		<Textfield type='text' label={m.given_name()} name="givenName" id="givenName" placeholder="given name"
 							 required={true} bind:value={givenName} />
 		<Textfield type='email' label={m.email()} name="email" id="email" placeholder="john.doe@example.org" required={true}
 							 bind:value={email} pattern={email_pattern} />
-		<Togglefield label={m.is_active()} id="isActive" toggle_state={isActive}/>
+		<Togglefield label={m.is_active()} id="isActive" bind:toggle_state={isActive}/>
 		<Table label={m.projects()} description={m.perprojperms()} padding={false} action_elements={actions}>
 			<TableHeader>
 				<TableColumnTitle>{m.project()}</TableColumnTitle>
@@ -381,16 +423,16 @@
 			</TableBody>
 		</Table>
 
-		<div>Data Permissions</div>
+		<div class="text-sm ">Data Permissions</div>
 		{#each permissionSets as pset}
-			{@const txt = `${pset?.label ? pset?.label[langobj] : ''} (${dataPermissionAsString(pset?.givesPermission)} ${m.fromproj()} "${pset?.projectShortName}") ${pset?.permissionSetIri}`}
-			<Checkbox label={txt} position="right" bind:checked={user_permsets[pset?.permissionSetIri]}></Checkbox>
+			{@const txt = `${pset?.label ? pset?.label[langobj] : ''} (${dataPermissionAsString(pset?.givesPermission)} ${m.fromproj()} "${pset?.projectShortName}")`}
+			<Checkbox label={txt} position="right" bind:checked={user_permsets[pset?.permissionSetIri.toString()]}></Checkbox>
 		{/each}
 
 
 		<div class="flex justify-center gap-4 mt-6">
-			<Button class="mx-4 my-2 ">Cancel</Button>
-			<Button class="mx-4 my-2 ">Add</Button>
+			<Button class="mx-4 my-2" onclick={() => window.history.back()}>{m.cancel()}</Button>
+			<Button class="mx-4 my-2" onclick={() => add_user()}>{data?.userid === 'new' ? m.add() : m.modify()}</Button>
 		</div>
 	</form>
 </div>

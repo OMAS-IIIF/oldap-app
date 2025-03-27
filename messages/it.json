@@ -33,5 +33,8 @@
     "admindatamodel": "Modificare il modello di dati",
     "createres": "Creare risorse",
     "adminlists": "Aggiungere/modificare i thesauri",
-    "fromproj": "dal progetto"
+    "fromproj": "dal progetto",
+    "cancel": "Annullamento",
+    "modify": "Modificare",
+    "user_iri": "Utente IRI"
 }
