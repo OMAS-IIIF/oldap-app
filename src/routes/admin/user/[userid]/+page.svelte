@@ -24,28 +24,43 @@
 	import DropdownMenu from '$lib/components/basic_gui/dropdown/DropdownMenu.svelte';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
+	import Checkbox from '$lib/components/basic_gui/checkbox/Checkbox.svelte';
+	import { OldapPermissionSet } from '$lib/oldap/classes/permissionset';
+	import { languageTag } from '$lib/paraglide/runtime';
+	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
+	import { dataPermissionAsString } from '$lib/oldap/enums/data_permissions';
+	import { QName } from '$lib/oldap/datatypes/xsd_qname.js';
 
 	type ProjRef = {iri: string, sname: string};
 	type CheckedState = {[key: string]: Record<AdminPermission, boolean>};
 
 	let { data }: PageProps = $props();
 
+	let lang = $state(languageTag());
+	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
+
 	let authinfo: AuthInfo;
-	let user = $state<OldapUser | null>(null);
 	let administrator = $state<OldapUser | null>(null);
 	const ncname_pattern: RegExp = /^[A-Za-z_][A-Za-z0-9._-]*$/;
 	const email_pattern: RegExp = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 	const iri_pattern: RegExp = /^(https?:\/\/|urn:)[^\s]+$/;
 	let user_in_projects = $state<ProjRef[]>([]);
 	let assignable_projects = $state<ProjRef[]>([]);
-	let checked = $state<CheckedState>({});
 	let addProjOpen = $state(false);
+
+	//let all_projects = $state<Record<string, OldapProject>>({});
+	let all_projects: Record<string, OldapProject> = {};
+	let user: OldapUser | null = null;
 
 	let userIri = $state('');
 	let userId = $state('');
 	let familyName = $state('');
 	let givenName = $state('');
 	let email = $state('');
+	let isActive = $state(false);
+	let inProject = $state<CheckedState>({});
+	let permissionSets = $state<OldapPermissionSet[]>([]);
+	let user_permsets = $state<Record<string, boolean>>({});
 
 
 	const allPermissions = Object.keys(AdminPermission)
@@ -55,8 +70,56 @@
 		administrator = admin;
 	})
 
+	const process_permissions = async (): Promise<void> => {
+		const sysprojref = {iri: "oldap:SystemProject", sname: 'oldap'} as ProjRef;
+		const exists = user_in_projects.some(
+			item => item.iri === "oldap:SystemProject"
+		);
+		let tmp: ProjRef[];
+		if (!exists) {
+			tmp = [sysprojref, ...user_in_projects];
+		}
+		else {
+			tmp = user_in_projects;
+		}
+		const promises2 = tmp.map(async (in_project) => { // get data permission set iris for all projects the user is in
+			const permset_config = api_get_config(authinfo, {definedByProject: in_project.iri});
+			const jsondata = await apiClient.getAdminpermissionsetsearch(permset_config);
+			return jsondata;
+		});
+		let permset_iris: string[] = [];
+		try {
+			const results2 = await Promise.all(promises2);
+			permset_iris = results2.flat();
+		}
+		catch (error) {
+			return Promise.reject(error);
+		}
+		const promises3 = permset_iris.map(async ps_iri => { // get the complete permission set data for all permission sets
+			const dataperm_config = api_get_config(authinfo, {iri: ps_iri});
+			return await apiClient.getAdminpermissionsetget(dataperm_config);
+		});
+		try {
+			const results3 = await Promise.all(promises3);
+
+			let gaga = user?.hasPermissions?.map(item => item.toString()) || [];
+			console.log("*=*=*=*=*=**>", gaga);
+			permissionSets = results3.map(jsonobj => {
+				let tmp = OldapPermissionSet.fromOldapJson(jsonobj);
+				tmp.projectShortName = all_projects[tmp.definedByProject.toString()].projectShortName.toString();
+				if (tmp?.permissionSetIri) {
+					user_permsets[tmp.permissionSetIri] = gaga.includes(tmp.permissionSetIri);
+				}
+				return tmp;
+			});
+		}
+		catch (error) {
+			return Promise.reject(error);
+		}
+	}
+
 	onMount(async () => {
-		user = null;
+		//user = null;
 		authinfo = AuthInfo.fromString(sessionStorage.getItem('authinfo'));
 		//
 		// fill "all_projects_iris" containing all the project iri's the current administrator may assign to the given user
@@ -75,7 +138,7 @@
 				}
 				catch (error) {
 					errorInfoStore.set(process_api_error(error as Error));
-					return null;
+					return;
 				}
 			}
 			else {
@@ -89,20 +152,21 @@
 		//
 		// now retrieve all projects data from the triplestore
 		//
-		let all_projects: Record<string, OldapProject> = {};
+		//let all_projects: Record<string, OldapProject> = {};
 		const promises = all_projects_iris.map(async iri => {
 			const config_projectdata = api_get_config(authinfo, { iri: iri });
-			try {
-				const jsondata = await apiClient.getAdminprojectget(config_projectdata);
-				const project = OldapProject.fromOldapJson(jsondata);
-				return { iri: project.projectIri.toString(), project };
-			} catch (error) {
-				errorInfoStore.set(process_api_error(error as Error));
-				return null;
-			}
+			const jsondata = await apiClient.getAdminprojectget(config_projectdata);
+			const project = OldapProject.fromOldapJson(jsondata);
+			return { iri: project.projectIri.toString(), project };
 		});
-		const results = await Promise.all(promises);
-		all_projects = Object.fromEntries(results.filter(p => p !== null).map(({ iri, project }) => [iri, project]));
+		try {
+			const results = await Promise.all(promises);
+			all_projects = Object.fromEntries(results.filter(p => p !== null).map(({ iri, project }) => [iri, project]));
+		}
+		catch (error) {
+			errorInfoStore.set(process_api_error(error as Error));
+			return;
+		}
 
 		if (data?.userid !== 'new') {
 			//
@@ -118,18 +182,19 @@
 					givenName = user.givenName;
 					familyName = user.familyName;
 					email = user.email;
+					isActive = user.isActive;
 
 					Object.keys(all_projects).forEach((p_iri) => {
 						let tmp = false;
 						user?.inProject?.forEach(in_project => {
 							if (in_project.project.toString() === p_iri) {
 								user_in_projects.push({iri: p_iri, sname: all_projects[p_iri].projectShortName.toString()});
-								checked[p_iri]  = {} as Record<AdminPermission, boolean>;
+								inProject[p_iri]  = {} as Record<AdminPermission, boolean>;
 								allPermissions.forEach(permission => {
 									if (in_project.permissions.includes(permission)) {
-										checked[p_iri][permission] = true;
+										inProject[p_iri][permission] = true;
 									} else {
-										checked[p_iri][permission] = false;
+										inProject[p_iri][permission] = false;
 									}
 								});
 								tmp = true;
@@ -142,7 +207,7 @@
 				}
 			} catch(error) {
 				errorInfoStore.set(process_api_error(error as Error));
-				return null;
+				return;
 			}
 			assignable_projects = assignable_projects.sort((a, b) => a.sname.localeCompare(b.sname));
 			user_in_projects = user_in_projects.sort((a, b) => a.sname.localeCompare(b.sname));
@@ -156,13 +221,18 @@
 				assignable_projects = assignable_projects.sort((a, b) => a.sname.localeCompare(b.sname));
 			});
 		}
+	});
 
+	$effect(() => {
+		process_permissions().catch(error => {
+			errorInfoStore.set(process_api_error(error as Error));
+		});
 	});
 
 	const add_project = (proj_ref: ProjRef) => {
-		checked[proj_ref.iri] = {} as Record<AdminPermission, boolean>;
+		inProject[proj_ref.iri] = {} as Record<AdminPermission, boolean>;
 		allPermissions.forEach(permission => {
-			checked[proj_ref.iri][permission] = false;
+			inProject[proj_ref.iri][permission] = false;
 		});
 		assignable_projects = assignable_projects.filter(item => item.iri !== proj_ref.iri);
 		user_in_projects.push(proj_ref);
@@ -172,7 +242,7 @@
 	};
 
 	const remove_project = (proj_ref: ProjRef) => {
-		delete checked[proj_ref.iri];
+		delete inProject[proj_ref.iri];
 		user_in_projects = user_in_projects.filter(item => item.iri !== proj_ref.iri);
 		assignable_projects.push(proj_ref);
 		assignable_projects = assignable_projects.sort((a, b) => a.sname.localeCompare(b.sname));
@@ -197,10 +267,10 @@
 	</div>
 {/snippet}
 
-<div class="absolute top-0 left-0 right-0 bottom-0 overflow-auto flex justify-center items-center">
-
+<div class="absolute top-0 left-0 right-0 bottom-0 overflow-auto flex flex-col justify-center items-center">
+	<div>{data.userid !== 'new' ? m.edit()  : m.add()} User </div>
 	<form class="max-w-128">
-		<h1>{data.userid !== 'new' ? m.edit()  : m.add()} User </h1>
+
 		{#if data?.userid === 'new'}
 			<Textfield type='text' label={m.user_id()} name="useriri" id="useriri" placeholder="user Iri" required={false}
 								 bind:value={userIri} pattern={iri_pattern} />
@@ -216,7 +286,7 @@
 							 required={true} bind:value={givenName} />
 		<Textfield type='email' label={m.email()} name="email" id="email" placeholder="john.doe@example.org" required={true}
 							 bind:value={email} pattern={email_pattern} />
-		<Togglefield label={m.is_active()} id="isActive" toggle_state={user?.isActive}/>
+		<Togglefield label={m.is_active()} id="isActive" toggle_state={isActive}/>
 		<Table label={m.projects()} description={m.perprojperms()} padding={false} action_elements={actions}>
 			<TableHeader>
 				<TableColumnTitle>{m.project()}</TableColumnTitle>
@@ -290,13 +360,13 @@
 				{#each user_in_projects as p_ref}
 					<TableRow>
 						<TableItem>{p_ref.sname}</TableItem>
-						<TableItem><input type="checkbox" bind:checked={checked[p_ref.iri][AdminPermission.ADMIN_OLDAP]}></TableItem>
-						<TableItem><input type="checkbox" bind:checked={checked[p_ref.iri][AdminPermission.ADMIN_USERS]}></TableItem>
-						<TableItem><input type="checkbox" bind:checked={checked[p_ref.iri][AdminPermission.ADMIN_PERMISSION_SETS]}></TableItem>
-						<TableItem><input type="checkbox" bind:checked={checked[p_ref.iri][AdminPermission.ADMIN_RESOURCES]}></TableItem>
-						<TableItem><input type="checkbox" bind:checked={checked[p_ref.iri][AdminPermission.ADMIN_MODEL]}></TableItem>
-						<TableItem><input type="checkbox" bind:checked={checked[p_ref.iri][AdminPermission.ADMIN_CREATE]}></TableItem>
-						<TableItem><input type="checkbox" bind:checked={checked[p_ref.iri][AdminPermission.ADMIN_LISTS]}></TableItem>
+						<TableItem><input type="checkbox" bind:checked={inProject[p_ref.iri][AdminPermission.ADMIN_OLDAP]}></TableItem>
+						<TableItem><input type="checkbox" bind:checked={inProject[p_ref.iri][AdminPermission.ADMIN_USERS]}></TableItem>
+						<TableItem><input type="checkbox" bind:checked={inProject[p_ref.iri][AdminPermission.ADMIN_PERMISSION_SETS]}></TableItem>
+						<TableItem><input type="checkbox" bind:checked={inProject[p_ref.iri][AdminPermission.ADMIN_RESOURCES]}></TableItem>
+						<TableItem><input type="checkbox" bind:checked={inProject[p_ref.iri][AdminPermission.ADMIN_MODEL]}></TableItem>
+						<TableItem><input type="checkbox" bind:checked={inProject[p_ref.iri][AdminPermission.ADMIN_CREATE]}></TableItem>
+						<TableItem><input type="checkbox" bind:checked={inProject[p_ref.iri][AdminPermission.ADMIN_LISTS]}></TableItem>
 						<TableItem>
 							<Button round={true} onclick={() => {remove_project(p_ref)}}>
 								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -310,6 +380,14 @@
 				{/each}
 			</TableBody>
 		</Table>
+
+		<div>Data Permissions</div>
+		{#each permissionSets as pset}
+			{@const txt = `${pset?.label ? pset?.label[langobj] : ''} (${dataPermissionAsString(pset?.givesPermission)} ${m.fromproj()} "${pset?.projectShortName}") ${pset?.permissionSetIri}`}
+			<Checkbox label={txt} position="right" bind:checked={user_permsets[pset?.permissionSetIri]}></Checkbox>
+		{/each}
+
+
 		<div class="flex justify-center gap-4 mt-6">
 			<Button class="mx-4 my-2 ">Cancel</Button>
 			<Button class="mx-4 my-2 ">Add</Button>

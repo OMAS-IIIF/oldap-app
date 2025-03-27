@@ -32,5 +32,6 @@
     "adminres": "Sovrascrivere le autorizzazioni delle risorse",
     "admindatamodel": "Modificare il modello di dati",
     "createres": "Creare risorse",
-    "adminlists": "Aggiungere/modificare i thesauri"
+    "adminlists": "Aggiungere/modificare i thesauri",
+    "fromproj": "dal progetto"
 }

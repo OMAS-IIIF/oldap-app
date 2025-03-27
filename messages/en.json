@@ -32,5 +32,6 @@
     "adminres": "Override resource permissions",
     "admindatamodel": "Modify data model",
     "createres": "Create resources",
-    "adminlists": "Add/modify thesauri"
+    "adminlists": "Add/modify thesauri",
+    "fromproj": "from project"
 }

@@ -32,5 +32,6 @@
     "adminres": "Ressourcenberechtigungen außer Kraft setzen",
     "admindatamodel": "Datenmodell modifizieren",
     "createres": "Ressourcen erstellen",
-    "adminlists": "Hinzufügen/Ändern von Thesauri"
+    "adminlists": "Hinzufügen/Ändern von Thesauri",
+    "fromproj": "vom Projekt"
 }

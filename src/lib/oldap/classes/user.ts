@@ -19,7 +19,7 @@ export class OldapUser extends OldapObject {
 	givenName: string;
 	email: string;
 	inProject?: InProject[];
-	hasPermissions?: QName[];
+	hasPermissions?: Iri[];
 	isRoot: boolean;
 
 	constructor(creator: Iri,
@@ -33,7 +33,7 @@ export class OldapUser extends OldapObject {
 							email: string,
 							isActive: boolean,
 							inProject?: InProject[],
-							hasPermissions?: QName[],
+							hasPermissions?: Iri[],
 							isRoot: boolean = false) {
 		super(creator, created, contributor, modified);
 		this.#userIri = userIri;
@@ -82,7 +82,7 @@ export class OldapUser extends OldapObject {
 				});
 			}
 		}
-		const has_permissions: QName[] | undefined = json?.has_permissions.map((x: string) => (QName.createQName(x)));
+		const has_permissions: Iri[] | undefined = json?.has_permissions.map((x: string) => (new Iri(x)));
 
 		let isRoot = false
 		in_project?.forEach((in_project: InProject) => {

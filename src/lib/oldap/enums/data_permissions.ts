@@ -11,3 +11,10 @@ export enum DataPermission {
 export function stringToDataPermission(value: string): DataPermission | undefined {
 	return Object.entries(DataPermission).find(([_, v]) => v === value)?.[1] as DataPermission | undefined;
 }
+
+export function dataPermissionAsString(value: DataPermission) {
+	const name = Object.keys(DataPermission).find(
+		key => DataPermission[key as keyof typeof DataPermission] === value
+	);
+	return name;
+}
