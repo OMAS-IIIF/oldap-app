@@ -11,6 +11,7 @@ import LangSelector from '$lib/components/basic_gui/langselector/LangSelector.sv
 import * as m from '$lib/paraglide/messages.js';
 import User from '$lib/components/oldap/User.svelte';
 import Projects from '$lib/components/oldap/Projects.svelte';
+import SuccessMsg from '$lib/components/oldap/SuccessMsg.svelte';
 
 let { children } = $props();
 
@@ -50,4 +51,7 @@ let user: OldapUser | null = $state(null);
 		<div>© Lukas & Manuel Rosenthaler (2025)</div>
 	</Footer>
 	<ErrorMsg></ErrorMsg>
+	<SuccessMsg></SuccessMsg>
 </div>
+
+

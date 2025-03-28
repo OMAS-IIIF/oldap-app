@@ -31,9 +31,12 @@
 	import { dataPermissionAsString } from '$lib/oldap/enums/data_permissions';
 	import { QName } from '$lib/oldap/datatypes/xsd_qname.js';
 	import { OldapErrorInvalidValue } from '$lib/oldap/errors/OldapErrorInvalidValue';
+	import { successInfoStore } from '$lib/stores/successinfo';
+	import SuccessMsg from '$lib/components/oldap/SuccessMsg.svelte';
 
 	type ProjRef = {iri: string, sname: string};
 	type CheckedState = {[key: string]: Record<AdminPermission, boolean>};
+	type AdminPerm = 'ADMIN_OLDAP' | 'ADMIN_USERS' | 'ADMIN_PERMISSION_SETS' | 'ADMIN_RESOURCES' | 'ADMIN_MODEL' |'ADMIN_CREATE'
 
 	let { data }: PageProps = $props();
 
@@ -283,7 +286,7 @@
 
 	const add_user = () => {
 		//
-		// check validity
+		// check validity of user data...
 		//
 		if (!(ncname_pattern as RegExp).test(userId)) {
 			errorInfoStore.set(new OldapErrorInvalidValue('userID is not valid! Must be NCName'));
@@ -314,13 +317,16 @@
 			errorInfoStore.set(new OldapErrorInvalidValue('Passwords do not match!'));
 			return;
 		}
-		let in_project: {project: string, permissions: string[]}[] = []
+		//
+		// build project membership and admin permissions for each project
+		//
+		let in_project: {project: string, permissions: AdminPerm[]}[] = []
 		Object.entries(inProject).forEach(([iri, perms]) => {
-			let p: string[] = []
+			let p: AdminPerm[] = []
 			Object.entries(perms).forEach(([perm, is_set]) => {
 				if (is_set) {
 					const tmp = perm.split(':');
-					p.push(tmp[1]);
+					p.push(tmp[1] as AdminPerm);
 				}
 			});
 			in_project.push({project: iri, permissions: p});
@@ -331,7 +337,7 @@
 			email: string,
 			password: string,
 			isActive: boolean,
-			inProjects: {project: string, permissions: string[]}[],
+			inProjects: {project: string, permissions: AdminPerm[]}[],
 			hasPermissions: string[]
 		} = {
 			givenName: givenName,
@@ -343,30 +349,21 @@
 			hasPermissions: []
 		};
 
-		//userdata.hasPermissions = [];
+		//
+		// build permission sets the user has assigned
+		//
 		Object.entries(user_permsets).forEach(([iri, checked]) => {
 			if (checked) {
-				const tmp = iri.split(':');
-				userdata.hasPermissions.push(tmp[1]);
+				userdata.hasPermissions.push(iri);
 			}
 		});
-		//const user_put = api_notget_config(authinfo, userdata)
-		const user_put = {
-			headers: {
-				'Accept': 'application/json',
-				'Authorization': 'Bearer ' + authinfo.token,
-			},
-			params: {
-				userId: userId,
-			}
-		}
-
-		apiClient.putAdminuserUserId(userdata, user_put).then(() => {
-			console.log("ADDED_USER:", userdata);
+		const user_put = api_notget_config(authinfo, {userId: userId});
+		apiClient.putAdminuserUserId(userdata, user_put).then((res) => {
+			successInfoStore.set(`User "${res.userId}" added successfully!`);
+			//window.history.back();
 		}).catch((error) => {
 			errorInfoStore.set(process_api_error(error as Error));
 		});
-
 	}
 
 
@@ -517,3 +514,4 @@
 		</div>
 	</form>
 </div>
+
