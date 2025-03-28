@@ -17,7 +17,7 @@
 	import { AdminPermission } from '$lib/oldap/enums/admin_permissions';
 	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
 	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { OldapProject } from '$lib/oldap/classes/project';
 	import DropdownButton from '$lib/components/basic_gui/dropdown/DropdownButton.svelte';
 	import DropdownButtonItem from '$lib/components/basic_gui/dropdown/DropdownButtonItem.svelte';
@@ -30,6 +30,7 @@
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import { dataPermissionAsString } from '$lib/oldap/enums/data_permissions';
 	import { QName } from '$lib/oldap/datatypes/xsd_qname.js';
+	import { OldapErrorInvalidValue } from '$lib/oldap/errors/OldapErrorInvalidValue';
 
 	type ProjRef = {iri: string, sname: string};
 	type CheckedState = {[key: string]: Record<AdminPermission, boolean>};
@@ -65,6 +66,9 @@
 	let inProject = $state<CheckedState>({});
 	let permissionSets = $state<OldapPermissionSet[]>([]);
 	let user_permsets = $state<Record<string, boolean>>({});
+	let topwin = $state<HTMLElement>();
+
+	let gugus = $state(false);
 
 
 	const allPermissions = Object.keys(AdminPermission)
@@ -72,7 +76,14 @@
 
 	userStore.subscribe((admin) => {
 		administrator = admin;
-	})
+	});
+
+	function scrollToTop() {
+		if (topwin) {
+			topwin.scrollTo({ top: -1000, behavior: "smooth" });
+		}
+	}
+
 
 	const process_permissions = async (): Promise<void> => {
 		const sysprojref = {iri: "oldap:SystemProject", sname: 'oldap'} as ProjRef;
@@ -124,6 +135,7 @@
 	}
 
 	onMount(async () => {
+		if (!topwin) return;
 		//user = null;
 		authinfo = AuthInfo.fromString(sessionStorage.getItem('authinfo'));
 		//
@@ -226,6 +238,10 @@
 				assignable_projects = assignable_projects.sort((a, b) => a.sname.localeCompare(b.sname));
 			});
 		}
+
+		// Initial scroll in case elements are already present
+		await tick();
+		scrollToTop();
 	});
 
 	$effect(() => {
@@ -266,26 +282,91 @@
 	}
 
 	const add_user = () => {
-		let userdata: Record<string, string | boolean | {project: string, permissions: string[]}[]> = {
-			givenName: ((p) => p)(givenName),
-			familyName: familyName,
-			email: email,
-			password: password1,
-			isActive: isActive,
-		};
+		//
+		// check validity
+		//
+		if (!(ncname_pattern as RegExp).test(userId)) {
+			errorInfoStore.set(new OldapErrorInvalidValue('userID is not valid! Must be NCName'));
+			return;
+		}
+		if (userIri && !(iri_pattern as RegExp).test(userIri)) {
+			errorInfoStore.set(new OldapErrorInvalidValue('User iriri is not valid!'));
+			return;
+		}
+		if (!givenName) {
+			errorInfoStore.set(new OldapErrorInvalidValue('Given name is empty!'));
+			return;
+		}
+		if (!familyName) {
+			errorInfoStore.set(new OldapErrorInvalidValue('Family name is empty!'));
+			return;
+		}
+
+		if (!(email_pattern as RegExp).test(email)) {
+			errorInfoStore.set(new OldapErrorInvalidValue('Email is not valid!'));
+			return;
+		}
+		if (!(password_pattern as RegExp).test(password1)) {
+			errorInfoStore.set(new OldapErrorInvalidValue('Passwords is not valid!'));
+			return;
+		}
+		if (password1 !== password2) {
+			errorInfoStore.set(new OldapErrorInvalidValue('Passwords do not match!'));
+			return;
+		}
 		let in_project: {project: string, permissions: string[]}[] = []
 		Object.entries(inProject).forEach(([iri, perms]) => {
 			let p: string[] = []
 			Object.entries(perms).forEach(([perm, is_set]) => {
 				if (is_set) {
-					let tmp = perm.split(':');
+					const tmp = perm.split(':');
 					p.push(tmp[1]);
 				}
 			});
 			in_project.push({project: iri, permissions: p});
 		});
-		userdata.inProjects = in_project;
-		console.log("ADD_USER:", userdata);
+		let userdata: {
+			givenName: string,
+			familyName: string,
+			email: string,
+			password: string,
+			isActive: boolean,
+			inProjects: {project: string, permissions: string[]}[],
+			hasPermissions: string[]
+		} = {
+			givenName: givenName,
+			familyName: familyName,
+			email: email,
+			password: password1,
+			isActive: isActive,
+			inProjects: in_project,
+			hasPermissions: []
+		};
+
+		//userdata.hasPermissions = [];
+		Object.entries(user_permsets).forEach(([iri, checked]) => {
+			if (checked) {
+				const tmp = iri.split(':');
+				userdata.hasPermissions.push(tmp[1]);
+			}
+		});
+		//const user_put = api_notget_config(authinfo, userdata)
+		const user_put = {
+			headers: {
+				'Accept': 'application/json',
+				'Authorization': 'Bearer ' + authinfo.token,
+			},
+			params: {
+				userId: userId,
+			}
+		}
+
+		apiClient.putAdminuserUserId(userdata, user_put).then(() => {
+			console.log("ADDED_USER:", userdata);
+		}).catch((error) => {
+			errorInfoStore.set(process_api_error(error as Error));
+		});
+
 	}
 
 
@@ -305,7 +386,7 @@
 	</div>
 {/snippet}
 
-<div class="absolute top-0 left-0 right-0 bottom-0 overflow-auto flex flex-col justify-center items-center">
+<div class="absolute top-0 left-0 right-0 bottom-0 overflow-auto flex flex-col justify-center items-center" bind:this={topwin}>
 	<div>{data.userid !== 'new' ? m.edit()  : m.add()} User </div>
 	<form class="max-w-128">
 
