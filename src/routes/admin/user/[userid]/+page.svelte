@@ -366,6 +366,35 @@
 		});
 	}
 
+	const update_user = () => {
+		let userdata: {
+			givenName?: string,
+			familyName?: string,
+			email?: string,
+			password?: string,
+			isActive?: boolean,
+			inProjects?: {project: string, permissions: AdminPerm[]}[],
+			hasPermissions?: string[]
+		} = {};
+		if (givenName !== user?.givenName) {
+			userdata.givenName = givenName;
+		}
+		if (familyName !== user?.familyName) {
+			userdata.givenName = givenName;
+		}
+		if (email !== user?.email) {
+			if (!(email_pattern as RegExp).test(email)) {
+				errorInfoStore.set(new OldapErrorInvalidValue('Email is not valid!'));
+				return;
+			}
+			userdata.email = email;
+		}
+		if (isActive !== user?.isActive) {
+			userdata.isActive = isActive;
+		}
+
+	}
+
 
 </script>
 
