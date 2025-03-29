@@ -366,8 +366,9 @@
 		});
 	}
 
-	const update_user = () => {
+	const modify_user = () => {
 		let userdata: {
+			userId?: string,
 			givenName?: string,
 			familyName?: string,
 			email?: string,
@@ -376,11 +377,17 @@
 			inProjects?: {project: string, permissions: AdminPerm[]}[],
 			hasPermissions?: string[]
 		} = {};
+		if (userId !== user?.userId.toString()) {
+			userdata.userId = userId;
+		}
+		if (givenName !== user?.givenName) {
+			userdata.givenName = givenName;
+		}
 		if (givenName !== user?.givenName) {
 			userdata.givenName = givenName;
 		}
 		if (familyName !== user?.familyName) {
-			userdata.givenName = givenName;
+			userdata.familyName = familyName;
 		}
 		if (email !== user?.email) {
 			if (!(email_pattern as RegExp).test(email)) {
@@ -392,7 +399,13 @@
 		if (isActive !== user?.isActive) {
 			userdata.isActive = isActive;
 		}
-
+		console.log("MODIFY USER:", userdata);
+		const user_post = api_notget_config(authinfo, {userId: user?.userId.toString()});
+		apiClient.postAdminuserUserId(userdata, user_post).then((res) => {
+			successInfoStore.set(`User "${res.userId}" modified successfully!`);
+		}).catch((error) => {
+			errorInfoStore.set(process_api_error(error as Error));
+		});
 	}
 
 
@@ -539,7 +552,12 @@
 
 		<div class="flex justify-center gap-4 mt-6">
 			<Button class="mx-4 my-2" onclick={() => window.history.back()}>{m.cancel()}</Button>
-			<Button class="mx-4 my-2" onclick={() => add_user()}>{data?.userid === 'new' ? m.add() : m.modify()}</Button>
+			{#if data?.userid === 'new'}
+				<Button class="mx-4 my-2" onclick={() => add_user()}>{m.add()}</Button>
+			{:else}
+				<Button class="mx-4 my-2" onclick={() => modify_user()}>{m.modify()}</Button>
+			{/if}
+
 		</div>
 	</form>
 </div>

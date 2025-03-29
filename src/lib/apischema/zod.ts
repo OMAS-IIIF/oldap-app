@@ -1309,7 +1309,7 @@ const endpoints = makeApi([
 			{
 				name: "body",
 				type: "Body",
-				schema: z.object({ givenName: z.string(), familyName: z.string(), email: z.string(), password: z.string(), isActive: z.boolean(), inProjects: z.array(z.object({ project: z.string(), permissions: z.union([z.array(z.string()), z.object({ add: z.array(z.string()), del: z.array(z.string()) }).partial().passthrough()]) }).partial().passthrough()), hasPermissions: z.union([z.array(z.string()), z.object({ add: z.array(z.string()), del: z.array(z.string()) }).partial().passthrough()]) }).partial().passthrough()
+				schema: z.object({ userId: z.string(), givenName: z.string(), familyName: z.string(), email: z.string(), password: z.string(), isActive: z.boolean(), inProjects: z.array(z.object({ project: z.string(), permissions: z.union([z.array(z.string()), z.object({ add: z.array(z.string()), del: z.array(z.string()) }).partial().passthrough(), z.null()]) }).partial().passthrough()), hasPermissions: z.union([z.array(z.string()), z.object({ add: z.array(z.string()), del: z.array(z.string()) }).partial().passthrough()]) }).partial().passthrough()
 			},
 			{
 				name: "userId",
