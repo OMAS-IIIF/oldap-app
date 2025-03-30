@@ -71,8 +71,6 @@
 	let user_permsets = $state<Record<string, boolean>>({});
 	let topwin = $state<HTMLElement>();
 
-	let gugus = $state(false);
-
 
 	const allPermissions = Object.keys(AdminPermission)
 		.map(key => AdminPermission[key as keyof typeof AdminPermission]);
@@ -366,6 +364,22 @@
 		});
 	}
 
+	function union<T>(a: Set<T>, b: Set<T>): Set<T> {
+		return new Set([...a, ...b]);
+	}
+
+	function intersection<T>(a: Set<T>, b: Set<T>): Set<T> {
+		return new Set([...a].filter(x => b.has(x)));
+	}
+
+	function difference<T>(a: Set<T>, b: Set<T>): Set<T> {
+		return new Set([...a].filter(x => !b.has(x)));
+	}
+
+	function symmetricDifference<T>(a: Set<T>, b: Set<T>): Set<T> {
+		return new Set([...a, ...b].filter(x => a.has(x) !== b.has(x)));
+	}
+
 	const modify_user = () => {
 		let userdata: {
 			userId?: string,
@@ -374,7 +388,7 @@
 			email?: string,
 			password?: string,
 			isActive?: boolean,
-			inProjects?: {project: string, permissions: AdminPerm[]}[],
+			inProjects?: {project: string, permissions: AdminPerm[] | null | Record<'add'|'del', AdminPerm[]> }[],
 			hasPermissions?: string[]
 		} = {};
 		if (userId !== user?.userId.toString()) {
@@ -399,8 +413,62 @@
 		if (isActive !== user?.isActive) {
 			userdata.isActive = isActive;
 		}
+		//
+		// check project membership
+		//
+		const p_iris = new Set(Object.keys(inProject));
+		const u_iris = new Set(user?.inProject?.map(x => x.project.toString()));
+
+		const new_iris = difference(p_iris, u_iris);
+		const removed_iris = difference(u_iris, p_iris);
+		const other_iris = intersection(p_iris, u_iris);
+
+		if (new_iris || other_iris) {
+			userdata.inProjects = [] as {project: string, permissions: AdminPerm[]}[];
+			// add new projects with permissions
+			for (const iri of new_iris) {
+				let p: AdminPerm[] = []
+				Object.entries(inProject[iri]).forEach(([perm, is_set]) => {
+					if (is_set) {
+						const tmp = perm.split(':');
+						p.push(tmp[1] as AdminPerm);
+					}
+				});
+			}
+			// remove projects
+			for (const iri of removed_iris) {
+				userdata.inProjects.push({project: iri, permissions: null});
+			}
+		}
+		// modify (if necessary) existing inProject permissions
+		for (const iri of other_iris) {
+			let u_perms = new Set<AdminPerm>(); // permissions previously set for this project iri
+			let n_perms = new Set<AdminPerm>(); // permissions set in GUI for this project iri
+			if (user?.inProject) {
+				const pp = user.inProject.find(x => x.project.toString() === iri);
+				if (pp) {
+					Object.entries(pp).forEach(([perm, is_set]) => {
+						if (is_set) {
+							const tmp = perm.split(':');
+							u_perms.add(tmp[1] as AdminPerm);
+						}
+					});
+				}
+			}
+			Object.entries(inProject[iri]).forEach(([perm, is_set]) => {
+				if (is_set) {
+					const tmp = perm.split(':');
+					n_perms.push(tmp[1] as AdminPerm);
+				}
+			});
+			const new_perms = difference(n_perms, u_perms);
+			const del_perms = difference(u_perms, u_perms);
+			// now let put the "add" and "del" modification to the userdata object that will be sent to the serer
+		}
+
+
 		console.log("MODIFY USER:", userdata);
-		const user_post = api_notget_config(authinfo, {userId: user?.userId.toString()});
+		const user_post = api_notget_config(authinfo, {userId: user?.userId.toString() || ''});
 		apiClient.postAdminuserUserId(userdata, user_post).then((res) => {
 			successInfoStore.set(`User "${res.userId}" modified successfully!`);
 		}).catch((error) => {
