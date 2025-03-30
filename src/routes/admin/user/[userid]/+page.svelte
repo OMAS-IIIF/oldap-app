@@ -434,6 +434,7 @@
 						p.push(tmp[1] as AdminPerm);
 					}
 				});
+				userdata.inProjects.push({project: iri, permissions: p});
 			}
 			// remove projects
 			for (const iri of removed_iris) {
@@ -458,12 +459,21 @@
 			Object.entries(inProject[iri]).forEach(([perm, is_set]) => {
 				if (is_set) {
 					const tmp = perm.split(':');
-					n_perms.push(tmp[1] as AdminPerm);
+					n_perms.add(tmp[1] as AdminPerm);
 				}
 			});
 			const new_perms = difference(n_perms, u_perms);
 			const del_perms = difference(u_perms, u_perms);
-			// now let put the "add" and "del" modification to the userdata object that will be sent to the serer
+			// now let put the "add" and "del" modification to the userdata object that will be sent to the server
+			if ((new_perms || del_perms) && !userdata.inProjects) {
+				userdata.inProjects = [] as {project: string, permissions: AdminPerm[]}[];
+			}
+			if (new_perms) {
+				userdata?.inProjects?.push({project: iri, permissions: {'add': Array.from(new_perms)} as Record<'add'|'del', AdminPerm[]>});
+			}
+			if (del_perms) {
+				userdata?.inProjects?.push({project: iri, permissions: {'del': Array.from(del_perms)} as Record<'add'|'del', AdminPerm[]>});
+			}
 		}
 
 
