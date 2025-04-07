@@ -33,6 +33,7 @@
 	import { OldapErrorInvalidValue } from '$lib/oldap/errors/OldapErrorInvalidValue';
 	import { successInfoStore } from '$lib/stores/successinfo';
 	import SuccessMsg from '$lib/components/oldap/SuccessMsg.svelte';
+	import type { Iri } from '$lib/oldap/datatypes/xsd_iri';
 
 	type ProjRef = {iri: string, sname: string};
 	type CheckedState = {[key: string]: Record<AdminPermission, boolean>};
@@ -389,7 +390,7 @@
 			password?: string,
 			isActive?: boolean,
 			inProjects?: {project: string, permissions: AdminPerm[] | null | Record<'add'|'del', AdminPerm[]> }[],
-			hasPermissions?: string[]
+			hasPermissions?: string[] | Record<'add'|'del', string[]>
 		} = {};
 		if (userId !== user?.userId.toString()) {
 			userdata.userId = userId;
@@ -448,12 +449,10 @@
 			if (user?.inProject) {
 				const pp = user.inProject.find(x => x.project.toString() === iri);
 				if (pp) {
-					Object.entries(pp).forEach(([perm, is_set]) => {
-						if (is_set) {
-							const tmp = perm.split(':');
-							u_perms.add(tmp[1] as AdminPerm);
-						}
-					});
+					for (const perm of pp.permissions) {
+						const tmp = perm.split(':');
+						u_perms.add(tmp[1] as AdminPerm);
+					}
 				}
 			}
 			Object.entries(inProject[iri]).forEach(([perm, is_set]) => {
@@ -462,20 +461,53 @@
 					n_perms.add(tmp[1] as AdminPerm);
 				}
 			});
+			// now find out which permissions are to be added and deleted for this iri...
 			const new_perms = difference(n_perms, u_perms);
-			const del_perms = difference(u_perms, u_perms);
+			const del_perms = difference(u_perms, n_perms);
 			// now let put the "add" and "del" modification to the userdata object that will be sent to the server
 			if ((new_perms || del_perms) && !userdata.inProjects) {
 				userdata.inProjects = [] as {project: string, permissions: AdminPerm[]}[];
 			}
-			if (new_perms) {
+			if (new_perms.size > 0) {
 				userdata?.inProjects?.push({project: iri, permissions: {'add': Array.from(new_perms)} as Record<'add'|'del', AdminPerm[]>});
 			}
-			if (del_perms) {
+			if (del_perms.size > 0) {
 				userdata?.inProjects?.push({project: iri, permissions: {'del': Array.from(del_perms)} as Record<'add'|'del', AdminPerm[]>});
 			}
 		}
+		if (userdata?.inProjects?.length == 0) {
+			delete userdata.inProjects;
+		}
 
+		//
+		// process permission sets
+		//
+		const u_permsets = new Set<string>(user?.hasPermissions?.map(x => x.toString()));
+		const n_permsets = new Set<string>([]);
+		Object.entries(user_permsets).forEach(([perm, is_set]) => {
+			if (is_set) n_permsets.add(perm);
+		});
+		if (n_permsets.size == 0) { // all permission sets have been removed!!
+			userdata.hasPermissions = [];
+		}
+		else if (u_permsets.size == 0) { // User had nore permission sets before
+			userdata.hasPermissions = Array.from(n_permsets);
+		}
+		else {
+			const add_permsets = difference(n_permsets, u_permsets);
+			const del_permsets = difference(u_permsets, n_permsets);
+			let tmp: Record<'add'|'del', string[]> = {} as Record<'add'|'del', string[]>;
+			if (add_permsets.size > 0) {
+				tmp.add = Array.from(add_permsets);
+			}
+			if (del_permsets.size > 0) {
+				tmp.del = Array.from(del_permsets);
+			}
+			console.log("====> tmp", tmp);
+			if (tmp && Object.keys(tmp).length > 0) {
+				userdata.hasPermissions = tmp;
+			}
+		}
 
 		console.log("MODIFY USER:", userdata);
 		const user_post = api_notget_config(authinfo, {userId: user?.userId.toString() || ''});
