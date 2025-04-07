@@ -44,6 +44,7 @@
 	});
 
 	$effect(() => {
+		user_list = [];
 		if (authinfo) {
 			let usersearch = api_get_config(authinfo);
 			if (!show_all_users) {
