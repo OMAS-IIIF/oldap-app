@@ -14,6 +14,7 @@
 	import { apiClient } from '$lib/shared/apiClient';
 	import { userStore } from '$lib/stores/user';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
+	import { goto } from '$app/navigation';
 
 	let { user = $bindable() } = $props();
 
@@ -72,6 +73,7 @@
 		src = undefined;
 		userStore.set(null);
 		sessionStorage.removeItem('authinfo');
+		goto('/');
 	}
 
 	let test = (event: Event) => {

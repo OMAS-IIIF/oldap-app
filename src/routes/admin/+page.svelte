@@ -14,12 +14,13 @@
 	import * as m from '$lib/paraglide/messages.js'
 	import { AdminPermission } from '$lib/oldap/enums/admin_permissions';
 	import UsersList from '$lib/components/oldap/UsersList.svelte';
+	import { get } from 'svelte/store';
 
 	//type UsersList = {[key: string]: OldapUser};
 
 	let tabs: TabsType = $state({});
 	let administrator: OldapUser | null = $state(null);
-	let project: OldapProject | null = $state(null);
+	let project = $state<OldapProject | null>(get(projectStore));
 	let selected_tab = $state('');
 
 	let tabs_height = $state(100); // just an arbitrary value

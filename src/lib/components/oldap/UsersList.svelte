@@ -3,7 +3,7 @@
 	import Table from '$lib/components/basic_gui/table/Table.svelte';
 	import { OldapUser } from '$lib/oldap/classes/user';
 	import type { OldapProject } from '$lib/oldap/classes/project';
-	import { api_config, api_get_config } from '$lib/helpers/api_config';
+	import { api_config, api_get_config, api_notget_config } from '$lib/helpers/api_config';
 	import { apiClient } from '$lib/shared/apiClient';
 	import Checkbox from '$lib/components/basic_gui/checkbox/Checkbox.svelte';
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
@@ -28,7 +28,6 @@
 
 	let show_all_users = $state(false);
 	let authinfo = $state<AuthInfo>();
-	//let users: OldapUser[] = $state([]);
 	let users = $state<Record<string, OldapUser>>({});
 	let user_list = $state<string[]>([]);
 	let user_active: Record<string, boolean> = $state({});
@@ -94,7 +93,7 @@
 					console.log(result);
 				})
 				.catch((err) => {
-					console.log(err);
+					errorInfoStore.set(process_api_error(err as Error));
 				});
 		}
 		return on;
@@ -107,6 +106,22 @@
 	const goto_page = (url: string) => {
 		return () => {
 			goto(url);
+		}
+	}
+
+	const delete_user = async (user_id: string) => {
+		confirmation_for_userid = user_id;
+		confirmation_title = 'Delete user';
+		confirmation_for_state = 'GAGAGAG';
+		const ok = await confirmation_dialog.open();
+		if (ok && authinfo) {
+			const config_data = api_notget_config(authinfo, {userId: user_id});
+			apiClient.deleteAdminuserUserId (undefined, config_data).then((result) => {
+				delete users[user_id];
+				user_list = user_list.filter((id) => id !== user_id);
+			}).catch((err) => {
+				errorInfoStore.set(process_api_error(err as Error));
+			})
 		}
 	}
 
@@ -156,7 +171,7 @@
 											d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
 							</svg>
 						</Button>
-						<Button round={true}>
+						<Button round={true} onclick={() => delete_user(user_id)}>
 							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
 									 stroke="currentColor" class="size-4">
 								<path stroke-linecap="round" stroke-linejoin="round"
