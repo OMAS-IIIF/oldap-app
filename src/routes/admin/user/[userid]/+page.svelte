@@ -284,6 +284,7 @@
 	}
 
 	const add_user = () => {
+		console.log("------> add_user()")
 		//
 		// check validity of user data...
 		//
@@ -358,9 +359,13 @@
 		});
 		const user_put = api_notget_config(authinfo, {userId: userId});
 		apiClient.putAdminuserUserId(userdata, user_put).then((res) => {
+			console.log("ADD NEW USER");
+			console.log(userdata);
 			successInfoStore.set(`User "${res.userId}" added successfully!`);
 			//window.history.back();
 		}).catch((error) => {
+			console.log("ADD NEW USER FAILED");
+			console.log(userdata);
 			errorInfoStore.set(process_api_error(error as Error));
 		});
 	}
