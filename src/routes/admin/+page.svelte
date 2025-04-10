@@ -48,6 +48,7 @@
 			});
 			if (administrator.isRoot) {
 				tabs = {
+					projects: m.projects(),
 					users: m.users(),
 					lists: m.lists(),
 					models: m.datamodel(),
@@ -77,7 +78,10 @@
 		else {
 			tabs = {};
 		}
-		if (tabs['users']) {
+		if (tabs['projects']) {
+			selected_tab = 'projects';
+		}
+		else if (tabs['users']) {
 			selected_tab = 'users';
 		}
 		else if (tabs['lists']) {
@@ -107,7 +111,6 @@
 	contentAreaHeight.subscribe((height) => {
 		if (height) {
 			table_height = height - tabs_height - 25;
-			console.log("height=>", height, "table_height=>", table_height);
 		}
 	});
 

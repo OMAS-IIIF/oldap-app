@@ -36,5 +36,8 @@
     "fromproj": "dal progetto",
     "cancel": "Annullamento",
     "modify": "Modificare",
-    "user_iri": "Utente IRI"
+    "user_iri": "Utente IRI",
+    "confirm_user_delete": "Si vuole davvero cancellare l'utente \"{userid}\"?",
+    "active": "Attivo",
+    "add_project": "Aggiungi progetto"
 }

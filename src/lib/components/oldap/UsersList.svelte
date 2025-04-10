@@ -112,7 +112,7 @@
 	const delete_user = async (user_id: string) => {
 		confirmation_for_userid = user_id;
 		confirmation_title = 'Delete user';
-		confirmation_for_state = 'GAGAGAG';
+		confirmation_for_state = '';
 		const ok = await confirmation_dialog.open();
 		if (ok && authinfo) {
 			const config_data = api_notget_config(authinfo, {userId: user_id});
@@ -126,12 +126,12 @@
 	}
 
 	let headers: string[] = $state([
-		'User ID',
-		'Family name',
-		'Given name',
-		'Email',
-		'Active',
-		'Action']);
+		m.user_id(),
+		m.family_name(),
+		m.given_name(),
+		m.email(),
+		m.active(),
+		m.action()]);
 
 </script>
 
@@ -186,5 +186,9 @@
 </Table>
 
 <Confirmation bind:this={confirmation_dialog} title={confirmation_title}>
-	{m.confirm_state({ userid: confirmation_for_userid, state: confirmation_for_state })}
+	{#if confirmation_for_state === ''}
+		{m.confirm_user_delete({ userid: confirmation_for_userid})}
+	{:else}
+		{m.confirm_state({ userid: confirmation_for_userid, state: confirmation_for_state })}
+	{/if}
 </Confirmation>
