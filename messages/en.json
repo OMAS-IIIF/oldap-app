@@ -39,5 +39,6 @@
     "user_iri": "User IRI",
     "confirm_user_delete": "Do you really want to delete the user \"{userid}\" ?",
     "active": "Active",
-    "add_project": "Add project"
+    "add_project": "Add project",
+    "projectlist_descr": "List of all projects"
 }

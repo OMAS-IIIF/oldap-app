@@ -22,7 +22,7 @@
     "family_name": "Nome della famiglia",
     "given_name": "Nome",
     "email": "Email",
-    "is_active": "È attivo",
+    "is_active": "\u00c8 attivo",
     "projects": "Progetti",
     "perprojperms": "Autorizzazioni amministrative per progetto",
     "action": "Azione",
@@ -39,5 +39,6 @@
     "user_iri": "Utente IRI",
     "confirm_user_delete": "Si vuole davvero cancellare l'utente \"{userid}\"?",
     "active": "Attivo",
-    "add_project": "Aggiungi progetto"
+    "add_project": "Aggiungi progetto",
+    "projectlist_descr": "Elenco di tutti i progetti"
 }

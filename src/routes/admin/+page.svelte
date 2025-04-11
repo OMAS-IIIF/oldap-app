@@ -15,6 +15,7 @@
 	import { AdminPermission } from '$lib/oldap/enums/admin_permissions';
 	import UsersList from '$lib/components/oldap/UsersList.svelte';
 	import { get } from 'svelte/store';
+	import ProjectsList from '$lib/components/oldap/ProjectsList.svelte';
 
 	//type UsersList = {[key: string]: OldapUser};
 
@@ -124,6 +125,9 @@
 </script>
 
 <Tabs tabs={tabs} bind:selected={selected_tab} bind:height={tabs_height}></Tabs>
+{#if selected_tab === 'projects'}
+	<ProjectsList table_height={table_height} bind:administrator={administrator}/>
+{/if}
 {#if selected_tab === 'users'}
 	<UsersList table_height={table_height} bind:administrator={administrator} bind:project={project}/>
 {/if}
