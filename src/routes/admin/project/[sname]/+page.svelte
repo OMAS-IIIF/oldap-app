@@ -18,6 +18,7 @@
 
 	const project_iri_pattern: RegExp = /^(https?:\/\/[^\s<>"]+|urn:[^\s<>"]+|[A-Za-z_][\w.-]*:[\w.-]+)$/;
 	const ncname_pattern: RegExp = /^[A-Za-z_][A-Za-z0-9._-]*$/;
+	const namespace_pattern = /^https?:\/\/[^\s<>"]+[\/#]$/;
 
 	let authinfo: AuthInfo;
 	let administrator = $state<OldapUser | null>(null);
@@ -25,6 +26,7 @@
 
 	let projectIri = $state('');
 	let sname = $state('');
+	let namespaceIri = $state('');
 
 	let topwin = $state<HTMLElement>();
 
@@ -50,6 +52,7 @@
 					if (project) {
 						projectIri = project.projectIri.toString();
 						sname = project.projectShortName.toString();
+						namespaceIri = project.namespaceIri.toString();
 					}
 				}
 				else {
@@ -65,7 +68,7 @@
 
 <div class="absolute top-0 left-0 right-0 bottom-0 overflow-auto flex flex-col justify-center items-center" bind:this={topwin}>
 	<div>{data.sname !== 'new' ? m.edit()  : m.add()} Project </div>
-	<form class="max-w-128">
+	<form class="max-w-128 min-w-64">
 
 		{#if data?.sname === 'new'}
 			<Textfield type='text' label={m.project_iri()} name="projectiri" id="projectiri" placeholder="project Iri" required={true}
@@ -76,6 +79,9 @@
 		{/if}
 		<Textfield type='text' label={m.project_sname()} name="sname" id="sname" placeholder="shortname" required={true}
 							 bind:value={sname} pattern={ncname_pattern} />
+
+		<Textfield type='text' label={m.project_sname()} name="namespaceiri" id="namespaceiri" placeholder="namespace iri" required={true}
+							 bind:value={namespaceIri} pattern={namespace_pattern} />
 
 	</form>
 </div>

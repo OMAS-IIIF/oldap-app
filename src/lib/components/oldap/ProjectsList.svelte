@@ -19,7 +19,6 @@
 	import TableItem from '$lib/components/basic_gui/table/TableItem.svelte';
 	import { languageTag } from '$lib/paraglide/runtime';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
-	import { getLangString } from '$lib/oldap/datatypes/langstring';
 
 	let { table_height, administrator = $bindable() }: {
 		table_height: number,
@@ -111,7 +110,7 @@
 			<TableRow>
 				<TableItem>{projects[sname].projectIri.toString()}</TableItem>
 				<TableItem>{sname}</TableItem>
-				<TableItem>{getLangString(projects[sname].label, langobj)}</TableItem>
+				<TableItem>{projects[sname].label?.get(langobj)}</TableItem>
 				<TableItem>{projects[sname].projectStart?.toLocaleDateString()}</TableItem>
 				<TableItem>{projects[sname].projectEnd?.toLocaleDateString()}</TableItem>
 				<TableItem>

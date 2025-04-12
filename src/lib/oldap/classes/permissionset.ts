@@ -2,8 +2,7 @@ import { OldapObject } from '$lib/oldap/classes/object';
 import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
 import { Iri } from '$lib/oldap/datatypes/xsd_iri';
 import { DataPermission, stringToDataPermission } from '$lib/oldap/enums/data_permissions';
-import { jsonToLangString, type LangString } from '$lib/oldap/datatypes/langstring';
-import { OldapProject } from '$lib/oldap/classes/project';
+import { LangString } from '$lib/oldap/datatypes/langstring';
 import { OldapErrorInconsistency } from '$lib/oldap/errors/OldapErrorInconsistency';
 
 export class OldapPermissionSet extends OldapObject {
@@ -60,8 +59,10 @@ export class OldapPermissionSet extends OldapObject {
 		const permissionSetId = new NCName(json.permissionSetId);
 		const definedByProject = new Iri(json.definedByProject);
 		const givesPermission = stringToDataPermission(json.givesPermission);
-		const label = jsonToLangString(json?.label);
-		const comment = jsonToLangString(json?.comment);
+		//const label = jsonToLangString(json?.label);
+		const label = LangString.fromJson(json?.label);
+		//const comment = jsonToLangString(json?.comment);
+		const comment = LangString.fromJson(json?.comment);
 
 		if (!givesPermission) {
 			throw new OldapErrorInconsistency("No permission in permission set.");

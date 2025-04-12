@@ -1,15 +1,68 @@
+<!--
+  @component
+
+  This components implements a generic text entry field with a lot of options:
+  - includes a label
+  - includes an optional placeholder
+  - a validation function can be added
+  - a RegExp pattern for validation can be added
+-->
 <script lang="ts">
 	import { error } from '@sveltejs/kit';
+	import { onMount } from 'svelte';
 
 	type ValidateFunction = (value?: string) => [boolean, string];
 
 	let {
-		label, name, id, type = 'text', placeholder = '', value = $bindable(), validate = undefined,
-		readonly = false, disabled = $bindable(false), required = undefined,
-		pattern = undefined, class: userClass = ""
-	}: {label: string, name: string, id?: string, type: string, placeholder: string, value?: string,
-		validate?: ValidateFunction, readonly?: boolean, disabled?: boolean, required?: boolean,
-		pattern?: RegExp, class?: string} = $props();
+		/** @param {string} label The label to be used for the text field */
+		label,
+
+		/** @param {string} name The HTML input element name */
+		name,
+
+		/** @param {string} [id] Optional `id` for the HTML input element */
+		id,
+
+		/** @param {string} [type] Optional type of input element, allowed are 'text', 'password', 'email', 'number', 'search', 'tel', 'url', defaults to 'text */
+		type = 'text',
+
+		/** @param {string} [placeholder] Optional placeholder text, defaults to an empty string */
+		placeholder = '',
+
+		/** @param {string} [value] Optional bindable parameter which reflects the actual value */
+		value = $bindable(),
+
+		/** @param {ValidateFunction} [validate] Optional validation function of the form `(value?: string) => [boolean, string]`. Defauklts to undefined */
+		validate = undefined,
+
+		/** @param {boolean} [readonly] Optional flag to indicate a readonly flag. Defaults to false */
+		readonly = false,
+
+		/** @param {boolean} [disabled] Optional bindable flag to indicate if the field is disabled */
+		disabled = $bindable(false),
+
+		/** @param {boolean} [required] Optional flag to indicate of the field is mandatory. Defaults to false */
+		required = undefined,
+
+		/** @param {RegExp} [pattern] Optional RegExp pattern that is being validated if the field looses focus. Default to undefined */
+		pattern = undefined,
+
+		/** @param {string} [class] Optional string that is passed to the class attribute of HTML input element. Defaults to an empty string */
+		class: userClass = ""
+	}: {
+		label: string,
+		name: string,
+		id?: string,
+		type: string,
+		placeholder: string,
+		value?: string,
+		validate?: ValidateFunction,
+		readonly?: boolean,
+		disabled?: boolean,
+		required?: boolean,
+		pattern?: RegExp,
+		class?: string
+	} = $props();
 
 
 	const allowed_types = ['text', 'password', 'email', 'number', 'search', 'tel', 'url'];
@@ -17,7 +70,16 @@
 	let invalid = $state(false);
 	let errortext = $state('');
 	let modified = $state(false);
-	let orig_value = value;
+	let orig_value: string = '';
+
+	/**
+	 * Must use effect here to access the bindable variable `value`
+	 */
+	$effect(() => {
+		if (value && orig_value === '') {
+			orig_value = value;
+		}
+	})
 
 	if (!allowed_types.includes(type)) {
 		throw error(400, `Internal error: invalid type "${type}"cfor Input-field. must be "text", "password", "email", "number", "search", "tel" or "url"`);

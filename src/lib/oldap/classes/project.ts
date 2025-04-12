@@ -1,6 +1,6 @@
 import { Iri } from '$lib/oldap/datatypes/xsd_iri';
 import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
-import { jsonToLangString, type LangString } from '$lib/oldap/datatypes/langstring';
+import { LangString } from '$lib/oldap/datatypes/langstring';
 import { OldapObject } from '$lib/oldap/classes/object';
 
 export class OldapProject extends OldapObject{
@@ -53,8 +53,8 @@ export class OldapProject extends OldapObject{
 		const projectIri = new Iri(json.projectIri);
 		const projectShortName = new NCName(json.projectShortName);
 		const namespaceIri = new Iri(json.namespaceIri);
-		const label = jsonToLangString(json?.label);
-		const comment = jsonToLangString(json?.comment);
+		const label = LangString.fromJson(json?.label);
+		const comment = LangString.fromJson(json?.comment);
 		const projectStart = json?.projectStart ? new Date(json.projectStart) : undefined
 		const projectEnd = json?.projectEnd ? new Date(json.projectEnd) : undefined;
 
