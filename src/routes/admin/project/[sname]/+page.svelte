@@ -12,6 +12,8 @@
 	import { apiClient } from '$lib/shared/apiClient';
 	import { OldapProject } from '$lib/oldap/classes/project';
 	import { api_notget_config } from '$lib/helpers/api_config.js';
+	import { LangString } from '$lib/oldap/datatypes/langstring';
+	import LangstringField from '$lib/components/basic_gui/inputs/LangstringField.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -27,6 +29,7 @@
 	let projectIri = $state('');
 	let sname = $state('');
 	let namespaceIri = $state('');
+	let label = $state<LangString | null>(null);
 
 	let topwin = $state<HTMLElement>();
 
@@ -53,6 +56,7 @@
 						projectIri = project.projectIri.toString();
 						sname = project.projectShortName.toString();
 						namespaceIri = project.namespaceIri.toString();
+						label = project.label;
 					}
 				}
 				else {
@@ -82,6 +86,7 @@
 
 		<Textfield type='text' label={m.project_sname()} name="namespaceiri" id="namespaceiri" placeholder="namespace iri" required={true}
 							 bind:value={namespaceIri} pattern={namespace_pattern} />
+		<LangstringField label="LABEL" name="label" id="label" placeholder="label" value={label} />
 
 	</form>
 </div>

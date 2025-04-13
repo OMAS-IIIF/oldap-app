@@ -193,3 +193,13 @@ export function convertToLanguage(key: string): Language | undefined {
 	return undefined; // Return undefined if the key is not a valid enum member
 }
 
+export function getLanguageShortname(value: string): string | undefined {
+	const tmp = Object.entries(Language).find(([key, val]) => val === value)?.[0];
+	if (tmp) {
+		return tmp.toLowerCase()
+	}
+	else {
+		return undefined;
+	}
+}
+
