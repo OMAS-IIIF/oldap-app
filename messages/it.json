@@ -42,5 +42,7 @@
     "add_project": "Aggiungi progetto",
     "projectlist_descr": "Elenco di tutti i progetti",
     "project_iri": "Progetto-IRI",
-    "project_sname": "Nome breve del progetto"
+    "project_sname": "Nome breve del progetto",
+    "namespaceiri": "Spazio dei nomi-IRI",
+    "label": "Label"
 }

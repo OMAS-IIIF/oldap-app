@@ -5,7 +5,7 @@
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { OldapUser } from '$lib/oldap/classes/user';
 	import { userStore } from '$lib/stores/user';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { OldapError } from '$lib/oldap/errors/OldapError';
 	import { api_get_config } from '$lib/helpers/api_config';
@@ -14,6 +14,7 @@
 	import { api_notget_config } from '$lib/helpers/api_config.js';
 	import { LangString } from '$lib/oldap/datatypes/langstring';
 	import LangstringField from '$lib/components/basic_gui/inputs/LangstringField.svelte';
+	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -30,6 +31,7 @@
 	let sname = $state('');
 	let namespaceIri = $state('');
 	let label = $state<LangString | null>(null);
+	let comment = $state<LangString | null>(null);
 
 	let topwin = $state<HTMLElement>();
 
@@ -56,37 +58,44 @@
 						projectIri = project.projectIri.toString();
 						sname = project.projectShortName.toString();
 						namespaceIri = project.namespaceIri.toString();
-						label = project.label;
+						label = project.label || null;
 					}
-				}
-				else {
 				}
 			}
 			else {
 				errorInfoStore.set(new OldapError("You must be root user to access this page."));
 			}
 		}
+		await tick();
+		scrollToTop();
 	});
+
+	const add_project = () => {};
+
+	const modify_project = () => {};
 
 </script>
 
 <div class="absolute top-0 left-0 right-0 bottom-0 overflow-auto flex flex-col justify-center items-center" bind:this={topwin}>
 	<div>{data.sname !== 'new' ? m.edit()  : m.add()} Project </div>
-	<form class="max-w-128 min-w-64">
-
-		{#if data?.sname === 'new'}
-			<Textfield type='text' label={m.project_iri()} name="projectiri" id="projectiri" placeholder="project Iri" required={true}
-								 bind:value={projectIri} pattern={project_iri_pattern} />
-		{:else}
-			<Textfield type='text' label={m.project_iri()} name="projectiri" id="projectiri" placeholder="project Iri" required={true}
-								 bind:value={projectIri} pattern={project_iri_pattern} disabled={true}/>
-		{/if}
+	<form class="max-w-128 min-w-96">
+		<Textfield type='text' label={m.project_iri()} name="projectiri" id="projectiri" placeholder="project Iri" required={true}
+							 bind:value={projectIri} pattern={project_iri_pattern} disabled={data?.sname !== 'new'} />
 		<Textfield type='text' label={m.project_sname()} name="sname" id="sname" placeholder="shortname" required={true}
-							 bind:value={sname} pattern={ncname_pattern} />
+							 bind:value={sname} pattern={ncname_pattern} disabled={data?.sname !== 'new'} />
+		<Textfield type='text' label={m.namespaceiri()} name="namespaceiri" id="namespaceiri" placeholder="namespace iri" required={true}
+							 bind:value={namespaceIri} pattern={namespace_pattern} disabled={data?.sname !== 'new'} />
+		<LangstringField label={m.label()} name="label" id="label" placeholder="label" value={label} />
+		<LangstringField label="COMMENT" name="comment" id="comment" placeholder="comment" value={comment} />
 
-		<Textfield type='text' label={m.project_sname()} name="namespaceiri" id="namespaceiri" placeholder="namespace iri" required={true}
-							 bind:value={namespaceIri} pattern={namespace_pattern} />
-		<LangstringField label="LABEL" name="label" id="label" placeholder="label" value={label} />
+		<div class="flex justify-center gap-4 mt-6">
+			<Button class="mx-4 my-2" onclick={() => window.history.back()}>{m.cancel()}</Button>
+			{#if data?.sname === 'new'}
+				<Button class="mx-4 my-2" onclick={() => add_project()}>{m.add()}</Button>
+			{:else}
+				<Button class="mx-4 my-2" onclick={() => modify_project()}>{m.modify()}</Button>
+			{/if}
+		</div>
 
 	</form>
 </div>

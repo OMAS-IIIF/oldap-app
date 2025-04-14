@@ -284,7 +284,6 @@
 	}
 
 	const add_user = () => {
-		console.log("------> add_user()")
 		//
 		// check validity of user data...
 		//
@@ -672,7 +671,6 @@
 			{:else}
 				<Button class="mx-4 my-2" onclick={() => modify_user()}>{m.modify()}</Button>
 			{/if}
-
 		</div>
 	</form>
 </div>

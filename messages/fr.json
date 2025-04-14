@@ -42,5 +42,7 @@
     "add_project": "Ajouter un projet",
     "projectlist_descr": "Liste de tous les projets",
     "project_iri": "Projet-IRI",
-    "project_sname": "Nom abrégé du projet"
+    "project_sname": "Nom abrégé du projet",
+    "namespaceiri": "Espace nominatif-IRI",
+    "label": "Label"
 }

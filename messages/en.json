@@ -42,5 +42,7 @@
     "add_project": "Add project",
     "projectlist_descr": "List of all projects",
     "project_iri": "Project-IRI",
-    "project_sname": "Project shortname"
+    "project_sname": "Project shortname",
+    "namespaceiri": "Namespace-IRI",
+    "label": "Label"
 }
