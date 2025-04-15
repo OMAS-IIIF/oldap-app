@@ -45,30 +45,40 @@
 	let vals = $state<Record<string, string>>({});
 	let orig_vals = <Record<string, string>>({});
 	let modified = $state<Record<string, boolean>>({});
+	let initialized = false;
 
-	$effect(() => {
-		if (value === null || Object.keys(vals).length > 0) return;
+
 		for (const lang of languagesArray) {
-			const lobj = convertToLanguage(lang);
-			if (lobj) {
-				vals[lang] = value?.getraw(lobj) || '';
-			}
+			orig_vals[lang] = '';
 		}
-	});
+
+		$effect(() => {
+			if (value === null || Object.keys(vals).length > 0) return;
+			for (const lang of languagesArray) {
+				const lobj = convertToLanguage(lang);
+				if (lobj) {
+					vals[lang] = value?.getraw(lobj) || '';
+					orig_vals[lang] = value?.getraw(lobj) || '';
+				}
+			}
+			console.log("EFFECT-1", label, $state.snapshot(vals));
+		});
 
 	$effect(() => {
+		if (!vals || Object.keys(vals).length === 0) return;
 		for (const lang of languagesArray) {
 			if (orig_vals[lang] === undefined) {
-				orig_vals[lang] = vals[lang];
+				//orig_vals[lang] = vals[lang];
 				modified[lang] = false;
 			}
 		}
+		console.log("EFFECT-2", label, orig_vals, $state.snapshot(vals));
 	});
 
 	const value_changed = (lang: string, val?: string) => {
 		modified[lang] = orig_vals[lang] !== val;
-		const langobj = convertToLanguage(lang);
-		if (value !== null) value.set(langobj as Language, val || '');
+		//const langobj = convertToLanguage(lang);
+		//if (value !== null) value.set(langobj as Language, val || '');
 	}
 
 	const handle_reset_key = (event: KeyboardEvent, lang: string) => {

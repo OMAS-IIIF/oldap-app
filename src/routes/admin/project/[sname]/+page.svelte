@@ -85,8 +85,8 @@
 							 bind:value={sname} pattern={ncname_pattern} disabled={data?.sname !== 'new'} />
 		<Textfield type='text' label={m.namespaceiri()} name="namespaceiri" id="namespaceiri" placeholder="namespace iri" required={true}
 							 bind:value={namespaceIri} pattern={namespace_pattern} disabled={data?.sname !== 'new'} />
-		<LangstringField label={m.label()} name="label" id="label" placeholder="label" value={label} />
-		<LangstringField label="COMMENT" name="comment" id="comment" placeholder="comment" value={comment} />
+		<LangstringField label={m.label()} name="label" id="label" placeholder="label" bind:value={label} />
+		<LangstringField label="COMMENT" name="comment" id="comment" placeholder="comment" bind:value={comment} />
 
 		<div class="flex justify-center gap-4 mt-6">
 			<Button class="mx-4 my-2" onclick={() => window.history.back()}>{m.cancel()}</Button>
