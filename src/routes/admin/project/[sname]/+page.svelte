@@ -15,6 +15,7 @@
 	import { LangString } from '$lib/oldap/datatypes/langstring';
 	import LangstringField from '$lib/components/basic_gui/inputs/LangstringField.svelte';
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
+	import DatePicker from '$lib/components/basic_gui/inputs/DatePicker.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -25,13 +26,16 @@
 
 	let authinfo: AuthInfo;
 	let administrator = $state<OldapUser | null>(null);
-	let project: OldapProject | null = null;
 
 	let projectIri = $state('');
 	let sname = $state('');
 	let namespaceIri = $state('');
+	let label_field: LangstringField;
 	let label = $state<LangString | null>(null);
+	let comment_field: LangstringField;
 	let comment = $state<LangString | null>(null);
+	let projectStart = $state<Date | null>(null);
+	let projectEnd = $state<Date | null>(null);
 
 	let topwin = $state<HTMLElement>();
 
@@ -59,6 +63,8 @@
 						sname = project.projectShortName.toString();
 						namespaceIri = project.namespaceIri.toString();
 						label = project.label || null;
+						projectStart = project.projectStart || null;
+						projectEnd = project.projectEnd || null;
 					}
 				}
 			}
@@ -70,9 +76,14 @@
 		scrollToTop();
 	});
 
-	const add_project = () => {};
+	const add_project = () => {
 
-	const modify_project = () => {};
+	};
+
+	const modify_project = () => {
+		console.log('MODIFIED-1:', label_field.get_value());
+		console.log('MODIFIED-1:', comment_field.get_value());
+	};
 
 </script>
 
@@ -85,8 +96,10 @@
 							 bind:value={sname} pattern={ncname_pattern} disabled={data?.sname !== 'new'} />
 		<Textfield type='text' label={m.namespaceiri()} name="namespaceiri" id="namespaceiri" placeholder="namespace iri" required={true}
 							 bind:value={namespaceIri} pattern={namespace_pattern} disabled={data?.sname !== 'new'} />
-		<LangstringField label={m.label()} name="label" id="label" placeholder="label" bind:value={label} />
-		<LangstringField label="COMMENT" name="comment" id="comment" placeholder="comment" bind:value={comment} />
+		<LangstringField bind:this={label_field} label={m.label()} name="label" id="label" placeholder="label" value={label} />
+		<LangstringField bind:this={comment_field} label="COMMENT" name="comment" id="comment" placeholder="comment" value={comment} />
+		<DatePicker label="Project start" name="project_start" id="project_start" bind:value={projectStart} />
+		<DatePicker label="Project start" name="project_start" id="project_start" bind:value={projectEnd} />
 
 		<div class="flex justify-center gap-4 mt-6">
 			<Button class="mx-4 my-2" onclick={() => window.history.back()}>{m.cancel()}</Button>

@@ -1,7 +1,13 @@
+<!--
+	@comment
+
+	This component implements a field for editing LangStrings.
+
+-->
 <script lang="ts">
 
 	import { availableLanguageTags } from '$lib/paraglide/runtime';
-	import type { LangString } from '$lib/oldap/datatypes/langstring';
+	import { LangString } from '$lib/oldap/datatypes/langstring';
 	import { convertToLanguage, getLanguageShortname, Language } from '$lib/oldap/enums/language';
 	import { onMount } from 'svelte';
 
@@ -18,7 +24,7 @@
 		/** @param {string} [placeholder] Optional placeholder text, defaults to an empty string */
 		placeholder = '',
 
-		value = $bindable(null),
+		value = null,
 
 		/** @param {boolean} [required] Optional flag to indicate of the field is mandatory. Defaults to false */
 		required = undefined,
@@ -27,9 +33,9 @@
 		disabled = $bindable(false),
 
 		/** @param {string} [class] Optional string that is passed to the class attribute of HTML input element. Defaults to an empty string */
-		class: userClass = ""
+		class: userClass = ''
 
-	} : {
+	}: {
 		label: string,
 		name: string,
 		id?: string,
@@ -45,53 +51,62 @@
 	let vals = $state<Record<string, string>>({});
 	let orig_vals = <Record<string, string>>({});
 	let modified = $state<Record<string, boolean>>({});
-	let initialized = false;
 
 
+	for (const lang of languagesArray) {
+		orig_vals[lang] = '';
+	}
+
+	$effect(() => {
+		if (value === null || Object.keys(vals).length > 0) return;
 		for (const lang of languagesArray) {
-			orig_vals[lang] = '';
-		}
-
-		$effect(() => {
-			if (value === null || Object.keys(vals).length > 0) return;
-			for (const lang of languagesArray) {
-				const lobj = convertToLanguage(lang);
-				if (lobj) {
-					vals[lang] = value?.getraw(lobj) || '';
-					orig_vals[lang] = value?.getraw(lobj) || '';
-				}
+			const lobj = convertToLanguage(lang);
+			if (lobj) {
+				vals[lang] = value?.getraw(lobj) || '';
+				orig_vals[lang] = value?.getraw(lobj) || '';
 			}
-			console.log("EFFECT-1", label, $state.snapshot(vals));
-		});
+		}
+		console.log('EFFECT-1', label, $state.snapshot(vals));
+	});
 
 	$effect(() => {
 		if (!vals || Object.keys(vals).length === 0) return;
 		for (const lang of languagesArray) {
 			if (orig_vals[lang] === undefined) {
-				//orig_vals[lang] = vals[lang];
 				modified[lang] = false;
 			}
 		}
-		console.log("EFFECT-2", label, orig_vals, $state.snapshot(vals));
+		console.log('EFFECT-2', label, orig_vals, $state.snapshot(vals));
 	});
 
 	const value_changed = (lang: string, val?: string) => {
 		modified[lang] = orig_vals[lang] !== val;
-		//const langobj = convertToLanguage(lang);
-		//if (value !== null) value.set(langobj as Language, val || '');
-	}
+	};
 
 	const handle_reset_key = (event: KeyboardEvent, lang: string) => {
 		if (event.key === 'Enter' || event.key === ' ') {
 			reset_value(lang);
 		}
-	}
+	};
 
 	const reset_value = (lang: string) => {
 		vals[lang] = orig_vals[lang];
 		modified[lang] = false;
+	};
+
+	export const is_modified = (): Record<string, boolean>  => {
+		return $state.snapshot<Record<string, boolean>>(modified);
 	}
 
+	export const get_value = (): LangString => {
+		let retval: Record<Language, string> = {} as Record<Language, string>;
+		for (const lang of languagesArray) {
+			if (vals[lang]) {
+				retval[convertToLanguage(lang) || Language.EN] = vals[lang];
+			}
+		}
+		return new LangString(retval);
+	}
 
 </script>
 
