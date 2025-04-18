@@ -39,7 +39,7 @@
 	let current: Date = new Date();
 	let year = $state<number>(current.getFullYear());
 	let month = $state<number>(current.getMonth());
-	let day = $state<number>(current.getDay());
+	let day = $state<number>(current.getDate());
 	let dayrange = $derived(getDaysInMonth(year, month));
 	let is_used = $state<boolean>(false);
 
@@ -51,7 +51,7 @@
 		if (value === null) return;
 		year = value.getFullYear();
 		month = value.getMonth();
-		day = value.getDay();
+		day = value.getDate();
 		is_used = true;
 	});
 
@@ -74,31 +74,60 @@
 </script>
 
 <div class="mt-3">
-	<label for={id} class="{required ? 'underline' : ''} block text-xs/4 font-medium text-input-label-fg dark:text-input-label-fg-dark">{label}:</label>
+	<label for={id}
+				 class="{required ? 'underline' : ''} block text-xs/4 font-medium text-input-label-fg dark:text-input-label-fg-dark">{label}
+		:</label>
 	<div>
 		{#if !required}
-			<input type="checkbox" bind:checked={is_used}/>
+			<input type="checkbox" bind:checked={is_used} />
 		{/if}
-		<select name="year" id={`${id}_year`} bind:value={year} disabled={disabled || !is_used}
-						class="appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6">
-			{#each Array.from(Array(range).keys()) as i}
-				<option value={year + i - range/2} selected={year + i - range/2 === year}>{year + i - range/2}</option>
-			{/each}
-		</select>
 
+		<div class="relative inline-block w-auto mt-2 grid-cols-1">
+			<select name="year" id={`${id}_year`} bind:value={year} disabled={disabled || !is_used}
+							class="appearance-none rounded-md bg-white pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6">
+				{#each Array.from(Array(range).keys()) as i}
+					<option value={year + i - range/2} selected={year + i - range/2 === year}>{year + i - range / 2}</option>
+				{/each}
+			</select>
+			<svg
+				class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 size-5 self-center justify-self-end text-gray-500 sm:size-4"
+				viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" data-slot="icon">
+				<path fill-rule="evenodd"
+							d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
+							clip-rule="evenodd" />
+			</svg>
+		</div>
 
-		<select name="month" id={`${id}_month`} bind:value={month}  disabled={disabled || !is_used}
-						class="appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6">
-			{#each monthlist as m, i}
-				<option value={i} selected={i === month}>{m}</option>
-			{/each}
-		</select>
-		<select name="day" id={`${id}_day`} bind:value={day}  disabled={disabled || !is_used}
-						class="appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6">
-			{#each Array.from(Array(dayrange).keys()) as i}
-				<option value={i + 1} selected={i + 1 === day}>{i + 1}</option>
-			{/each}
-		</select>
+		<div class="relative inline-block w-auto mt-2 grid-cols-1">
+			<select name="month" id={`${id}_month`} bind:value={month} disabled={disabled || !is_used}
+							class="appearance-none rounded-md bg-white pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6">
+				{#each monthlist as m, i}
+					<option value={i} selected={i === month}>{m}</option>
+				{/each}
+			</select>
+			<svg
+				class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 size-5 self-center justify-self-end text-gray-500 sm:size-4"
+				viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" data-slot="icon">
+				<path fill-rule="evenodd"
+							d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
+							clip-rule="evenodd" />
+			</svg>
+		</div>
+
+		<div class="relative inline-block w-auto mt-2 grid-cols-1">
+			<select name="day" id={`${id}_day`} bind:value={day} disabled={disabled || !is_used}
+							class="appearance-none rounded-md bg-white pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6">
+				{#each Array.from(Array(dayrange).keys()) as i}
+					<option value={i + 1} selected={i + 1 === day}>{i + 1}</option>
+				{/each}
+			</select>
+			<svg
+				class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 size-5 self-center justify-self-end text-gray-500 sm:size-4"
+				viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" data-slot="icon">
+				<path fill-rule="evenodd"
+							d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
+							clip-rule="evenodd" />
+			</svg>
+		</div>
 	</div>
-
 </div>
