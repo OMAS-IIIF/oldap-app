@@ -29,11 +29,9 @@
 	import { languageTag } from '$lib/paraglide/runtime';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import { dataPermissionAsString } from '$lib/oldap/enums/data_permissions';
-	import { QName } from '$lib/oldap/datatypes/xsd_qname.js';
 	import { OldapErrorInvalidValue } from '$lib/oldap/errors/OldapErrorInvalidValue';
 	import { successInfoStore } from '$lib/stores/successinfo';
-	import SuccessMsg from '$lib/components/oldap/SuccessMsg.svelte';
-	import type { Iri } from '$lib/oldap/datatypes/xsd_iri';
+	import { difference, intersection } from '$lib/helpers/setops';
 
 	type ProjRef = {iri: string, sname: string};
 	type CheckedState = {[key: string]: Record<AdminPermission, boolean>};
@@ -367,22 +365,6 @@
 			console.log(userdata);
 			errorInfoStore.set(process_api_error(error as Error));
 		});
-	}
-
-	function union<T>(a: Set<T>, b: Set<T>): Set<T> {
-		return new Set([...a, ...b]);
-	}
-
-	function intersection<T>(a: Set<T>, b: Set<T>): Set<T> {
-		return new Set([...a].filter(x => b.has(x)));
-	}
-
-	function difference<T>(a: Set<T>, b: Set<T>): Set<T> {
-		return new Set([...a].filter(x => !b.has(x)));
-	}
-
-	function symmetricDifference<T>(a: Set<T>, b: Set<T>): Set<T> {
-		return new Set([...a, ...b].filter(x => a.has(x) !== b.has(x)));
 	}
 
 	const modify_user = () => {

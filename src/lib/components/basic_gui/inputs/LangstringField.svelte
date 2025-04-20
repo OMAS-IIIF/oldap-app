@@ -58,7 +58,7 @@
 	}
 
 	$effect(() => {
-		if (value === null || Object.keys(vals).length > 0) return;
+		if (value === null || Object.keys(vals).length > 0) return; // TODO: is this correct (after ||)
 		for (const lang of languagesArray) {
 			const lobj = convertToLanguage(lang);
 			if (lobj) {

@@ -16,6 +16,9 @@
 	import LangstringField from '$lib/components/basic_gui/inputs/LangstringField.svelte';
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
 	import DatePicker from '$lib/components/basic_gui/inputs/DatePicker.svelte';
+	import { availableLanguageTags } from '$lib/paraglide/runtime';
+	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
+	import { difference } from '$lib/helpers/setops';
 
 	let { data }: PageProps = $props();
 
@@ -24,9 +27,12 @@
 	const ncname_pattern: RegExp = /^[A-Za-z_][A-Za-z0-9._-]*$/;
 	const namespace_pattern = /^https?:\/\/[^\s<>"]+[\/#]$/;
 
+	const languagesArray = Array.from(availableLanguageTags);
+
 	let authinfo: AuthInfo;
 	let administrator = $state<OldapUser | null>(null);
 
+	let project: OldapProject;
 	let projectIri = $state('');
 	let sname = $state('');
 	let namespaceIri = $state('');
@@ -57,12 +63,13 @@
 				if (data?.sname !== 'new') {
 					const config_projectdata = api_notget_config(authinfo, { projectId: data?.sname});
 					const jsondata = await apiClient.getAdminprojectProjectId(config_projectdata);
-					let project = OldapProject.fromOldapJson(jsondata);
+					project = OldapProject.fromOldapJson(jsondata);
 					if (project) {
 						projectIri = project.projectIri.toString();
 						sname = project.projectShortName.toString();
 						namespaceIri = project.namespaceIri.toString();
 						label = project.label || null;
+						comment = project.comment || null;
 						projectStart = project.projectStart || null;
 						projectEnd = project.projectEnd || null;
 					}
@@ -81,11 +88,20 @@
 	};
 
 	const modify_project = () => {
-		console.log('MODIFIED-1:', label_field.get_value());
-		console.log('MODIFIED-1:', comment_field.get_value());
+		let projectdata: {
+			label?: string[] | Partial<Record<'add'|'del', string[]>> | null,
+			comment?: string[] | Partial<Record<'add'|'del', string[]>> | null,
+			projectStart?: string,
+			projectEnd?: string,
+		} = {};
+		const new_label = label_field.get_value();
+		projectdata.label = new_label.modify_data(project?.label || null);
+		const new_comment = comment_field.get_value();
+		projectdata.comment = new_comment.modify_data(project?.comment || null);
+
+		console.log("MODIFY: ", projectdata);
 	};
 
-	console.log("========>", window.history.toString());
 
 </script>
 

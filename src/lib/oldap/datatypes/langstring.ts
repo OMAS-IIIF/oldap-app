@@ -1,16 +1,21 @@
-import { convertToLanguage, Language } from '$lib/oldap/enums/language';
+import { convertToLanguage, getLanguageShortname, Language } from '$lib/oldap/enums/language';
 import { OldapErrorInvalidValue } from '$lib/oldap/errors/OldapErrorInvalidValue';
+import { difference } from '$lib/helpers/setops';
 
 export class LangString {
 	static defaultLang: Language = Language.EN
 	#langstrs: Record<Language, string>;
 
-	constructor(langstrs: Record<Language, string>) {
-		this.#langstrs = langstrs;
+	constructor(langstrs: Record<Language, string> | null) {
+		this.#langstrs = langstrs ? langstrs : {} as Record<Language, string>;
 	}
 
 	setDefaultLanguage(defaultLanguage: Language): void {
 		LangString.defaultLang = defaultLanguage;
+	}
+
+	length(): number {
+		return Object.keys(this.#langstrs).length;
 	}
 
 	get(lang: Language): string {
@@ -89,5 +94,27 @@ export class LangString {
 			}
 		});
 		return new LangString(langString);
+	}
+
+	modify_data(from: LangString | null): string[] | Partial<Record<'add'|'del', string[]>> | null {
+		let res: string[] | Partial<Record<'add'|'del', string[]>> | null = null;
+
+		const from_strs = new Set<string>(from?.map((lang, val) => `${val}@${getLanguageShortname(lang)}`));
+		const this_strs = new Set<string>(this.map((lang, val) => `${val}@${getLanguageShortname(lang)}`));
+		const add_strs = difference(this_strs, from_strs);
+		const del_strs = difference(from_strs, this_strs);
+		if (from_strs.size === 0 && this_strs.size > 0) {
+			res = Array.from(this_strs);
+		}
+		else if (from_strs.size > 0 && this_strs.size === 0) {
+			res = null;
+		}
+		else if (from_strs.size > 0 && this_strs.size > 0) {
+			res = {
+				add: Array.from(add_strs),
+				del: Array.from(del_strs)
+			};
+		}
+		return res;
 	}
 }
