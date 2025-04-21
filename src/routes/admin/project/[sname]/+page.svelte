@@ -40,7 +40,9 @@
 	let label = $state<LangString | null>(null);
 	let comment_field: LangstringField;
 	let comment = $state<LangString | null>(null);
+	let projectStart_field: DatePicker;
 	let projectStart = $state<Date | null>(null);
+	let projectEnd_field: DatePicker;
 	let projectEnd = $state<Date | null>(null);
 
 	let topwin = $state<HTMLElement>();
@@ -91,13 +93,24 @@
 		let projectdata: {
 			label?: string[] | Partial<Record<'add'|'del', string[]>> | null,
 			comment?: string[] | Partial<Record<'add'|'del', string[]>> | null,
-			projectStart?: string,
-			projectEnd?: string,
+			projectStart?: string | null,
+			projectEnd?: string | null,
 		} = {};
 		const new_label = label_field.get_value();
 		projectdata.label = new_label.modify_data(project?.label || null);
 		const new_comment = comment_field.get_value();
 		projectdata.comment = new_comment.modify_data(project?.comment || null);
+
+		const new_projectStart = projectStart_field.get_value();
+		console.log("new_projectStart: ", new_projectStart?.getTime(), project?.projectStart?.getTime());
+		if (new_projectStart?.getTime() !== project?.projectStart?.getTime()) {
+			projectdata.projectStart = new_projectStart?.toISOString() || null;
+		}
+		const new_projectEnd = projectEnd_field.get_value();
+		console.log("new_projectEnd: ", new_projectEnd);
+		if (new_projectEnd?.getTime() !== project?.projectEnd?.getTime()) {
+			projectdata.projectEnd = new_projectEnd?.toISOString() || null;
+		}
 
 		console.log("MODIFY: ", projectdata);
 	};
@@ -116,8 +129,8 @@
 							 bind:value={namespaceIri} pattern={namespace_pattern} disabled={data?.sname !== 'new'} />
 		<LangstringField bind:this={label_field} label={m.label()} name="label" id="label" placeholder="label" value={label} />
 		<LangstringField bind:this={comment_field} label="COMMENT" name="comment" id="comment" placeholder="comment" value={comment} />
-		<DatePicker label="Project start" name="project_start" id="project_start" bind:value={projectStart} />
-		<DatePicker label="Project start" name="project_start" id="project_start" bind:value={projectEnd} />
+		<DatePicker bind:this={projectStart_field} label="Project start" name="project_start" id="project_start" value={projectStart} />
+		<DatePicker bind:this={projectEnd_field} label="Project start" name="project_start" id="project_start" value={projectEnd} />
 
 		<div class="flex justify-center gap-4 mt-6">
 			<Button class="mx-4 my-2" onclick={() => window.history.back()}>{m.cancel()}</Button>

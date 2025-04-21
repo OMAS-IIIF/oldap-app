@@ -2,6 +2,7 @@ import { Iri } from '$lib/oldap/datatypes/xsd_iri';
 import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
 import { LangString } from '$lib/oldap/datatypes/langstring';
 import { OldapObject } from '$lib/oldap/classes/object';
+import { XsdDate } from '$lib/oldap/datatypes/xsd_date';
 
 export class OldapProject extends OldapObject{
 	#projectIri: Iri;
@@ -9,8 +10,8 @@ export class OldapProject extends OldapObject{
 	#namespaceIri: Iri;
 	label?: LangString;
 	comment?: LangString;
-	projectStart?: Date;
-	projectEnd?: Date;
+	projectStart?: XsdDate;
+	projectEnd?: XsdDate;
 
 	constructor(creator: Iri,
 							created: Date,
@@ -21,8 +22,8 @@ export class OldapProject extends OldapObject{
 							namespaceIri: Iri,
 							label?: LangString,
 							comment?: LangString,
-							projectStart?: Date,
-							projectEnd?: Date) {
+							projectStart?: XsdDate,
+							projectEnd?: XsdDate) {
 		super(creator, created, contributor, modified);
 		this.#projectIri = projectIri;
 		this.#projectShortName = projectShortName;
@@ -45,6 +46,7 @@ export class OldapProject extends OldapObject{
 		return this.#namespaceIri;
 	}
 
+
 	static fromOldapJson(json: any): OldapProject {
 		const creator = new Iri(json.creator);
 		const created = new Date(json.created);
@@ -55,8 +57,8 @@ export class OldapProject extends OldapObject{
 		const namespaceIri = new Iri(json.namespaceIri);
 		const label = LangString.fromJson(json?.label);
 		const comment = LangString.fromJson(json?.comment);
-		const projectStart = json?.projectStart ? new Date(json.projectStart) : undefined
-		const projectEnd = json?.projectEnd ? new Date(json.projectEnd) : undefined;
+		const projectStart = json?.projectStart ? new XsdDate(json.projectStart) : undefined
+		const projectEnd = json?.projectEnd ? new XsdDate(json.projectEnd) : undefined;
 
 		return new OldapProject(
 			creator, created, contributor, modified, projectIri, projectShortName,

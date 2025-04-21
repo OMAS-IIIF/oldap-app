@@ -1,6 +1,7 @@
 <script lang="ts">
 
 	import { LangString } from '$lib/oldap/datatypes/langstring';
+	import { XsdDate } from '$lib/oldap/datatypes/xsd_date';
 
 	let {
 		/** @param {string} label The label to be used for the text field */
@@ -12,7 +13,7 @@
 		/** @param {string} [id] Optional `id` for the HTML input element */
 		id,
 
-		value = $bindable(null),
+		value = null,
 
 		range = 20,
 
@@ -29,7 +30,7 @@
 		label: string,
 		name: string,
 		id?: string,
-		value: Date | null,
+		value: XsdDate | null,
 		range?: number,
 		required?: boolean,
 		disabled?: boolean,
@@ -38,7 +39,7 @@
 
 	let current: Date = new Date();
 	let year = $state<number>(current.getFullYear());
-	let month = $state<number>(current.getMonth());
+	let month = $state<number>(current.getMonth()); // zero based
 	let day = $state<number>(current.getDate());
 	let dayrange = $derived(getDaysInMonth(year, month));
 	let is_used = $state<boolean>(false);
@@ -49,25 +50,30 @@
 
 	$effect(() => {
 		if (value === null) return;
-		year = value.getFullYear();
-		month = value.getMonth();
-		day = value.getDate();
+		year = value.year;
+		month = value.month - 1; // month is zero based, value.month (XsdDate) is 1-based!
+		day = value.day;
+		console.log("*****>", year, month, day);
 		is_used = true;
 	});
 
+	export const get_value = () => {
+		if (!is_used) return null;
+		console.log(year, month, day);
+		return new XsdDate(year, month + 1, day);
+	}
+
 	function getDaysInMonth(year: number, month: number) {
-		// month is 1-based (1 = January, 12 = December)
-		return new Date(year, month + 1, 0).getDate();
+		return new Date(year, month, 0).getDate();
 	}
 
 	function getWeekday(year: number, month: number, day: number) {
-		// month is 1-based (1 = January, 12 = December)
-		return new Date(year, month + 1, day).getDay();
+		return new Date(year, month, day).getDay();
 	}
 
 	const set_today = () => {
 		year = current.getFullYear();
-		month = current.getMonth();
+		month = current.getMonth(); // zero based
 		day = current.getDay();
 	}
 

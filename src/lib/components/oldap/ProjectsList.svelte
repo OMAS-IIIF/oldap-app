@@ -111,8 +111,8 @@
 				<TableItem>{projects[sname].projectIri.toString()}</TableItem>
 				<TableItem>{sname}</TableItem>
 				<TableItem>{projects[sname].label?.get(langobj)}</TableItem>
-				<TableItem>{projects[sname].projectStart?.toLocaleDateString()}</TableItem>
-				<TableItem>{projects[sname].projectEnd?.toLocaleDateString()}</TableItem>
+				<TableItem>{projects[sname].projectStart?.toString()}</TableItem>
+				<TableItem>{projects[sname].projectEnd?.toString()}</TableItem>
 				<TableItem>
 					<div class="flex flex-row items-center justify-left gap-2">
 						<Button round={true} onclick={goto_page(`/admin/project/${sname}`)}>
