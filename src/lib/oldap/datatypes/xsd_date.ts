@@ -72,10 +72,25 @@ export class XsdDate {
 	 *
 	 * @param other
 	 */
-	equals(other: XsdDate): boolean {
+	equals(other?: XsdDate | null): boolean {
+		if (!other) return false;
 		return this.#year === other.#year &&
 			this.#month === other.#month &&
 			this.#day === other.#day;
+	}
+
+	static areEqual(a?: XsdDate | null, b?: XsdDate | null): boolean {
+		if (!a && !b) { // both are empty, thus equal
+			return true;
+		}
+		else {
+			if (a) {
+				return a.equals(b);
+			}
+			else {
+				return b?.equals(a);
+			}
+		}
 	}
 
 	/**

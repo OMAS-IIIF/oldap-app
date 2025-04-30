@@ -53,7 +53,6 @@
 		year = value.year;
 		month = value.month - 1; // month is zero based, value.month (XsdDate) is 1-based!
 		day = value.day;
-		console.log("*****>", year, month, day);
 		is_used = true;
 	});
 
@@ -89,7 +88,8 @@
 		{/if}
 
 		<div class="relative inline-block w-auto mt-2 grid-cols-1">
-			<select name="year" id={`${id}_year`} bind:value={year} disabled={disabled || !is_used}
+			<select name="year" id={`${id}_year`}
+							bind:value={year} disabled={disabled || !is_used}
 							class="appearance-none rounded-md bg-white pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6">
 				{#each Array.from(Array(range).keys()) as i}
 					<option value={year + i - range/2} selected={year + i - range/2 === year}>{year + i - range / 2}</option>
@@ -105,7 +105,8 @@
 		</div>
 
 		<div class="relative inline-block w-auto mt-2 grid-cols-1">
-			<select name="month" id={`${id}_month`} bind:value={month} disabled={disabled || !is_used}
+			<select name="month" id={`${id}_month`}
+							bind:value={month} disabled={disabled || !is_used}
 							class="appearance-none rounded-md bg-white pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6">
 				{#each monthlist as m, i}
 					<option value={i} selected={i === month}>{m}</option>
@@ -121,7 +122,8 @@
 		</div>
 
 		<div class="relative inline-block w-auto mt-2 grid-cols-1">
-			<select name="day" id={`${id}_day`} bind:value={day} disabled={disabled || !is_used}
+			<select name="day" id={`${id}_day`}
+							bind:value={day} disabled={disabled || !is_used}
 							class="appearance-none rounded-md bg-white pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6">
 				{#each Array.from(Array(dayrange).keys()) as i}
 					<option value={i + 1} selected={i + 1 === day}>{i + 1}</option>

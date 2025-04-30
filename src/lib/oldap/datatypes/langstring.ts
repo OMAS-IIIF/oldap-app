@@ -96,8 +96,8 @@ export class LangString {
 		return new LangString(langString);
 	}
 
-	modify_data(from: LangString | null): string[] | Partial<Record<'add'|'del', string[]>> | null {
-		let res: string[] | Partial<Record<'add'|'del', string[]>> | null = null;
+	modify_data(from: LangString | null): string[] | Partial<Record<'add'|'del', string[]>> | null | undefined {
+		let res: string[] | Partial<Record<'add'|'del', string[]>> | null = undefined;
 
 		const from_strs = new Set<string>(from?.map((lang, val) => `${val}@${getLanguageShortname(lang)}`));
 		const this_strs = new Set<string>(this.map((lang, val) => `${val}@${getLanguageShortname(lang)}`));
@@ -109,9 +109,19 @@ export class LangString {
 		else if (from_strs.size > 0 && this_strs.size === 0) {
 			res = null;
 		}
-		else if (from_strs.size > 0 && this_strs.size > 0) {
+		else if (add_strs.size > 0 && del_strs.size > 0) {
 			res = {
 				add: Array.from(add_strs),
+				del: Array.from(del_strs)
+			};
+		}
+		else if (add_strs.size > 0) {
+			res = {
+				add: Array.from(add_strs)
+			};
+		}
+		else if (del_strs.size > 0) {
+			res = {
 				del: Array.from(del_strs)
 			};
 		}

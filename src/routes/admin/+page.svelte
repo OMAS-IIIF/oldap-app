@@ -16,6 +16,7 @@
 	import UsersList from '$lib/components/oldap/UsersList.svelte';
 	import { get } from 'svelte/store';
 	import ProjectsList from '$lib/components/oldap/ProjectsList.svelte';
+	import { adminTabState } from '$lib/stores/admintabstate';
 
 	//type UsersList = {[key: string]: OldapUser};
 
@@ -32,6 +33,12 @@
 	onMount(() => {
 		authinfo = AuthInfo.fromString(sessionStorage.getItem('authinfo'));
 	});
+
+	adminTabState.subscribe((state) => {
+		if (state) {
+			selected_tab = state;
+		}
+	})
 
 	//
 	// the logged in user changed
@@ -79,20 +86,20 @@
 		else {
 			tabs = {};
 		}
-		if (tabs['projects']) {
-			selected_tab = 'projects';
-		}
-		else if (tabs['users']) {
-			selected_tab = 'users';
-		}
-		else if (tabs['lists']) {
-			selected_tab = 'lists';
-		}
-		else if (tabs['models']) {
-			selected_tab = 'models';
-		}
-		else if (tabs['permsets']) {
-			selected_tab = 'permsets';
+		if (userinfo) {
+			if (!selected_tab || !(selected_tab in tabs)) {
+				if (tabs['projects']) {
+					selected_tab = 'projects';
+				} else if (tabs['users']) {
+					selected_tab = 'users';
+				} else if (tabs['lists']) {
+					selected_tab = 'lists';
+				} else if (tabs['models']) {
+					selected_tab = 'models';
+				} else if (tabs['permsets']) {
+					selected_tab = 'permsets';
+				}
+			}
 		}
 	});
 
@@ -104,7 +111,6 @@
 			project = projectinfo;
 		}
 	});
-
 
 	//
 	// act on changes of the contentAreaHeight
@@ -120,6 +126,11 @@
 	//
 	$effect(() => {
 		table_height = ($contentAreaHeight || 250) - tabs_height - 25;
+	})
+
+	$effect(() => {
+		adminTabState.set(selected_tab);
+		console.log("TAB CHANGED TO: " + selected_tab)
 	})
 
 </script>

@@ -9,6 +9,7 @@ export enum DataPermission {
 }
 
 export function stringToDataPermission(value: string): DataPermission | undefined {
+	if (!value.startsWith('oldap:')) value = `oldap:${value}`;
 	return Object.entries(DataPermission).find(([_, v]) => v === value)?.[1] as DataPermission | undefined;
 }
 

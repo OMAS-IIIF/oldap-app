@@ -162,6 +162,9 @@ const postAdmindatamodelProjectpropertyProperty_Body = z.object({ name: LangStri
 const postAdmindatamodelProjectResource_Body = z.object({ closed: z.boolean(), label: LangString, comment: LangString }).partial().passthrough();
 const putAdmindatamodelProjectResourceProperty_Body = Property.and(z.object({ maxCount: z.number(), minCount: z.number(), order: z.number() }).partial().passthrough());
 const postAdmindatamodelProjectResourceProperty_Body = z.object({ property: Property, maxCount: z.number(), minCount: z.number(), order: z.number() }).partial().passthrough();
+const putAdminhlistProjectHlistid_Body = z.object({ label: LangString, definition: LangString }).partial().passthrough();
+const putAdminhlistProjectHlistidNodeid_Body = z.union([z.object({ label: LangString, definition: LangString, position: z.enum(["belowOf", "leftOf", "rightOf"]), refnode: z.string() }).passthrough(), z.object({ label: LangString, definition: LangString, position: z.literal("root") }).passthrough()]);
+const postAdminhlistProjectHlistidNodeid_Body = z.union([z.object({ leftOf: z.string() }).passthrough(), z.object({ rightOf: z.string() }).passthrough(), z.object({ belowOf: z.string() }).passthrough()]);
 
 export const schemas = {
 	LangString,
@@ -172,6 +175,9 @@ export const schemas = {
 	postAdmindatamodelProjectResource_Body,
 	putAdmindatamodelProjectResourceProperty_Body,
 	postAdmindatamodelProjectResourceProperty_Body,
+	putAdminhlistProjectHlistid_Body,
+	putAdminhlistProjectHlistidNodeid_Body,
+	postAdminhlistProjectHlistidNodeid_Body,
 };
 
 const endpoints = makeApi([
@@ -734,6 +740,274 @@ const endpoints = makeApi([
 	},
 	{
 		method: "put",
+		path: "/admin/hlist/:project/:hlistid",
+		alias: "putAdminhlistProjectHlistid",
+		description: `Creates an empty hierarchical list. Later to be filled with nodes.`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "body",
+				type: "Body",
+				schema: putAdminhlistProjectHlistid_Body
+			},
+			{
+				name: "project",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "hlistid",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.object({ message: z.string() }).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Bad request`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 403,
+				description: `Unauthorized`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 404,
+				description: `Not Found`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 409,
+				description: `Userid or useriri already exists`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 500,
+				description: `Internal Server error. Should not be reachable`,
+				schema: z.void()
+			},
+		]
+	},
+	{
+		method: "get",
+		path: "/admin/hlist/:project/:hlistid",
+		alias: "getAdminhlistProjectHlistid",
+		description: `Viewfunction to get the information about a hierarchical of a project. A (hierarchical) ordered List of all the nodes will be delivered.`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "project",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "hlistid",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.void(),
+		errors: [
+			{
+				status: 403,
+				description: `Unauthorized`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 404,
+				description: `Not Found`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 500,
+				description: `Internal Server error. Should not be reachable`,
+				schema: z.void()
+			},
+		]
+	},
+	{
+		method: "put",
+		path: "/admin/hlist/:project/:hlistid/:nodeid",
+		alias: "putAdminhlistProjectHlistidNodeid",
+		description: `Viewfunction to add a new node to an existing hierarchical list. A JSON is expected that has the following form.
+Note: if the position is &quot;root&quot;, then &quot;refnode&quot; must be omitted.
+
+Example JSON:
+{
+  &quot;label&quot;: [&quot;testrootnodelabel@en&quot;],
+  &quot;definition&quot;: [&quot;testrootnodedefinition@en&quot;],
+  &quot;position&quot;: &quot;leftOf&quot;,
+  &quot;refnode&quot;: &quot;nodeA&quot;
+}
+`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "body",
+				type: "Body",
+				schema: putAdminhlistProjectHlistidNodeid_Body
+			},
+			{
+				name: "project",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "hlistid",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "nodeid",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.object({ message: z.string() }).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Bad request`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 403,
+				description: `Unauthorized`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 404,
+				description: `Not Found`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 409,
+				description: `Resource already exists`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 500,
+				description: `Internal Server error. Should not be reachable`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+		]
+	},
+	{
+		method: "delete",
+		path: "/admin/hlist/:project/:hlistid/:nodeid",
+		alias: "deleteAdminhlistProjectHlistidNodeid",
+		description: `Viewfunction that deletes a node from the hierarchical list
+`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "project",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "hlistid",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "nodeid",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.object({ message: z.string() }).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Bad request`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 403,
+				description: `Unauthorized`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 404,
+				description: `Not Found`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 409,
+				description: `Resource already exists`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 500,
+				description: `Internal Server error. Should not be reachable`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+		]
+	},
+	{
+		method: "post",
+		path: "/admin/hlist/:project/:hlistid/:nodeid",
+		alias: "postAdminhlistProjectHlistidNodeid",
+		description: `Viewfunction that moves a node inside the hierarchical list from one place to another.
+When there are any number of nodes below the node one wish to move, they get moved automatically alongside the other node.
+`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "body",
+				type: "Body",
+				schema: postAdminhlistProjectHlistidNodeid_Body
+			},
+			{
+				name: "project",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "hlistid",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "nodeid",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.object({ message: z.string() }).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Bad request`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 403,
+				description: `Unauthorized`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 404,
+				description: `Not Found`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 409,
+				description: `Resource already exists`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 500,
+				description: `Internal Server error. Should not be reachable`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+		]
+	},
+	{
+		method: "put",
 		path: "/admin/permissionset/:definedByProject/:permissionSetId",
 		alias: "putAdminpermissionsetDefinedByProjectPermissionSetId",
 		description: `Creates a new permissionset in the database`,
@@ -1080,7 +1354,7 @@ const endpoints = makeApi([
 			{
 				name: "body",
 				type: "Body",
-				schema: z.object({ label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough()]), projectStart: z.string(), projectEnd: z.string() }).partial().passthrough()
+				schema: z.object({ label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), projectStart: z.string().nullable(), projectEnd: z.string().nullable() }).partial().passthrough()
 			},
 			{
 				name: "projectId",

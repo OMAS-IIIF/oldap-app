@@ -19,6 +19,9 @@
 	import { availableLanguageTags } from '$lib/paraglide/runtime';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import { difference } from '$lib/helpers/setops';
+	import { XsdDate } from '$lib/oldap/datatypes/xsd_date';
+	import { successInfoStore } from '$lib/stores/successinfo';
+	import { process_api_error } from '$lib/helpers/process_api_error';
 
 	let { data }: PageProps = $props();
 
@@ -97,22 +100,36 @@
 			projectEnd?: string | null,
 		} = {};
 		const new_label = label_field.get_value();
-		projectdata.label = new_label.modify_data(project?.label || null);
+		const tmp_modlabel = new_label.modify_data(project?.label || null);
+		if (tmp_modlabel !== undefined) {
+			projectdata.label = new_label.modify_data(project?.label || null);
+		}
+
 		const new_comment = comment_field.get_value();
-		projectdata.comment = new_comment.modify_data(project?.comment || null);
+		const tmp_modcomment = new_comment.modify_data(project?.comment || null);
+		if (tmp_modcomment !== undefined) {
+			projectdata.comment = new_comment.modify_data(project?.comment || null);
+		}
 
 		const new_projectStart = projectStart_field.get_value();
-		console.log("new_projectStart: ", new_projectStart?.getTime(), project?.projectStart?.getTime());
-		if (new_projectStart?.getTime() !== project?.projectStart?.getTime()) {
-			projectdata.projectStart = new_projectStart?.toISOString() || null;
-		}
-		const new_projectEnd = projectEnd_field.get_value();
-		console.log("new_projectEnd: ", new_projectEnd);
-		if (new_projectEnd?.getTime() !== project?.projectEnd?.getTime()) {
-			projectdata.projectEnd = new_projectEnd?.toISOString() || null;
+		if (!XsdDate.areEqual(new_projectStart, project?.projectStart)) {
+			projectdata.projectStart = new_projectStart?.toString() || null;
 		}
 
-		console.log("MODIFY: ", projectdata);
+		const new_projectEnd = projectEnd_field.get_value();
+		if (!XsdDate.areEqual(new_projectEnd, project?.projectEnd)) {
+			projectdata.projectEnd = new_projectEnd?.toString() || null;
+		}
+		
+		if (projectdata) {
+			const project_post = api_notget_config(authinfo, {projectId: project?.projectShortName.toString() || ''});
+			apiClient.postAdminprojectProjectId(projectdata, project_post).then((res) => {
+				successInfoStore.set(`project "${res.projectId}" modified successfully!`);
+			}).catch((error) => {
+				errorInfoStore.set(process_api_error(error as Error));
+			});
+
+		}
 	};
 
 
