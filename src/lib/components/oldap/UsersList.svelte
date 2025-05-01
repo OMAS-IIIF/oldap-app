@@ -111,7 +111,7 @@
 
 	const delete_user = async (user_id: string) => {
 		confirmation_for_userid = user_id;
-		confirmation_title = 'Delete user';
+		confirmation_title = m.deluser();
 		confirmation_for_state = '';
 		const ok = await confirmation_dialog.open();
 		if (ok && authinfo) {

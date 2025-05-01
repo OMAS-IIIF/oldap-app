@@ -67,6 +67,7 @@
 		else {
 			current_project_id = null;
 			projectStore.set(null);
+			projects = {};
 		}
 	});
 
@@ -79,13 +80,13 @@
 
 
 <DropdownLabel bind:isOpen={projectsIsOpen} name="projects"
-							 labelText={current_project_id ? projects[current_project_id].label[langobj] : 'Projects'}>
+							 labelText={current_project_id ? projects[current_project_id].label.get(langobj) : 'Projects'}>
 	<DropdownMenu bind:isOpen={projectsIsOpen} position="left" name="projects" id="projects-id">
 		{#each Object.entries(projects) as [key, value]}
 			<DropdownLinkItem bind:isOpen={projectsIsOpen}
 												onclick={() => set_current_project(key)} id="oldap"
 												selected={key == current_project_id}>
-				{value?.label?.[langobj] ?? key}
+				{value?.label?.get(langobj) ?? key}
 			</DropdownLinkItem>
 		{/each}
 	</DropdownMenu>

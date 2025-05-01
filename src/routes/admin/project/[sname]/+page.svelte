@@ -8,7 +8,6 @@
 	import { onMount, tick } from 'svelte';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { OldapError } from '$lib/oldap/errors/OldapError';
-	import { api_get_config } from '$lib/helpers/api_config';
 	import { apiClient } from '$lib/shared/apiClient';
 	import { OldapProject } from '$lib/oldap/classes/project';
 	import { api_notget_config } from '$lib/helpers/api_config.js';
@@ -16,21 +15,17 @@
 	import LangstringField from '$lib/components/basic_gui/inputs/LangstringField.svelte';
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
 	import DatePicker from '$lib/components/basic_gui/inputs/DatePicker.svelte';
-	import { availableLanguageTags } from '$lib/paraglide/runtime';
-	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
-	import { difference } from '$lib/helpers/setops';
 	import { XsdDate } from '$lib/oldap/datatypes/xsd_date';
 	import { successInfoStore } from '$lib/stores/successinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
+	import { getLanguageShortname } from '$lib/oldap/enums/language';
 
 	let { data }: PageProps = $props();
 
 
 	const project_iri_pattern: RegExp = /^(https?:\/\/[^\s<>"]+|urn:[^\s<>"]+|[A-Za-z_][\w.-]*:[\w.-]+)$/;
 	const ncname_pattern: RegExp = /^[A-Za-z_][A-Za-z0-9._-]*$/;
-	const namespace_pattern = /^https?:\/\/[^\s<>"]+[\/#]$/;
-
-	const languagesArray = Array.from(availableLanguageTags);
+	const namespace_pattern = /^https?:\/\/[^\s<>"]+[/#]$/;
 
 	let authinfo: AuthInfo;
 	let administrator = $state<OldapUser | null>(null);
@@ -44,9 +39,9 @@
 	let comment_field: LangstringField;
 	let comment = $state<LangString | null>(null);
 	let projectStart_field: DatePicker;
-	let projectStart = $state<Date | null>(null);
+	let projectStart = $state<XsdDate | null>(null);
 	let projectEnd_field: DatePicker;
-	let projectEnd = $state<Date | null>(null);
+	let projectEnd = $state<XsdDate | null>(null);
 
 	let topwin = $state<HTMLElement>();
 
@@ -89,7 +84,31 @@
 	});
 
 	const add_project = () => {
-
+		const label = label_field.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
+		const comment = comment_field.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
+		const projectStart = projectStart_field.get_value();
+		const projectEnd = projectEnd_field.get_value();
+		let projectdata: {
+			projectIri: string,
+			namespaceIri: string,
+			label?: string[],
+			comment?: string[],
+			projectStart?: string,
+			projectEnd?: string,
+		} = {
+			projectIri: projectIri,
+			namespaceIri: namespaceIri,
+			label: label.length > 0 ? label : undefined,
+			comment: comment.length > 0 ? comment : undefined,
+			projectStart: projectStart?.toString(),
+			projectEnd: projectEnd?.toString()
+		};
+		const project_put = api_notget_config(authinfo, {projectId: sname});
+		apiClient.putAdminprojectProjectId(projectdata, project_put).then((res) => {
+			successInfoStore.set(`Project "${res.projectId}" added successfully!`);
+		}).catch((error) => {
+			errorInfoStore.set(process_api_error(error as Error));
+		});
 	};
 
 	const modify_project = () => {
@@ -120,11 +139,11 @@
 		if (!XsdDate.areEqual(new_projectEnd, project?.projectEnd)) {
 			projectdata.projectEnd = new_projectEnd?.toString() || null;
 		}
-		
+
 		if (projectdata) {
 			const project_post = api_notget_config(authinfo, {projectId: project?.projectShortName.toString() || ''});
 			apiClient.postAdminprojectProjectId(projectdata, project_post).then((res) => {
-				successInfoStore.set(`project "${res.projectId}" modified successfully!`);
+				successInfoStore.set(`Project "${res.projectId}" modified successfully!`);
 			}).catch((error) => {
 				errorInfoStore.set(process_api_error(error as Error));
 			});

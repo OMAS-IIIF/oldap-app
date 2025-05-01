@@ -12,13 +12,14 @@
 	import { onMount } from 'svelte';
 	import TableBody from '$lib/components/basic_gui/table/TableBody.svelte';
 	import { apiClient } from '$lib/shared/apiClient';
-	import { api_get_config } from '$lib/helpers/api_config';
+	import { api_get_config, api_notget_config } from '$lib/helpers/api_config';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
 	import TableItem from '$lib/components/basic_gui/table/TableItem.svelte';
 	import { languageTag } from '$lib/paraglide/runtime';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
+	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
 
 	let { table_height, administrator = $bindable() }: {
 		table_height: number,
@@ -31,6 +32,10 @@
 
 	let lang = $state(languageTag());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
+
+	let confirmation_dialog: Confirmation;
+	let confirmation_title = $state('');
+	let confirmation_for_sname = $state('');
 
 
 	onMount(() => {
@@ -78,15 +83,27 @@
 	}
 
 	const delete_project = async (sname: string) => {
+		confirmation_for_sname = sname;
+		confirmation_title = m.delproject();
+		const ok = await confirmation_dialog.open();
 
+		if (ok && authinfo) {
+			const project_delete = api_notget_config(authinfo, { projectId: sname })
+			apiClient.deleteAdminprojectProjectId(undefined, project_delete).then(() => {
+				delete projects[sname];
+				project_list = project_list.filter((id) => id !== sname);
+			}).catch((err) => {
+				errorInfoStore.set(process_api_error(err as Error));
+			});
+		}
 	}
 
 	let headers: string[] = $state([
-		'Iri/QName',
-		'Shortname',
-		'Label',
-		'Startdate',
-		'Enddate',
+		m.iri_qname(),
+		m.shortname(),
+		m.label(),
+		m.startdate(),
+		m.enddate(),
 		m.action()]);
 
 </script>
@@ -136,3 +153,7 @@
 		{/each}
 	</TableBody>
 </Table>
+
+<Confirmation bind:this={confirmation_dialog} title={confirmation_title}>
+	{m.confirm_project_delete({ sname: confirmation_for_sname})}
+</Confirmation>

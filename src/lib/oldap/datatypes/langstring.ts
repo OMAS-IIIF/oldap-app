@@ -97,7 +97,7 @@ export class LangString {
 	}
 
 	modify_data(from: LangString | null): string[] | Partial<Record<'add'|'del', string[]>> | null | undefined {
-		let res: string[] | Partial<Record<'add'|'del', string[]>> | null = undefined;
+		let res: string[] | Partial<Record<'add'|'del', string[]>> | null | undefined = undefined;
 
 		const from_strs = new Set<string>(from?.map((lang, val) => `${val}@${getLanguageShortname(lang)}`));
 		const this_strs = new Set<string>(this.map((lang, val) => `${val}@${getLanguageShortname(lang)}`));

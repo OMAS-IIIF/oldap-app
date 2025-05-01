@@ -37,12 +37,19 @@
     "cancel": "Abbrechen",
     "modify": "Ändern",
     "user_iri": "User IRI",
-    "confirm_user_delete": "Möchten Sie wirklich den Benuttzer \"{userid}\" löschen ?",
+    "confirm_user_delete": "Möchten Sie wirklich den Benutzer \"{userid}\" löschen ?",
     "active": "Aktiv",
     "add_project": "Projekt hinzufügen",
     "projectlist_descr": "Liste aller Projekte",
     "project_iri": "Projekt-IRI",
     "project_sname": "Projekt-Kurzname",
     "namespaceiri": "Namespace-IRI",
-    "label": "Label"
+    "label": "Label",
+    "iri_qname": "Iri/QName",
+    "shortname": "Kurzname",
+    "startdate": "Datum des Beginns",
+    "enddate": "Enddate",
+    "confirm_project_delete": "Möchten Sie wirklich das Projekt \"{sname}\" löschen ?",
+    "deluser": "Benutzer löschen",
+    "delproject": "Projekt löschen"
 }

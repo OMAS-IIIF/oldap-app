@@ -44,5 +44,12 @@
     "project_iri": "Project-IRI",
     "project_sname": "Project shortname",
     "namespaceiri": "Namespace-IRI",
-    "label": "Label"
+    "label": "Label",
+    "iri_qname": "Iri/QName",
+    "shortname": "Shortname",
+    "startdate": "Startdate",
+    "enddate": "Enddate",
+    "confirm_project_delete": "Do you really want to delete the project \"{sname}\" ?",
+    "deluser": "Delete user",
+    "delproject": "Delete project"
 }
