@@ -32,7 +32,6 @@
 
 	userStore.subscribe(async (user: OldapUser | null) => {
 		if (user && authinfo) {
-			console.log("USER=", user);
 
 			let project_iris: string[] | undefined;
 			if (user.isRoot) {
@@ -61,6 +60,7 @@
 			}
 			for (const k in projects) {
 				current_project_id = projects[k].projectShortName.toString();
+				projectStore.set(projects[k]);
 				break;
 			}
 		}

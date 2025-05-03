@@ -51,5 +51,11 @@
     "enddate": "Data di fine",
     "confirm_project_delete": "Si vuole davvero cancellare il progetto \"{sname}\"?",
     "deluser": "Cancellare l'utente",
-    "delproject": "Cancellare il progetto"
+    "delproject": "Cancellare il progetto",
+    "add_list": "Aggiungere un elenco gerarchico",
+    "hlists": "Elenchi gerarchici",
+    "hlists_descr": "Elenco di tutti gli elenchi gerarchici/thesauri",
+    "hlist_id": "Elenco gerarchico ID",
+    "pref_label": "Etichetta preferita (SKOS)",
+    "nodeclassiri": "Node class IRI"
 }

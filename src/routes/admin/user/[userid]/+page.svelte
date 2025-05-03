@@ -131,7 +131,6 @@
 		catch (error) {
 			return Promise.reject(error);
 		}
-		console.log("-- user_permsets--:", $state.snapshot(user_permsets));
 	}
 
 	onMount(async () => {
@@ -169,7 +168,6 @@
 		//
 		// now retrieve all projects data from the triplestore
 		//
-		//let all_projects: Record<string, OldapProject> = {};
 		const promises = all_projects_iris.map(async iri => {
 			const config_projectdata = api_get_config(authinfo, { iri: iri });
 			const jsondata = await apiClient.getAdminprojectget(config_projectdata);

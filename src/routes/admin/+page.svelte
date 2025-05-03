@@ -17,6 +17,7 @@
 	import { get } from 'svelte/store';
 	import ProjectsList from '$lib/components/oldap/ProjectsList.svelte';
 	import { adminTabState } from '$lib/stores/admintabstate';
+	import HlistsList from '$lib/components/oldap/HlistsList.svelte';
 
 	//type UsersList = {[key: string]: OldapUser};
 
@@ -48,8 +49,10 @@
 			//
 			// we determine which tabs the user has available depending on his/her admin permissions
 			administrator = userinfo;
+			console.log("ADMINISTRATOR: ", administrator);
 			let in_project: InProject | undefined = undefined;
 			administrator.inProject?.forEach((inProject) => {
+				console.log("................IN PROJECT: ", inProject.project.toString(), project?.projectIri.toString());
 				if (inProject.project.toString() === project?.projectIri.toString()) {
 					in_project = inProject;
 				}
@@ -63,6 +66,7 @@
 					permsets: m.permsets()
 				}
 			} else {
+				console.log("IN PROJECT: ", in_project);
 				if (in_project) {
 					(in_project as InProject).permissions.forEach((x) => {
 						switch (x) {
@@ -108,6 +112,7 @@
 	//
 	projectStore.subscribe((projectinfo) => {
 		if (projectinfo) {
+			//console.log("PROJECT FROM STORE: ", projectinfo);
 			project = projectinfo;
 		}
 	});
@@ -142,3 +147,7 @@
 {#if selected_tab === 'users'}
 	<UsersList table_height={table_height} bind:administrator={administrator} bind:project={project}/>
 {/if}
+{#if selected_tab === 'lists'}
+	<HlistsList table_height={table_height} bind:administrator={administrator} bind:project={project}/>
+{/if}
+

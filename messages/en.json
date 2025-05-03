@@ -51,5 +51,11 @@
     "enddate": "Enddate",
     "confirm_project_delete": "Do you really want to delete the project \"{sname}\" ?",
     "deluser": "Delete user",
-    "delproject": "Delete project"
+    "delproject": "Delete project",
+    "add_list": "Add hierarchical list",
+    "hlists": "Hierarchical lists",
+    "hlists_descr": "List of all hierarchical lists/thesauri",
+    "hlist_id": "Hierarchical list ID",
+    "pref_label": "Preferred label (SKOS)",
+    "nodeclassiri": "Node class IRI"
 }

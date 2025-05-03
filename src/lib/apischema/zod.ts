@@ -1,6 +1,3 @@
-/*
- * npx openapi-zod-client ../oldap-api/API-def/oldap-api.yaml --with-docs -o src/lib/apischema/zod.ts  --export-types
- */
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
@@ -808,7 +805,7 @@ const endpoints = makeApi([
 				schema: z.string()
 			},
 		],
-		response: z.void(),
+		response: z.union([z.object({}).partial().passthrough(), z.array(z.any()), z.string(), z.number(), z.boolean(), z.unknown()]),
 		errors: [
 			{
 				status: 403,
@@ -1007,6 +1004,85 @@ When there are any number of nodes below the node one wish to move, they get mov
 		]
 	},
 	{
+		method: "get",
+		path: "/admin/hlist/get",
+		alias: "getAdminhlistget",
+		description: `Get all hlist data from the hlist iri`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "iri",
+				type: "Query",
+				schema: z.string().optional()
+			},
+		],
+		response: z.object({ hlistIri: z.string(), creator: z.string(), created: z.string(), contributor: z.string(), modified: z.string(), hlistId: z.string(), prefLabel: LangString, definition: LangString, nodeNamespaceIri: z.string(), nodeClassIri: z.string() }).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Unspecified error`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 403,
+				description: `Unauthorized`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 404,
+				description: `Not Found`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+		]
+	},
+	{
+		method: "get",
+		path: "/admin/hlist/search",
+		alias: "getAdminhlistsearch",
+		description: `Search for a given user`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "project",
+				type: "Query",
+				schema: z.string().optional()
+			},
+			{
+				name: "hlist",
+				type: "Query",
+				schema: z.string().optional()
+			},
+			{
+				name: "prefLabel",
+				type: "Query",
+				schema: z.string().optional()
+			},
+			{
+				name: "definition",
+				type: "Query",
+				schema: z.string().optional()
+			},
+			{
+				name: "exactMatch",
+				type: "Query",
+				schema: z.boolean().optional()
+			},
+		],
+		response: z.array(z.string()),
+		errors: [
+			{
+				status: 400,
+				description: `Several Errors that involve bad requests`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 403,
+				description: `Unauthorized`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+		]
+	},
+	{
 		method: "put",
 		path: "/admin/permissionset/:definedByProject/:permissionSetId",
 		alias: "putAdminpermissionsetDefinedByProjectPermissionSetId",
@@ -1081,6 +1157,11 @@ When there are any number of nodes below the node one wish to move, they get mov
 			{
 				status: 404,
 				description: `Not Found`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 409,
+				description: `Conflict`,
 				schema: z.object({ message: z.string() }).partial().passthrough()
 			},
 			{
