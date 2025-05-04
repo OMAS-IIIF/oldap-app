@@ -3,6 +3,7 @@ import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
 import { LangString } from '$lib/oldap/datatypes/langstring';
 import { Iri } from '$lib/oldap/datatypes/xsd_iri';
 
+
 export class OldapList extends OldapObject {
 	#hlistId: NCName;
 	#hlistIri: Iri;
@@ -100,4 +101,14 @@ export class OldapListNode extends OldapObject {
 	addNode(node: OldapListNode) {
 		this.#nodes.push(node);
 	}
+}
+
+export interface ApiNode {
+	creator: string;
+	created: string;
+	contributor: string;
+	modified: string;
+	oldapListNodeId: string;
+	prefLabel: string[];
+	nodes: ApiNode[];
 }
