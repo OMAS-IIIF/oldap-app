@@ -13,16 +13,16 @@
 	}
 </script>
 
-<li>
-	<div style="cursor: pointer;" onclick={toggle}>
+<li class="ml-1 pl-1">
+	<div >
 		{#if node.children}
-			<strong>{expanded ? '▼' : '▶'}</strong>
+			<strong style="cursor: pointer;" onclick={toggle}>{expanded ? '▼' : '▶'}</strong>
 		{/if}
 		{node.name}
 	</div>
 
 	{#if expanded && node.children && node.children.length > 0}
-		<ul>
+		<ul class="pl-4 list-none border-l border-gray-300 ml-1 space-y-1">
 			{#each node.children as child}
 				<NodeTree node={child} />
 			{/each}
