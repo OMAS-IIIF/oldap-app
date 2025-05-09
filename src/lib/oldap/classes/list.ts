@@ -5,36 +5,54 @@ import { Iri } from '$lib/oldap/datatypes/xsd_iri';
 
 
 export class OldapList extends OldapObject {
-	#hlistId: NCName;
-	#hlistIri: Iri;
+	#oldapListId: NCName;
+	#oldapListIri: Iri;
 	#nodeClassIri: Iri;
 	#nodeNamespaceIri: Iri;
+	#nodePrefix: NCName;
 	#prefLabel?: LangString;
 	#definition?: LangString;
+	nodes?: OldapListNode[];
 
 	constructor(creator: Iri,
 							created: Date,
 							contributor: Iri,
 							modified: Date,
-							hlistId: NCName,
-							hlistIri: Iri,
+							oldapListId: NCName,
+							oldapListIri: Iri,
 							nodeClassIri: Iri,
+							nodeNamespaceIri: Iri,
+							nodePrefix: NCName,
 							prefLabel?: LangString,
 							definition?: LangString) {
 		super(creator, created, contributor, modified);
-		this.#hlistId = hlistId;
-		this.#hlistIri = hlistIri;
+		this.#oldapListId = oldapListId;
+		this.#oldapListIri = oldapListIri;
 		this.#nodeClassIri = nodeClassIri;
+		this.#nodeNamespaceIri = nodeNamespaceIri;
+		this.#nodePrefix = nodePrefix;
 		this.#prefLabel = prefLabel;
 		this.#definition = definition;
 	}
 
-	get hlistId() {
-		return this.#hlistId;
+	get oldapListId() {
+		return this.#oldapListId;
 	}
 
-	get nodeClassIri() {
+	get oldapListIri(): Iri {
+		return this.#oldapListIri;
+	}
+
+	get nodeNamespaceIri(): Iri {
+		return this.#nodeNamespaceIri;
+	}
+
+	get nodeClassIri(): Iri {
 		return this.#nodeClassIri;
+	}
+
+	get nodePrefix(): NCName {
+		return this.#nodePrefix;
 	}
 
 	get prefLabel() {
@@ -50,12 +68,14 @@ export class OldapList extends OldapObject {
 		const created = new Date(json.created);
 		const contributor = new Iri(json.contributor);
 		const modified = new Date(json.modified);
-		const hlistId = new NCName(json.hlistId);
-		const hlistIri = new Iri(json.hlistIri);
+		const oldapListId = new NCName(json.oldapListId);
+		const oldapListIri = new Iri(json.oldapListIri);
 		const nodeClassIri = new Iri(json.nodeClassIri);
+		const nodeNamespaceIri = new Iri(json.nodeNamespaceIri);
+		const nodePrefix = new NCName(json.nodePrefix);
 		const prefLabel = LangString.fromJson(json?.prefLabel);
 		const definition = LangString.fromJson(json?.definition);
-		return new OldapList(creator, created, contributor, modified, hlistId, hlistIri, nodeClassIri, prefLabel, definition);
+		return new OldapList(creator, created, contributor, modified, oldapListId, oldapListIri, nodeClassIri, nodeNamespaceIri, nodePrefix, prefLabel, definition);
 	}
 }
 

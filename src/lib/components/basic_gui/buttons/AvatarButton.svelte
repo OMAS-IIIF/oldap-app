@@ -18,7 +18,6 @@
 	class_str += ` ${userClass} aria-expanded=${ariaExpanded || undefined} aria-haspopup=${ariaHaspopup || undefined}`;
 
 	const no_avatar = () => {
-		console.log("NO AVATAR IMAGE", initials);
 		avatar_error = true;
 	}
 
