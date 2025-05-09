@@ -32,6 +32,7 @@
 	import { OldapErrorInvalidValue } from '$lib/oldap/errors/OldapErrorInvalidValue';
 	import { successInfoStore } from '$lib/stores/successinfo';
 	import { difference, intersection } from '$lib/helpers/setops';
+	import { authInfoStore } from '$lib/stores/authinfo';
 
 	type ProjRef = {iri: string, sname: string};
 	type CheckedState = {[key: string]: Record<AdminPermission, boolean>};
@@ -42,7 +43,7 @@
 	let lang = $state(languageTag());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
 
-	let authinfo: AuthInfo;
+	let authinfo: AuthInfo | null = $authInfoStore;
 	let administrator = $state<OldapUser | null>(null);
 	const ncname_pattern: RegExp = /^[A-Za-z_][A-Za-z0-9._-]*$/;
 	const email_pattern: RegExp = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -78,6 +79,10 @@
 		administrator = admin;
 	});
 
+	authInfoStore.subscribe(data => {
+		authinfo = data;
+	});
+
 	function scrollToTop() {
 		if (topwin) {
 			topwin.scrollTo({ top: -1000, behavior: "smooth" });
@@ -98,7 +103,7 @@
 			tmp = user_in_projects;
 		}
 		const promises2 = tmp.map(async (in_project) => { // get data permission set iris for all projects the user is in
-			const permset_config = api_get_config(authinfo, {definedByProject: in_project.iri});
+			const permset_config = api_get_config(authinfo as AuthInfo, {definedByProject: in_project.iri});
 			const jsondata = await apiClient.getAdminpermissionsetsearch(permset_config);
 			return jsondata;
 		});
@@ -111,7 +116,7 @@
 			return Promise.reject(error);
 		}
 		const promises3 = permset_iris.map(async ps_iri => { // get the complete permission set data for all permission sets
-			const dataperm_config = api_get_config(authinfo, {iri: ps_iri});
+			const dataperm_config = api_get_config(authinfo as AuthInfo, {iri: ps_iri});
 			return await apiClient.getAdminpermissionsetget(dataperm_config);
 		});
 		try {
@@ -135,15 +140,13 @@
 
 	onMount(async () => {
 		if (!topwin) return;
-		//user = null;
-		authinfo = AuthInfo.fromString(sessionStorage.getItem('authinfo'));
 		//
 		// fill "all_projects_iris" containing all the project iri's the current administrator may assign to the given user
 		//
 		let all_projects_iris: string[] = [];
 		if (administrator) { // the administrator has to be defined...
 			if (administrator.isRoot) {
-				const psearch_config = api_get_config(authinfo);
+				const psearch_config = api_get_config(authinfo as AuthInfo);
 				try {
 					const projs = await apiClient.getAdminprojectsearch(psearch_config);
 					projs.forEach(p => {
@@ -169,7 +172,7 @@
 		// now retrieve all projects data from the triplestore
 		//
 		const promises = all_projects_iris.map(async iri => {
-			const config_projectdata = api_get_config(authinfo, { iri: iri });
+			const config_projectdata = api_get_config(authinfo as AuthInfo, { iri: iri });
 			const jsondata = await apiClient.getAdminprojectget(config_projectdata);
 			const project = OldapProject.fromOldapJson(jsondata);
 			return { iri: project.projectIri.toString(), project };
@@ -187,7 +190,7 @@
 			//
 			// first we get the user data of the already existing user
 			//
-			const config_userdata = api_notget_config(authinfo, { userId: data.userid });
+			const config_userdata = api_notget_config(authinfo as AuthInfo, { userId: data.userid });
 			try {
 				const jsondata = await apiClient.getAdminuserUserId(config_userdata);
 				user = OldapUser.fromOldapJson(jsondata);
@@ -352,7 +355,7 @@
 				userdata.hasPermissions.push(iri);
 			}
 		});
-		const user_put = api_notget_config(authinfo, {userId: userId});
+		const user_put = api_notget_config(authinfo as AuthInfo, {userId: userId});
 		apiClient.putAdminuserUserId(userdata, user_put).then((res) => {
 			console.log("ADD NEW USER");
 			console.log(userdata);
@@ -494,7 +497,7 @@
 		}
 
 		console.log("MODIFY USER:", userdata);
-		const user_post = api_notget_config(authinfo, {userId: user?.userId.toString() || ''});
+		const user_post = api_notget_config(authinfo as AuthInfo, {userId: user?.userId.toString() || ''});
 		apiClient.postAdminuserUserId(userdata, user_post).then((res) => {
 			successInfoStore.set(`User "${res.userId}" modified successfully!`);
 		}).catch((error) => {

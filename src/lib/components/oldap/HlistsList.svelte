@@ -2,10 +2,9 @@
 	import { OldapUser } from '$lib/oldap/classes/user';
 	import type { OldapProject } from '$lib/oldap/classes/project';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { onMount } from 'svelte';
 	import { api_get_config } from '$lib/helpers/api_config';
 	import { apiClient } from '$lib/shared/apiClient';
-	import { OldapList } from '$lib/oldap/classes/hlist';
+	import { OldapList } from '$lib/oldap/classes/list';
 	import * as m from '$lib/paraglide/messages';
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
 	import { goto } from '$app/navigation';
@@ -19,6 +18,7 @@
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
+	import { authInfoStore } from '$lib/stores/authinfo';
 
 	let { table_height, administrator = $bindable(), project = $bindable() }: {
 		table_height: number,
@@ -29,13 +29,13 @@
 	let lang = $state(languageTag());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
 
-	let authinfo = $state<AuthInfo>();
+	let authinfo = $state<AuthInfo | null>($authInfoStore);
 	let hlists = $state<Record<string, OldapList>>({});
 	let hlist_list = $state<string[]>([]);
 
-	onMount(() => {
-		authinfo = AuthInfo.fromString(sessionStorage.getItem('authinfo'));
-	});
+	authInfoStore.subscribe(data => {
+		authinfo = data;
+	})
 
 	$effect(() => {
 		if (authinfo) {
@@ -43,13 +43,15 @@
 			apiClient.getAdminhlistsearch(hlistsearch).then(hldata => {
 				hlists = {} as Record<string, OldapList>;
 				const promises = hldata.map(hl => {
-					const config_hlistdata = api_get_config(authinfo, { iri: hl });
+					const config_hlistdata = api_get_config(authinfo as AuthInfo, { iri: hl });
 					return apiClient.getAdminhlistget(config_hlistdata);
 				});
 				Promise.all(promises).then((results) => {
 					results.forEach((hlistdata) => {
-						const hlist = OldapList.fromOldapJson(hlistdata);
-						const id = hlist.hlistId.toString();
+						console.log("--->", hlistdata);
+						const hlist = OldapList.fromOldapJson(hlistdata, true);
+						console.log("===>", hlist);
+						const id = hlist.oldapListId.toString();
 						hlists[id] = hlist;
 						hlist_list.push(id);
 					});

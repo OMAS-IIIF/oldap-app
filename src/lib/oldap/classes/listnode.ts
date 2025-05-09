@@ -6,10 +6,11 @@ import { OldapList } from '$lib/oldap/classes/list';
 
 export class OldapListNode extends OldapObject {
 	#oldapList: OldapList;
-	#listNodeId: NCName;
-	#label?: LangString;
+	#oldapListNodeId: NCName;
+	#iri: Iri;
+	#prefLabel?: LangString;
 	#definition?: LangString;
-	#nodes: OldapListNode[];
+	nodes?: OldapListNode[];
 
 	constructor(
 		creator: Iri,
@@ -17,35 +18,67 @@ export class OldapListNode extends OldapObject {
 		contributor: Iri,
 		modified: Date,
 		oldapList: OldapList,
-		listNodeId: NCName,
-		label?: LangString,
+		oldapListNodeId: NCName,
+		iri: Iri,
+		prefLabel?: LangString,
 		definition?: LangString
 	) {
 		super(creator, created, contributor, modified);
 		this.#oldapList = oldapList;
-		this.#listNodeId = listNodeId;
-		this.#label = label;
+		this.#oldapListNodeId = oldapListNodeId;
+		this.#iri = iri;
+		this.#prefLabel = prefLabel;
 		this.#definition = definition;
-		this.#nodes = [];
+		this.nodes = undefined;
 	}
 
-	get oldapList() {
+	get oldapList(): OldapList {
 		return this.#oldapList;
 	}
 
-	get listNodeId() {
-		return this.#listNodeId;
+	get oldapListNodeId(): NCName {
+		return this.#oldapListNodeId;
 	}
 
-	get label() {
-		return this.#label;
+	get iri(): Iri {
+		return this.#iri;
+	}
+
+	get prefLabel() {
+		return this.#prefLabel;
 	}
 
 	get definition() {
 		return this.#definition;
 	}
 
-	addNode(node: OldapListNode) {
-		this.#nodes.push(node);
+	static fromOldapJson(json: any, oldapList: OldapList): OldapListNode {
+		const creator = new Iri(json.creator);
+		const created = new Date(json.created);
+		const contributor = new Iri(json.contributor);
+		const modified = new Date(json.modified);
+		const oldapListNodeId = new NCName(json.oldapListNodeId);
+		const iri = new Iri(json.iri);
+		const prefLabel = LangString.fromJson(json?.prefLabel);
+		const definition = LangString.fromJson(json?.definition);
+		const node = new OldapListNode(
+			creator,
+			created,
+			contributor,
+			modified,
+			oldapList,
+			oldapListNodeId,
+			iri,
+			prefLabel,
+			definition
+		);
+
+		if (json.nodes && json.nodes.length > 0) {
+			node.nodes = json.nodes.map(subnode => {
+				return OldapListNode.fromOldapJson(subnode, oldapList);
+			})
+		}
+
+		return node;
 	}
 }

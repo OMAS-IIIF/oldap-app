@@ -7,7 +7,6 @@
 	import Table from '$lib/components/basic_gui/table/Table.svelte';
 	import { contentAreaHeight } from '$lib/stores/contentarea_h';
 	import type { OldapProject } from '$lib/oldap/classes/project';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { onMount } from 'svelte';
 	import { apiClient } from '$lib/shared/apiClient';
 	import { api_get_config } from '$lib/helpers/api_config';
@@ -19,8 +18,6 @@
 	import { adminTabState } from '$lib/stores/admintabstate';
 	import HlistsList from '$lib/components/oldap/HlistsList.svelte';
 
-	//type UsersList = {[key: string]: OldapUser};
-
 	let tabs: TabsType = $state({});
 	let administrator: OldapUser | null = $state(null);
 	let project = $state<OldapProject | null>(get(projectStore));
@@ -28,12 +25,6 @@
 
 	let tabs_height = $state(100); // just an arbitrary value
 	let table_height = $state(($contentAreaHeight || 200) - (() => tabs_height)() - 25);
-
-	let authinfo: AuthInfo;
-
-	onMount(() => {
-		authinfo = AuthInfo.fromString(sessionStorage.getItem('authinfo'));
-	});
 
 	adminTabState.subscribe((state) => {
 		if (state) {
@@ -52,7 +43,6 @@
 			console.log("ADMINISTRATOR: ", administrator);
 			let in_project: InProject | undefined = undefined;
 			administrator.inProject?.forEach((inProject) => {
-				console.log("................IN PROJECT: ", inProject.project.toString(), project?.projectIri.toString());
 				if (inProject.project.toString() === project?.projectIri.toString()) {
 					in_project = inProject;
 				}

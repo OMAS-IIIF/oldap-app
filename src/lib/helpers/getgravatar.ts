@@ -8,5 +8,5 @@ export function getGravatarUrl(email: string, size: number = 200): string {
 	const hash = md5(trimmedEmail).toString();
 
 	// Construct the Gravatar URL with optional size parameter
-	return `https://www.gravatar.com/avatar/${hash}?s=${size}`;
+	return `https://www.gravatar.com/avatar/${hash}?s=${size}&d=identicon`;
 }

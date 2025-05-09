@@ -19,6 +19,7 @@
 	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
+	import { authInfoStore } from '$lib/stores/authinfo';
 
 	let { table_height, administrator = $bindable(), project = $bindable() }: {
 		table_height: number,
@@ -27,7 +28,7 @@
 	} = $props();
 
 	let show_all_users = $state(false);
-	let authinfo = $state<AuthInfo>();
+	let authinfo = $state<AuthInfo | null>($authInfoStore);
 	let users = $state<Record<string, OldapUser>>({});
 	let user_list = $state<string[]>([]);
 	let user_active: Record<string, boolean> = $state({});
@@ -38,9 +39,9 @@
 	let confirmation_for_state = $state('');
 
 
-	onMount(() => {
-		authinfo = AuthInfo.fromString(sessionStorage.getItem('authinfo'));
-	});
+	authInfoStore.subscribe(data => {
+		authinfo = data;
+	})
 
 	$effect(() => {
 		user_list = [];
@@ -53,7 +54,7 @@
 				.then((iris) => {
 					users = {} as Record<string, OldapUser>;
 					const promises = iris.map(iri => {
-						const config_userdata = api_get_config(authinfo, { iri: iri });
+						const config_userdata = api_get_config(authinfo as AuthInfo, { iri: iri });
 						return apiClient.getAdminuserget(config_userdata);
 					});
 					Promise.all(promises)
@@ -85,7 +86,7 @@
 			on = !on;
 			const data = { isActive: on };
 			const config_change_isActive = {
-				headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + authinfo.token },
+				headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + authinfo?.token },
 				params: { userId: id }
 			};
 			apiClient.postAdminuserUserId(data, config_change_isActive)

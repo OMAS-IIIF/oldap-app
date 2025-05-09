@@ -12,10 +12,16 @@ import * as m from '$lib/paraglide/messages.js';
 import User from '$lib/components/oldap/User.svelte';
 import Projects from '$lib/components/oldap/Projects.svelte';
 import SuccessMsg from '$lib/components/oldap/SuccessMsg.svelte';
+import { userStore } from '$lib/stores/user';
 
 let { children } = $props();
 
-let user: OldapUser | null = $state(null);
+//let user: OldapUser | null = $state(null);
+let user: OldapUser | null = $state($userStore);
+
+userStore.subscribe(stored_user => {
+	user = stored_user;
+});
 
 </script>
 

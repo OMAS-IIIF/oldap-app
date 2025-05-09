@@ -20,13 +20,14 @@
 	import { languageTag } from '$lib/paraglide/runtime';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import { authInfoStore } from '$lib/stores/authinfo';
 
 	let { table_height, administrator = $bindable() }: {
 		table_height: number,
 		administrator: OldapUser,
 	} = $props();
 
-	let authinfo = $state<AuthInfo>();
+	let authinfo = $state<AuthInfo | null>($authInfoStore);
 	let projects = $state<Record<string, OldapProject>>({});
 	let project_list = $state<string[]>([]);
 
@@ -37,11 +38,9 @@
 	let confirmation_title = $state('');
 	let confirmation_for_sname = $state('');
 
-
-	onMount(() => {
-		authinfo = AuthInfo.fromString(sessionStorage.getItem('authinfo'));
-	});
-
+	authInfoStore.subscribe(data => {
+		authinfo = data;
+	})
 
 	$effect(() => {
 		project_list = [];
@@ -50,7 +49,7 @@
 			apiClient.getAdminprojectsearch(config_data).then(pdata => {
 				projects = {} as Record<string, OldapProject>;
 				const promises = pdata.map(p => {
-					const config_projectdata = api_get_config(authinfo, { iri: p.projectIri });
+					const config_projectdata = api_get_config(authinfo as AuthInfo, { iri: p.projectIri });
 					return apiClient.getAdminprojectget(config_projectdata);
 				});
 				Promise.all(promises)

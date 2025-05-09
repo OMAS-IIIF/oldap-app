@@ -19,6 +19,7 @@
 	import { successInfoStore } from '$lib/stores/successinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import { getLanguageShortname } from '$lib/oldap/enums/language';
+	import { authInfoStore } from '$lib/stores/authinfo';
 
 	let { data }: PageProps = $props();
 
@@ -27,7 +28,7 @@
 	const ncname_pattern: RegExp = /^[A-Za-z_][A-Za-z0-9._-]*$/;
 	const namespace_pattern = /^https?:\/\/[^\s<>"]+[/#]$/;
 
-	let authinfo: AuthInfo;
+	let authinfo: AuthInfo | null = $authInfoStore;
 	let administrator = $state<OldapUser | null>(null);
 
 	let project: OldapProject;
@@ -49,6 +50,10 @@
 		administrator = admin;
 	});
 
+	authInfoStore.subscribe(data => {
+		authinfo = data;
+	})
+
 	function scrollToTop() {
 		if (topwin) {
 			topwin.scrollTo({ top: -1000, behavior: 'smooth' });
@@ -56,8 +61,7 @@
 	}
 
 	onMount(async () => {
-		if (!topwin) return;
-		authinfo = AuthInfo.fromString(sessionStorage.getItem('authinfo'));
+		if (!topwin || !authinfo) return;
 		if (administrator) { // the administrator has to be defined...
 			if (administrator.isRoot) {
 				if (data?.sname !== 'new') {
@@ -84,6 +88,7 @@
 	});
 
 	const add_project = () => {
+		if (!authinfo) return;
 		const label = label_field.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
 		const comment = comment_field.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
 		const projectStart = projectStart_field.get_value();

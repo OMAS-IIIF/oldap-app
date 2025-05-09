@@ -21,6 +21,7 @@ export class OldapUser extends OldapObject {
 	inProject?: InProject[];
 	hasPermissions?: Iri[];
 	isRoot: boolean;
+	avatarSrc?: string;
 
 	constructor(creator: Iri,
 							created: Date,

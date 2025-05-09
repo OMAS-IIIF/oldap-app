@@ -6,7 +6,7 @@
 	import Login from '$lib/components/basic_gui/login/Login.svelte';
 	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
 	import AvatarButton from '$lib/components/basic_gui/buttons/AvatarButton.svelte';
-	import type { AuthInfo } from '$lib/oldap/classes/authinfo';
+	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { OldapErrorApiFailure } from '$lib/oldap/errors/OldapErrorApiFailure';
 	import { OldapUser } from '$lib/oldap/classes/user';
 	import { getGravatarUrl } from '$lib/helpers/getgravatar';
@@ -15,12 +15,13 @@
 	import { userStore } from '$lib/stores/user';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { goto } from '$app/navigation';
+	import { authInfoStore } from '$lib/stores/authinfo';
 
 	let { user = $bindable() } = $props();
 
 	let avatarIsOpen = $state(false);
 	let initials: string | undefined = $state(undefined);
-	let src: string | undefined = $state(undefined);
+	let src: string | undefined = $state($userStore?.avatarSrc);
 	let loginIsOpen = $state(false);
 
 	let do_login = (userid: string, password: string) => {
@@ -35,11 +36,8 @@
 		apiClient.postAdminauthUserId(data, config_auth)
 			.then(authdata => {
 				if (authdata.token) {
-					const authinfo: AuthInfo = {
-						userid: userid,
-						token: authdata.token,
-					}
-					sessionStorage.setItem('authinfo', JSON.stringify(authinfo));
+					const authinfo = new AuthInfo(userid, authdata.token);
+					authInfoStore.set(authinfo);
 					return authinfo;
 				}
 				throw new OldapErrorApiFailure("Got no token from login procedure");
@@ -56,10 +54,11 @@
 			})
 			.then(userdata => {
 				user = OldapUser.fromOldapJson(userdata);
-				userStore.set(user);
-				console.log(user);
 				src = getGravatarUrl(user.email, 200);
-				initials = user.givenName[0] + user.familyName[0]
+				console.log("AVATAR SRC=", src);
+				user.avatarSrc = src;
+				initials = user.givenName[0] + user.familyName[0];
+				userStore.set(user);
 			})
 			.catch(err => {
 				const errobj = process_api_error(err);
@@ -72,7 +71,7 @@
 		initials = undefined;
 		src = undefined;
 		userStore.set(null);
-		sessionStorage.removeItem('authinfo');
+		authInfoStore.set(null);
 		goto('/');
 	}
 

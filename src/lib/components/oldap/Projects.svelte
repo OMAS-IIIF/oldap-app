@@ -6,16 +6,14 @@
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import { apiClient } from '$lib/shared/apiClient';
 	import { userStore } from '$lib/stores/user';
-	import type { InProject, OldapUser } from '$lib/oldap/classes/user';
+	import type { OldapUser } from '$lib/oldap/classes/user';
 	import { api_config } from '$lib/helpers/api_config';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { error } from '@sveltejs/kit';
 	import { OldapProject } from '$lib/oldap/classes/project';
 	import { languageTag } from '$lib/paraglide/runtime';
-	import { onMount } from 'svelte';
-	import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
 	import { projectStore } from '$lib/stores/project';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
+	import { authInfoStore } from '$lib/stores/authinfo';
 
 	let projectsIsOpen = $state(false);
 	let current_project_id = $state<string | null>(null);
@@ -24,11 +22,11 @@
 
 	let projects: Record<string, OldapProject> = $state<Record<string, OldapProject>>({});
 
-	let authinfo: AuthInfo;
+	let authinfo: AuthInfo | null = $authInfoStore;
 
-	onMount(() => {
-		authinfo = AuthInfo.fromString(sessionStorage.getItem('authinfo'));
-	});
+	authInfoStore.subscribe(data => {
+		authinfo = data;
+	})
 
 	userStore.subscribe(async (user: OldapUser | null) => {
 		if (user && authinfo) {
@@ -41,7 +39,7 @@
 					project_iris = res.map(item => item.projectIri) as string[] | undefined;
 				}
 				catch (err) {
-					process_api_error(err as Error)
+					process_api_error(err as Error);
 				}
 			}
 			else {
@@ -55,7 +53,7 @@
 					projects[project.projectShortName.toString()] = project;
 				}
 				catch (err) {
-					console.log(err);
+					process_api_error(err as Error);
 				}
 			}
 			for (const k in projects) {
