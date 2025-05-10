@@ -20,10 +20,9 @@
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import { authInfoStore } from '$lib/stores/authinfo';
 
-	let { table_height, administrator = $bindable(), project = $bindable() }: {
+	let { table_height, project = null }: {
 		table_height: number,
-		administrator: OldapUser,
-		project: OldapProject
+		project: OldapProject | null
 	} = $props();
 
 	let lang = $state(languageTag());

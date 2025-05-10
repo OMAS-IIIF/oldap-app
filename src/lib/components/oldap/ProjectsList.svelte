@@ -4,12 +4,10 @@
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
 	import { goto } from '$app/navigation';
 	import Table from '$lib/components/basic_gui/table/Table.svelte';
-	import { OldapUser } from '$lib/oldap/classes/user';
 	import { OldapProject } from '$lib/oldap/classes/project';
 	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
 	import TableHeader from '$lib/components/basic_gui/table/TableHeader.svelte';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { onMount } from 'svelte';
 	import TableBody from '$lib/components/basic_gui/table/TableBody.svelte';
 	import { apiClient } from '$lib/shared/apiClient';
 	import { api_get_config, api_notget_config } from '$lib/helpers/api_config';
@@ -22,9 +20,8 @@
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
 	import { authInfoStore } from '$lib/stores/authinfo';
 
-	let { table_height, administrator = $bindable() }: {
+	let { table_height }: {
 		table_height: number,
-		administrator: OldapUser,
 	} = $props();
 
 	let authinfo = $state<AuthInfo | null>($authInfoStore);
@@ -49,7 +46,7 @@
 			apiClient.getAdminprojectsearch(config_data).then(pdata => {
 				projects = {} as Record<string, OldapProject>;
 				const promises = pdata.map(p => {
-					const config_projectdata = api_get_config(authinfo as AuthInfo, { iri: p.projectIri });
+					const config_projectdata = api_get_config(authinfo as AuthInfo, { iri: p.projectIri || '' });
 					return apiClient.getAdminprojectget(config_projectdata);
 				});
 				Promise.all(promises)

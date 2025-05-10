@@ -3,7 +3,7 @@
 	import Table from '$lib/components/basic_gui/table/Table.svelte';
 	import { OldapUser } from '$lib/oldap/classes/user';
 	import type { OldapProject } from '$lib/oldap/classes/project';
-	import { api_config, api_get_config, api_notget_config } from '$lib/helpers/api_config';
+	import { api_get_config, api_notget_config } from '$lib/helpers/api_config';
 	import { apiClient } from '$lib/shared/apiClient';
 	import Checkbox from '$lib/components/basic_gui/checkbox/Checkbox.svelte';
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
@@ -14,17 +14,16 @@
 	import TableItem from '$lib/components/basic_gui/table/TableItem.svelte';
 	import Toggle from '$lib/components/basic_gui/buttons/Toggle.svelte';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { onMount } from 'svelte';
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
 	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import { authInfoStore } from '$lib/stores/authinfo';
 
-	let { table_height, administrator = $bindable(), project = $bindable() }: {
+	let { table_height, administrator = null, project = null }: {
 		table_height: number,
-		administrator: OldapUser,
-		project: OldapProject
+		administrator: OldapUser | null,
+		project: OldapProject | null
 	} = $props();
 
 	let show_all_users = $state(false);
@@ -37,7 +36,6 @@
 	let confirmation_title = $state('');
 	let confirmation_for_userid = $state('');
 	let confirmation_for_state = $state('');
-
 
 	authInfoStore.subscribe(data => {
 		authinfo = data;
@@ -117,7 +115,7 @@
 		const ok = await confirmation_dialog.open();
 		if (ok && authinfo) {
 			const config_data = api_notget_config(authinfo, {userId: user_id});
-			apiClient.deleteAdminuserUserId (undefined, config_data).then((result) => {
+			apiClient.deleteAdminuserUserId (undefined, config_data).then(() => {
 				delete users[user_id];
 				user_list = user_list.filter((id) => id !== user_id);
 			}).catch((err) => {
