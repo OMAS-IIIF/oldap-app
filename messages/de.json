@@ -57,5 +57,9 @@
     "hlists_descr": "Liste aller hierarchischen Listen/Thesauri",
     "hlist_id": "Hierarchische Liste ID",
     "pref_label": "Bevorzugtes Label (SKOS)",
-    "nodeclassiri": "Node class IRI"
+    "nodeclassiri": "Node class IRI",
+    "edit_node": "Knoten bearbeiten",
+    "add_node_before": "Knoten vor diesem hinzufügen",
+    "add_node_after": "Knoten nach diesem hinzufügen",
+    "add_node_child": "Knoten als Unterknoten hinzufügen"
 }

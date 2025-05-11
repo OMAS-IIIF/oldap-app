@@ -57,5 +57,9 @@
     "hlists_descr": "Elenco di tutti gli elenchi gerarchici/thesauri",
     "hlist_id": "Elenco gerarchico ID",
     "pref_label": "Etichetta preferita (SKOS)",
-    "nodeclassiri": "Node class IRI"
+    "nodeclassiri": "Node class IRI",
+    "edit_node": "Modifica nodo",
+    "add_node_before": "Aggiungere il nodo prima di",
+    "add_node_after": "Aggiungere un nodo dopo questo",
+    "add_node_child": "Aggiungere nodi come sottonodi"
 }

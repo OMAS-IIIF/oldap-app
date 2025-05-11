@@ -57,5 +57,9 @@
     "hlists_descr": "Liste de toutes les listes/thésaurus hiérarchiques",
     "hlist_id": "Liste hiérarchique ID",
     "pref_label": "Étiquette préférée (SKOS)",
-    "nodeclassiri": "Node class IRI"
+    "nodeclassiri": "Node class IRI",
+    "edit_node": "Modifier le nœud",
+    "add_node_before": "Ajouter un nœud avant",
+    "add_node_after": "Ajouter un nœud après celui-ci",
+    "add_node_child": "Ajouter un nœud en tant que sous-nœud"
 }

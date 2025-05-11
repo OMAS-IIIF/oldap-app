@@ -57,5 +57,9 @@
     "hlists_descr": "List of all hierarchical lists/thesauri",
     "hlist_id": "Hierarchical list ID",
     "pref_label": "Preferred label (SKOS)",
-    "nodeclassiri": "Node class IRI"
+    "nodeclassiri": "Node class IRI",
+    "edit_node": "Edit node",
+    "add_node_before": "Add node before this",
+    "add_node_after": "Add node after this",
+    "add_node_child": "Add node as child"
 }
