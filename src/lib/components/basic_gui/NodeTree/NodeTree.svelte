@@ -5,16 +5,14 @@
 	import type { TreeNodeInterface } from '$lib/helpers/treenodeinterface';
 	import { Plus, ArrowDown, ArrowUp, CornerDownRight } from '@lucide/svelte'
 	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
-	import Login from '$lib/components/basic_gui/login/Login.svelte';
 	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
 	import Node from '$lib/components/oldap/Node.svelte';
-	import type { OldapListNode } from '$lib/oldap/classes/listnode';
 
 	let { node } : {node: TreeNodeInterface } = $props();
 
 	let nodeIsOpen = $state(false);
 	let expanded = $state(false);
-	let nodeid = $state('');
+	let nodeid = $state<string>();
 	let refnode = $state<string>();
 	let action = $state('');
 
@@ -76,5 +74,9 @@
 </li>
 
 <DialogWin bind:isopen={nodeIsOpen} title="NODE-EDIT">
-	<Node {action} hlistid={node.hlistid} bind:nodeid={nodeid} {refnode} bind:isopen={nodeIsOpen} />
+	<Node {action}
+				hlistid={node.hlistid}
+				bind:nodeid={nodeid}
+				{refnode}
+				bind:isopen={nodeIsOpen} />
 </DialogWin>

@@ -18,10 +18,12 @@
 	import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { OldapError } from '$lib/oldap/errors/OldapError';
+	import { refreshNodeTreeNow } from '../../../routes/admin/hlist/[hlistid]/refresh_nodetree.svelte';
 
 	const ncname_pattern: RegExp = /^[A-Za-z_][A-Za-z0-9._-]*$/;
 
-	let { action, hlistid, nodeid = $bindable(), refnode, isopen = $bindable() }: { action: string, hlistid: string, nodeid?: string, refnode?: string | null, isopen: boolean} = $props();
+	let { action, hlistid, nodeid = $bindable(), refnode, isopen = $bindable()} :
+		{ action: string, hlistid: string, nodeid?: string, refnode?: string | null, isopen: boolean} = $props();
 
 	let authinfo = $authInfoStore || new AuthInfo('', '');
 	let current_project = $projectStore;
@@ -79,6 +81,7 @@
 				});
 				apiClient.postAdminhlistProjectHlistidNodeid(nodedata, node_put).then((res) => {
 					successInfoStore.set(`!${res.message}`);
+					refreshNodeTreeNow();
 				}).catch((error) => {
 					errorInfoStore.set(process_api_error(error as Error));
 					return;
@@ -117,10 +120,11 @@
 			const node_post = api_config(authinfo, {
 				project: current_project?.projectShortName.toString() || '',
 				hlistid: hlistid,
-				nodeid: nodeid
+				nodeid: nodeid || ''
 			});
 			apiClient.putAdminhlistProjectHlistidNodeid(nodedata, node_post).then((res) => {
 				successInfoStore.set(`!${res.message}`);
+				refreshNodeTreeNow();
 			}).catch((error) => {
 				errorInfoStore.set(process_api_error(error as Error));
 			});
