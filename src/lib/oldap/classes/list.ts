@@ -96,6 +96,7 @@ export class OldapList extends OldapObject {
 		}
 		if (json.nodes && json.nodes.length > 0) {
 			hlist.nodes = json.nodes.map(node => {
+				console.log("=====>", json.hlist);
 				return OldapListNode.fromOldapJson(node, json.hlist);
 			})
 		}

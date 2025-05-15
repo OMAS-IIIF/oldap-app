@@ -47,9 +47,7 @@
 				});
 				Promise.all(promises).then((results) => {
 					results.forEach((hlistdata) => {
-						console.log("--->", hlistdata);
 						const hlist = OldapList.fromOldapJson(hlistdata, true);
-						console.log("===>", hlist);
 						const id = hlist.oldapListId.toString();
 						hlists[id] = hlist;
 						hlist_list.push(id);

@@ -19,7 +19,6 @@
 	import { authInfoStore } from '$lib/stores/authinfo';
 
 
-
 	let { data }: PageProps = $props();
 	let current_project = $state<OldapProject | null>(null);
 
@@ -59,6 +58,8 @@
 		else {
 			return tnodes.map((x) => {
 				return {
+					hlistid: data.hlistid,
+					nodeid: x.nodeId.toString(),
 					name: x?.prefLabel?.get(langobj),
 					...(x.nodes && x.nodes.length > 0 ? {children: process_tnodes(x.nodes)} : {})
 				} as TreeNodeInterface;
@@ -78,10 +79,7 @@
 				const jsondata = await apiClient.getAdminhlistProjectHlistid(config_hlistdata);
 				console.log(jsondata);
 				hlist = OldapList.fromOldapJson(jsondata);
-				console.log("HLIST=", hlist);
 				topnodes = process_tnodes(hlist.nodes) || []
-
-				//console.log($state.snapshot(topnodes));
 			}
 		}
 	});

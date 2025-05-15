@@ -25,7 +25,7 @@
 
 {#if isopen}
 	<div class={class1}>
-		<div class={class2}>
+		<div class={class2 + ' max-h-[90vh] overflow-y-auto'}>
 			<div class="flex items-between justify-center p-0 h-10">
 				<h2 class="flex items-center text-xl font-semibold {alert ? 'text-oldap-error-fg' : ''}">
 					{#if alert}

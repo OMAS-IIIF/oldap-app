@@ -159,9 +159,9 @@ const postAdmindatamodelProjectpropertyProperty_Body = z.object({ name: LangStri
 const postAdmindatamodelProjectResource_Body = z.object({ closed: z.boolean(), label: LangString, comment: LangString }).partial().passthrough();
 const putAdmindatamodelProjectResourceProperty_Body = Property.and(z.object({ maxCount: z.number(), minCount: z.number(), order: z.number() }).partial().passthrough());
 const postAdmindatamodelProjectResourceProperty_Body = z.object({ property: Property, maxCount: z.number(), minCount: z.number(), order: z.number() }).partial().passthrough();
-const putAdminhlistProjectHlistid_Body = z.object({ label: LangString, definition: LangString }).partial().passthrough();
-const putAdminhlistProjectHlistidNodeid_Body = z.union([z.object({ label: LangString, definition: LangString, position: z.enum(["belowOf", "leftOf", "rightOf"]), refnode: z.string() }).passthrough(), z.object({ label: LangString, definition: LangString, position: z.literal("root") }).passthrough()]);
-const postAdminhlistProjectHlistidNodeid_Body = z.union([z.object({ leftOf: z.string() }).passthrough(), z.object({ rightOf: z.string() }).passthrough(), z.object({ belowOf: z.string() }).passthrough()]);
+const putAdminhlistProjectHlistid_Body = z.object({ prefLabel: LangString, definition: LangString }).partial().passthrough();
+const putAdminhlistProjectHlistidNodeid_Body = z.union([z.object({ prefLabel: LangString, definition: LangString.optional(), position: z.enum(["belowOf", "leftOf", "rightOf"]), refnode: z.string() }).passthrough(), z.object({ prefLabel: LangString, definition: LangString.optional(), position: z.literal("root") }).passthrough()]);
+const postAdminhlistProjectHlistidNodeidmove_Body = z.union([z.object({ leftOf: z.string() }).passthrough(), z.object({ rightOf: z.string() }).passthrough(), z.object({ belowOf: z.string() }).passthrough()]);
 
 export const schemas = {
 	LangString,
@@ -174,7 +174,7 @@ export const schemas = {
 	postAdmindatamodelProjectResourceProperty_Body,
 	putAdminhlistProjectHlistid_Body,
 	putAdminhlistProjectHlistidNodeid_Body,
-	postAdminhlistProjectHlistidNodeid_Body,
+	postAdminhlistProjectHlistidNodeidmove_Body,
 };
 
 const endpoints = makeApi([
@@ -825,6 +825,27 @@ const endpoints = makeApi([
 		]
 	},
 	{
+		method: "get",
+		path: "/admin/hlist/:project/:hlistid/:nodeid",
+		alias: "getAdminhlistProjectHlistidNodeid",
+		description: `Viewfunction to retrieve all information of the given node
+`,
+		requestFormat: "json",
+		response: z.object({ nodeid: z.string(), creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), prefLabel: LangString, description: LangString }).partial().passthrough(),
+		errors: [
+			{
+				status: 403,
+				description: `Invalid data`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 404,
+				description: `Not Found`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+		]
+	},
+	{
 		method: "put",
 		path: "/admin/hlist/:project/:hlistid/:nodeid",
 		alias: "putAdminhlistProjectHlistidNodeid",
@@ -833,7 +854,7 @@ Note: if the position is &quot;root&quot;, then &quot;refnode&quot; must be omit
 
 Example JSON:
 {
-  &quot;label&quot;: [&quot;testrootnodelabel@en&quot;],
+  &quot;prefLabel&quot;: [&quot;testrootnodelabel@en&quot;],
   &quot;definition&quot;: [&quot;testrootnodedefinition@en&quot;],
   &quot;position&quot;: &quot;leftOf&quot;,
   &quot;refnode&quot;: &quot;nodeA&quot;
@@ -948,6 +969,59 @@ Example JSON:
 		method: "post",
 		path: "/admin/hlist/:project/:hlistid/:nodeid",
 		alias: "postAdminhlistProjectHlistidNodeid",
+		description: `Viewfunction to modify the parameters of a node
+`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "body",
+				type: "Body",
+				schema: z.object({ prefLabel: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), definition: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]) }).partial().passthrough()
+			},
+			{
+				name: "project",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "hlistid",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "nodeid",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.object({ message: z.string() }).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Bad request`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 403,
+				description: `Unauthorized`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 404,
+				description: `Not Found`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 500,
+				description: `Internal Server error. Should not be reachable`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+		]
+	},
+	{
+		method: "post",
+		path: "/admin/hlist/:project/:hlistid/:nodeid/move",
+		alias: "postAdminhlistProjectHlistidNodeidmove",
 		description: `Viewfunction that moves a node inside the hierarchical list from one place to another.
 When there are any number of nodes below the node one wish to move, they get moved automatically alongside the other node.
 `,
@@ -956,7 +1030,7 @@ When there are any number of nodes below the node one wish to move, they get mov
 			{
 				name: "body",
 				type: "Body",
-				schema: postAdminhlistProjectHlistidNodeid_Body
+				schema: postAdminhlistProjectHlistidNodeidmove_Body
 			},
 			{
 				name: "project",

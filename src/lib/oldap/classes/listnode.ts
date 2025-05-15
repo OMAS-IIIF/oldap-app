@@ -2,11 +2,10 @@ import { OldapObject } from '$lib/oldap/classes/object';
 import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
 import { LangString } from '$lib/oldap/datatypes/langstring';
 import { Iri } from '$lib/oldap/datatypes/xsd_iri';
-import { OldapList } from '$lib/oldap/classes/list';
 
 export class OldapListNode extends OldapObject {
-	#oldapList: OldapList;
-	#oldapListNodeId: NCName;
+	#listId: NCName;
+	#nodeId: NCName;
 	#iri: Iri;
 	#prefLabel?: LangString;
 	#definition?: LangString;
@@ -17,27 +16,27 @@ export class OldapListNode extends OldapObject {
 		created: Date,
 		contributor: Iri,
 		modified: Date,
-		oldapList: OldapList,
-		oldapListNodeId: NCName,
+		listId: NCName,
+		nodeId: NCName,
 		iri: Iri,
 		prefLabel?: LangString,
 		definition?: LangString
 	) {
 		super(creator, created, contributor, modified);
-		this.#oldapList = oldapList;
-		this.#oldapListNodeId = oldapListNodeId;
+		this.#listId = listId;
+		this.#nodeId = nodeId;
 		this.#iri = iri;
 		this.#prefLabel = prefLabel;
 		this.#definition = definition;
 		this.nodes = undefined;
 	}
 
-	get oldapList(): OldapList {
-		return this.#oldapList;
+	get listId(): NCName {
+		return this.#listId;
 	}
 
-	get oldapListNodeId(): NCName {
-		return this.#oldapListNodeId;
+	get nodeId(): NCName {
+		return this.#nodeId;
 	}
 
 	get iri(): Iri {
@@ -52,7 +51,7 @@ export class OldapListNode extends OldapObject {
 		return this.#definition;
 	}
 
-	static fromOldapJson(json: any, oldapList: OldapList): OldapListNode {
+	static fromOldapJson(json: any, oldapList: NCName): OldapListNode {
 		const creator = new Iri(json.creator);
 		const created = new Date(json.created);
 		const contributor = new Iri(json.contributor);
