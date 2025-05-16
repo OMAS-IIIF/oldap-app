@@ -46,6 +46,7 @@
 	"dependencies": {
 		"@inlang/paraglide-sveltekit": "^0.15.5",
 		"@lucide/svelte": "^0.509.0",
+		"@thisux/sveltednd": "^0.0.20",
 		"@zodios/core": "^10.9.6",
 		"crypto-js": "^4.2.0"
 	}

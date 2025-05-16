@@ -17,6 +17,7 @@
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import { draggable, droppable, type DragDropState } from '@thisux/sveltednd';
 
 	let { node } : {node: TreeNodeInterface } = $props();
 
@@ -83,6 +84,23 @@
 		}
 	}
 
+	function handleDrop(state: DragDropState<{ id: string }>) {
+		const { draggedItem, sourceContainer, targetContainer } = state;
+		console.log("-->", draggedItem, sourceContainer, targetContainer);
+		if (!targetContainer || sourceContainer === targetContainer) return;
+	}
+
+	function handleDragEnter(state: DragDropState<{ id: string }>) {
+		const { draggedItem, sourceContainer, targetContainer } = state;
+		console.log("Drag enter-->", draggedItem, sourceContainer, targetContainer);
+	}
+
+	function handleDragLeave(state: DragDropState<{ id: string }>) {
+		const { draggedItem, sourceContainer, targetContainer } = state;
+		console.log("Drag leave-->", draggedItem, sourceContainer, targetContainer);
+	}
+
+
 </script>
 
 <li class="ml-1 pl-1">
@@ -99,17 +117,38 @@
 			</button>
 		{/if}
 		<Tooltip text={m.edit_node()}>
-			<button type="button" onclick={() => {edit(node)}}>{node.name}</button>
+			<button type="button" onclick={() => {edit(node)}} use:draggable={{ container: 'nodes', dragData: node.nodeid }}>{node.name}</button>
 		</Tooltip>
 		<div class="flex space-x-3">
 			<Tooltip text={m.add_node_before()}>
-				<button onclick={() => add(node, 'addBefore')} aria-label={m.add_node_before()} class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 rounded-md outline-offset-3"><Plus class="size-3 -ml-1" /><ArrowUp class="size-3" /></button>
+				<button
+					onclick={() => add(node, 'addBefore')}
+					aria-label={m.add_node_before()}
+					class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 rounded-md outline-offset-3"
+					use:droppable={{ container: `before:${node.nodeid}`, callbacks: { onDrop: handleDrop }, attributes: {dragOverClass: "bg-red-400", draggingClass: "text-red-400"} }}
+				>
+					<Plus class="size-3 -ml-1" /><ArrowUp class="size-3" />
+				</button>
 			</Tooltip>
 			<Tooltip text={m.add_node_after()}>
-				<button onclick={() => add(node, 'addAfter')} aria-label={m.add_node_after()} class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 rounded-md outline-offset-3"><Plus class="size-3 -ml-1" /><ArrowDown class="size-3" /></button>
+				<button
+					onclick={() => add(node, 'addAfter')}
+					aria-label={m.add_node_after()}
+					class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 rounded-md outline-offset-3"
+					use:droppable={{ container: `after:${node.nodeid}`, callbacks: { onDrop: handleDrop } }}
+				>
+					<Plus class="size-3 -ml-1" /><ArrowDown class="size-3" />
+				</button>
 			</Tooltip>
 			<Tooltip text={m.add_node_child()}>
-				<button onclick={() => add(node, 'addBelow')} aria-label={m.add_node_child()} class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 rounded-md outline-offset-3"><Plus class="size-3 -ml-1" /><CornerDownRight class="size-3" /></button>
+				<button
+					onclick={() => add(node, 'addBelow')}
+					aria-label={m.add_node_child()}
+					class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 rounded-md outline-offset-3"
+					use:droppable={{ container: `below:${node.nodeid}`, callbacks: { onDrop: handleDrop } }}
+				>
+					<Plus class="size-3 -ml-1" /><CornerDownRight class="size-3" />
+				</button>
 			</Tooltip>
 			<Tooltip text={m.delete_node()}>
 				<button onclick={() => delete_node(node)} aria-label={m.add_node_child()} class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 rounded-md outline-offset-3"><Trash2 class="size-3" /></button>
