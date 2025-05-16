@@ -61,5 +61,16 @@
     "edit_node": "Modifica nodo",
     "add_node_before": "Aggiungere il nodo prima di",
     "add_node_after": "Aggiungere un nodo dopo questo",
-    "add_node_child": "Aggiungere nodi come sottonodi"
+    "add_node_child": "Aggiungere nodi come sottonodi",
+    "delete_node": "Cancellare il nodo",
+    "delete_node_2": "Si vuole davvero eliminare il nodo \"{nodename}\" e tutti i nodi sottostanti?",
+    "store_mod_node": "Salvare le modifiche?",
+    "store_mod_node_2": "Si desidera salvare le modifiche al nodo \"{nodename}\"?",
+    "store_node_below": "Aggiungere un nuovo nodo prima di \"{nodename}\"?",
+    "store_node_after": "Aggiungere un nuovo nodo dopo \"{nodename}\"?",
+    "store_node_child": "Aggiungere un nuovo nodo come sotto-nodo di \"{nodename}\"?",
+    "edit_node_2": "Modifica il nodo \"{nodename}\".",
+    "add_node_before_2": "Aggiungere nuovo nodo prima di \"{nodename}\"",
+    "add_node_after_2": "Aggiungere un nuovo nodo dopo \"{nodename}\".",
+    "add_node_child_2": "Aggiungere un nuovo nodo come sotto-nodo di \"{nodename}\""
 }

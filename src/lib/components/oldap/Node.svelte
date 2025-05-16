@@ -19,6 +19,7 @@
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { OldapError } from '$lib/oldap/errors/OldapError';
 	import { refreshNodeTreeNow } from '../../../routes/admin/hlist/[hlistid]/refresh_nodetree.svelte';
+	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
 
 	const ncname_pattern: RegExp = /^[A-Za-z_][A-Za-z0-9._-]*$/;
 
@@ -33,6 +34,11 @@
 	let definition_field: LangstringField;
 	let definition = $state<LangString | null>(null);
 	let node: OldapListNode;
+
+	let confirmation_dialog: Confirmation;
+	let confirmation_title = $state('');
+	let conformation_text = $state('');
+
 
 	onMount(() => {
 		if (nodeid && authinfo) {
@@ -49,9 +55,32 @@
 		}
 	});
 
-	let process_event = (event: Event) => {
+	let process_event = async (event: Event) => {
 		event.preventDefault();
 
+		switch (action) {
+			case 'edit':
+				confirmation_title = m.store_mod_node();
+				conformation_text = m.store_mod_node_2({nodename: nodeid || ''});
+				break;
+			case 'addBefore':
+				confirmation_title = `${m.add_node_before()}?`;
+				conformation_text = `${m.store_node_below({nodename: refnode || ''})}`;
+				break;
+			case 'addAfter':
+				confirmation_title = `${m.add_node_after()}?`;
+				conformation_text = `${m.store_node_after({nodename: refnode || ''})}`;
+				break;
+			case 'addBelow':
+				confirmation_title = `${m.add_node_child()}?`;
+				conformation_text = `${m.store_node_child({nodename: refnode || ''})}`;
+				break;
+
+		}
+		const ok = await confirmation_dialog.open();
+		if (!ok) {
+			return;
+		}
 		if (action === 'edit') {
 			let nodedata: {
 				prefLabel?: string[] | Partial<Record<'add'|'del', string[]>> | null,
@@ -148,3 +177,7 @@
 		</div>
 	</form>
 </div>
+
+<Confirmation bind:this={confirmation_dialog} title={confirmation_title}>
+	{conformation_text}
+</Confirmation>

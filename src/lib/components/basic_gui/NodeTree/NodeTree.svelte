@@ -3,10 +3,20 @@
 	import * as m from '$lib/paraglide/messages';
 	import NodeTree from './NodeTree.svelte';
 	import type { TreeNodeInterface } from '$lib/helpers/treenodeinterface';
-	import { Plus, ArrowDown, ArrowUp, CornerDownRight } from '@lucide/svelte'
+	import { Plus, ArrowDown, ArrowUp, CornerDownRight, Trash2 } from '@lucide/svelte'
 	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
 	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
 	import Node from '$lib/components/oldap/Node.svelte';
+	import { api_config } from '$lib/helpers/api_config';
+	import { AuthInfo } from '$lib/oldap/classes/authinfo';
+	import { authInfoStore } from '$lib/stores/authinfo';
+	import { projectStore } from '$lib/stores/project';
+	import { apiClient } from '$lib/shared/apiClient';
+	import { successInfoStore } from '$lib/stores/successinfo';
+	import { refreshNodeTreeNow } from '../../../../routes/admin/hlist/[hlistid]/refresh_nodetree.svelte';
+	import { errorInfoStore } from '$lib/stores/errorinfo';
+	import { process_api_error } from '$lib/helpers/process_api_error';
+	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
 
 	let { node } : {node: TreeNodeInterface } = $props();
 
@@ -15,6 +25,12 @@
 	let nodeid = $state<string>();
 	let refnode = $state<string>();
 	let action = $state('');
+	let authinfo = $authInfoStore || new AuthInfo('', '');
+	let current_project = $projectStore;
+
+	let confirmation_dialog: Confirmation;
+	let confirmation_title = $state('');
+	let dialog_title = $state('');
 
 	function toggle() {
 		expanded = !expanded;
@@ -24,6 +40,7 @@
 		nodeid = node.nodeid;
 		nodeIsOpen = true;
 		action = 'edit';
+		dialog_title = m.edit_node_2({nodename: node.nodeid});
 	}
 
 	function add(node: TreeNodeInterface, pos: 'addBefore' | 'addAfter' | 'addBelow') {
@@ -31,6 +48,39 @@
 		refnode = node.nodeid;
 		nodeIsOpen = true;
 		action = pos;
+		switch (pos) {
+			case 'addBefore':
+				dialog_title = m.add_node_before_2({nodename: refnode});
+				break;
+			case 'addAfter':
+				dialog_title = m.add_node_after_2({nodename: refnode});
+				break;
+			case 'addBelow':
+				dialog_title = m.add_node_child_2({nodename: refnode});
+				break;
+		}
+	}
+
+	async function delete_node(node: TreeNodeInterface) {
+		confirmation_title = m.delete_node();
+		const ok = await confirmation_dialog.open();
+
+		if (ok) {
+			const node_delete = api_config(authinfo, {
+				project: current_project?.projectShortName.toString() || '',
+				hlistid: node.hlistid,
+				nodeid: node.nodeid
+			}, {
+				recursive: "true"
+			});
+			apiClient.deleteAdminhlistProjectHlistidNodeid(undefined, node_delete).then(res => {
+				successInfoStore.set(`!${res.message}`);
+				refreshNodeTreeNow();
+			}).catch(error => {
+				errorInfoStore.set(process_api_error(error as Error));
+				return;
+			});
+		}
 	}
 
 </script>
@@ -61,6 +111,9 @@
 			<Tooltip text={m.add_node_child()}>
 				<button onclick={() => add(node, 'addBelow')} aria-label={m.add_node_child()} class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 rounded-md outline-offset-3"><Plus class="size-3 -ml-1" /><CornerDownRight class="size-3" /></button>
 			</Tooltip>
+			<Tooltip text={m.delete_node()}>
+				<button onclick={() => delete_node(node)} aria-label={m.add_node_child()} class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 rounded-md outline-offset-3"><Trash2 class="size-3" /></button>
+			</Tooltip>
 		</div>
 	</div>
 
@@ -73,10 +126,15 @@
 	{/if}
 </li>
 
-<DialogWin bind:isopen={nodeIsOpen} title="NODE-EDIT">
+<DialogWin bind:isopen={nodeIsOpen} title={dialog_title}>
 	<Node {action}
 				hlistid={node.hlistid}
 				bind:nodeid={nodeid}
 				{refnode}
 				bind:isopen={nodeIsOpen} />
 </DialogWin>
+
+<Confirmation bind:this={confirmation_dialog} title={confirmation_title}>
+	{m.delete_node_2({nodename: node.nodeid})}
+</Confirmation>
+

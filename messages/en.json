@@ -61,5 +61,16 @@
     "edit_node": "Edit node",
     "add_node_before": "Add node before this",
     "add_node_after": "Add node after this",
-    "add_node_child": "Add node as child"
+    "add_node_child": "Add node as child",
+    "delete_node": "Delete node",
+    "delete_node_2": "Do you really want to delete the node \"{nodename}\" and all nodes below it?",
+    "store_mod_node": "Save changes?",
+    "store_mod_node_2": "Do you want to save the changes to the \"{nodename}\" node?",
+    "store_node_below": "Add new node before \"{nodename}\"?",
+    "store_node_after": "Add new node after \"{nodename}\"?",
+    "store_node_child": "Add new node as a sub-node of \"{nodename}\"?",
+    "edit_node_2": "Edit node \"{nodename}\"",
+    "add_node_before_2": "Add new node before \"{nodename}\"",
+    "add_node_after_2": "Add new node after \"{nodename}\"",
+    "add_node_child_2": "Add new node as a sub-node of \"{nodename}\""
 }

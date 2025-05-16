@@ -935,6 +935,11 @@ Example JSON:
 				type: "Path",
 				schema: z.string()
 			},
+			{
+				name: "recursive",
+				type: "Query",
+				schema: z.enum(["1", "true", "yes", "on", "0", "false", "no", "off"]).optional()
+			},
 		],
 		response: z.object({ message: z.string() }).partial().passthrough(),
 		errors: [

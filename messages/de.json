@@ -61,5 +61,16 @@
     "edit_node": "Knoten bearbeiten",
     "add_node_before": "Knoten vor diesem hinzufügen",
     "add_node_after": "Knoten nach diesem hinzufügen",
-    "add_node_child": "Knoten als Unterknoten hinzufügen"
+    "add_node_child": "Knoten als Unterknoten hinzufügen",
+    "delete_node": "Knoten löschen",
+    "delete_node_2": "Wollen sie wirklich den Knoten \"{nodename}\" und alle darunter liegende Knoten löschen?",
+    "store_mod_node": "Änderungen speichern?",
+    "store_mod_node_2": "Wollen sie die Änderungen am Knoten \"{nodename}\" sichern?",
+    "store_node_below": "Neuer Knoten vor \"{nodename}\" hinzufügen?",
+    "store_node_after": "Neuer Knoten nach \"{nodename}\" hinzufügen?",
+    "store_node_child": "Neuer Knoten als Unterknoten von \"{nodename}\" hinzufügen?",
+    "edit_node_2": "Knoten \"{nodename}\" bearbeiten",
+    "add_node_before_2": "Neuer Knoten vor \"{nodename}\" hinzufügen",
+    "add_node_after_2": "Neuen Knoten nach \"{nodename}\" hinzufügen",
+    "add_node_child_2": "Neuer Knoten als Unterknoten von \"{nodename}\" hinzufügen"
 }
