@@ -116,16 +116,14 @@
 				{expanded ? '▼' : '▶'}
 			</button>
 		{/if}
-		<Tooltip text={m.edit_node()}>
-			<button type="button" onclick={() => {edit(node)}} use:draggable={{ container: 'nodes', dragData: node.nodeid }}>{node.name}</button>
-		</Tooltip>
+		<button type="button" onclick={() => {edit(node)}} use:draggable={{ container: 'nodes', dragData: node.nodeid }} class="cursor-pointer">{node.name}</button>
 		<div class="flex space-x-3">
 			<Tooltip text={m.add_node_before()}>
 				<button
 					onclick={() => add(node, 'addBefore')}
 					aria-label={m.add_node_before()}
 					class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 rounded-md outline-offset-3"
-					use:droppable={{ container: `before:${node.nodeid}`, callbacks: { onDrop: handleDrop }, attributes: {dragOverClass: "bg-red-400", draggingClass: "text-red-400"} }}
+					use:droppable={{ container: `before:${node.nodeid}`, callbacks: { onDrop: handleDrop }, attributes: {draggingClass: "text-red-400"} }}
 				>
 					<Plus class="size-3 -ml-1" /><ArrowUp class="size-3" />
 				</button>
@@ -135,7 +133,7 @@
 					onclick={() => add(node, 'addAfter')}
 					aria-label={m.add_node_after()}
 					class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 rounded-md outline-offset-3"
-					use:droppable={{ container: `after:${node.nodeid}`, callbacks: { onDrop: handleDrop } }}
+					use:droppable={{ container: `after:${node.nodeid}`, callbacks: { onDrop: handleDrop }, attributes: {draggingClass: "text-red-400"} }}
 				>
 					<Plus class="size-3 -ml-1" /><ArrowDown class="size-3" />
 				</button>
@@ -145,7 +143,7 @@
 					onclick={() => add(node, 'addBelow')}
 					aria-label={m.add_node_child()}
 					class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 rounded-md outline-offset-3"
-					use:droppable={{ container: `below:${node.nodeid}`, callbacks: { onDrop: handleDrop } }}
+					use:droppable={{ container: `below:${node.nodeid}`, callbacks: { onDrop: handleDrop }, attributes: {draggingClass: "text-red-400"} }}
 				>
 					<Plus class="size-3 -ml-1" /><CornerDownRight class="size-3" />
 				</button>
