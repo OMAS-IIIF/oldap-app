@@ -72,5 +72,7 @@
     "edit_node_2": "Edit node \"{nodename}\"",
     "add_node_before_2": "Add new node before \"{nodename}\"",
     "add_node_after_2": "Add new node after \"{nodename}\"",
-    "add_node_child_2": "Add new node as a sub-node of \"{nodename}\""
+    "add_node_child_2": "Add new node as a sub-node of \"{nodename}\"",
+    "move_node": "Move node",
+    "move_node_2": "Do you really want to move the \"{nodename}\" node and all the nodes below it?"
 }

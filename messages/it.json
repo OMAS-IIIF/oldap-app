@@ -72,5 +72,7 @@
     "edit_node_2": "Modifica il nodo \"{nodename}\".",
     "add_node_before_2": "Aggiungere nuovo nodo prima di \"{nodename}\"",
     "add_node_after_2": "Aggiungere un nuovo nodo dopo \"{nodename}\".",
-    "add_node_child_2": "Aggiungere un nuovo nodo come sotto-nodo di \"{nodename}\""
+    "add_node_child_2": "Aggiungere un nuovo nodo come sotto-nodo di \"{nodename}\"",
+    "move_node": "Spostare il nodo",
+    "move_node_2": "Si vuole davvero spostare il nodo \"{nodename}\" e tutti i nodi sottostanti?"
 }

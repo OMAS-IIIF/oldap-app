@@ -31,6 +31,7 @@
 
 	let confirmation_dialog: Confirmation;
 	let confirmation_title = $state('');
+	let confirmation_message = $state('');
 	let dialog_title = $state('');
 
 	function toggle() {
@@ -64,6 +65,7 @@
 
 	async function delete_node(node: TreeNodeInterface) {
 		confirmation_title = m.delete_node();
+		confirmation_message = m.delete_node_2({nodename: node.nodeid});
 		const ok = await confirmation_dialog.open();
 
 		if (ok) {
@@ -84,24 +86,30 @@
 		}
 	}
 
-	function handleDrop(state: DragDropState<TreeNodeInterface>) {
-		const { draggedItem, sourceContainer, targetContainer } = state;
-		console.log("-->", $state.snapshot(draggedItem), sourceContainer, targetContainer);
-		const node_move = api_config(authinfo, {
-			project: current_project?.projectShortName.toString() || '',
-			hlistid: draggedItem.hlistid,
-			nodeid: draggedItem.nodeid
-		});
-		const [position, nodeid] = targetContainer?.split(':') || ['', ''];
-		type Position = 'leftOf' | 'rightOf' | 'belowOf';
-		const data: Record<Position, string> = {[position as Position]: nodeid} as Record<Position, string>;
-		apiClient.postAdminhlistProjectHlistidNodeidmove(data, node_move).then((re) => {
-			successInfoStore.set(`!${re.message}`);
-			refreshNodeTreeNow();
-		}).catch(error => {
-			errorInfoStore.set(process_api_error(error as Error));
-			return;
-		});
+	async function handleDrop(state: DragDropState<TreeNodeInterface>) {
+		confirmation_title = m.move_node();
+		confirmation_message = m.move_node_2({nodename: node.nodeid});
+		const ok = await confirmation_dialog.open();
+
+		if (ok) {
+			const { draggedItem, sourceContainer, targetContainer } = state;
+			console.log("-->", $state.snapshot(draggedItem), sourceContainer, targetContainer);
+			const node_move = api_config(authinfo, {
+				project: current_project?.projectShortName.toString() || '',
+				hlistid: draggedItem.hlistid,
+				nodeid: draggedItem.nodeid
+			});
+			const [position, nodeid] = targetContainer?.split(':') || ['', ''];
+			type Position = 'leftOf' | 'rightOf' | 'belowOf';
+			const data: Record<Position, string> = {[position as Position]: nodeid} as Record<Position, string>;
+			apiClient.postAdminhlistProjectHlistidNodeidmove(data, node_move).then((re) => {
+				successInfoStore.set(`!${re.message}`);
+				refreshNodeTreeNow();
+			}).catch(error => {
+				errorInfoStore.set(process_api_error(error as Error));
+				return;
+			});
+		}
 	}
 
 </script>
@@ -125,7 +133,7 @@
 				<button
 					onclick={() => add(node, 'addBefore')}
 					aria-label={m.add_node_before()}
-					class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 rounded-md outline-offset-3"
+					class="flex items-center space-x-0 text-gray-500 hover:text-black dark:hover:text-amber-500 outline-2 rounded-md outline-offset-3"
 					use:droppable={{ container: `leftOf:${node.nodeid}`, callbacks: { onDrop: handleDrop }, attributes: {draggingClass: "text-red-400"} }}
 				>
 					<Plus class="size-3 -ml-1" /><ArrowUp class="size-3" />
@@ -135,7 +143,7 @@
 				<button
 					onclick={() => add(node, 'addAfter')}
 					aria-label={m.add_node_after()}
-					class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 rounded-md outline-offset-3"
+					class="flex items-center space-x-0 text-gray-500 hover:text-black dark:hover:text-amber-500 outline-2 rounded-md outline-offset-3"
 					use:droppable={{ container: `rightOf:${node.nodeid}`, callbacks: { onDrop: handleDrop }, attributes: {draggingClass: "text-red-400"} }}
 				>
 					<Plus class="size-3 -ml-1" /><ArrowDown class="size-3" />
@@ -146,7 +154,7 @@
 					<button
 						onclick={() => add(node, 'addBelow')}
 						aria-label={m.add_node_child()}
-						class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 rounded-md outline-offset-3"
+						class="flex items-center space-x-0 text-gray-500 hover:text-black dark:hover:text-amber-500 outline-2 rounded-md outline-offset-3"
 						use:droppable={{ container: `belowOf:${node.nodeid}`, callbacks: { onDrop: handleDrop }, attributes: {draggingClass: "text-red-400"} }}
 					>
 						<Plus class="size-3 -ml-1" /><CornerDownRight class="size-3" />
@@ -154,7 +162,7 @@
 				</Tooltip>
 			{/if}
 			<Tooltip text={m.delete_node()}>
-				<button onclick={() => delete_node(node)} aria-label={m.add_node_child()} class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 rounded-md outline-offset-3"><Trash2 class="size-3" /></button>
+				<button onclick={() => delete_node(node)} aria-label={m.add_node_child()} class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 dark:hover:text-amber-500 rounded-md outline-offset-3"><Trash2 class="size-3" /></button>
 			</Tooltip>
 		</div>
 	</div>
@@ -177,6 +185,6 @@
 </DialogWin>
 
 <Confirmation bind:this={confirmation_dialog} title={confirmation_title}>
-	{m.delete_node_2({nodename: node.nodeid})}
+	{confirmation_message}
 </Confirmation>
 

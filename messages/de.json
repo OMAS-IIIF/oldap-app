@@ -72,5 +72,7 @@
     "edit_node_2": "Knoten \"{nodename}\" bearbeiten",
     "add_node_before_2": "Neuer Knoten vor \"{nodename}\" hinzufügen",
     "add_node_after_2": "Neuen Knoten nach \"{nodename}\" hinzufügen",
-    "add_node_child_2": "Neuer Knoten als Unterknoten von \"{nodename}\" hinzufügen"
+    "add_node_child_2": "Neuer Knoten als Unterknoten von \"{nodename}\" hinzufügen",
+    "move_node": "Knoten verschieben",
+    "move_node_2": "Wollen sie wirklich den Knoten \"{nodename}\" und alle darunter liegende Knoten verschieben?"
 }

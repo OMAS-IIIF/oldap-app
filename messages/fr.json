@@ -72,5 +72,7 @@
     "edit_node_2": "Modifier le nœud \"{nodename}\".",
     "add_node_before_2": "Ajpouter nouveau nœud devant \"{nodename}\"",
     "add_node_after_2": "Ajouter un nouveau nœud après \"{nodename}\"",
-    "add_node_child_2": "Ajouter un nouveau nœud comme sous-nœud de \"{nodename}\" "
+    "add_node_child_2": "Ajouter un nouveau nœud comme sous-nœud de \"{nodename}\" ",
+    "move_node": "Déplacer le nœud",
+    "move_node_2": "Voulez-vous vraiment déplacer le nœud \"{nodename}\" et tous les nœuds sous-jacents ?"
 }

@@ -10,7 +10,7 @@
 	}
 	else {
 		class1 = "fixed inset-0 bg-black/50 flex items-center justify-center z-9999";
-		class2 = "bg-oldap-bg p-3 rounded-lg shadow-lg w-96";
+		class2 = "bg-oldap-bg dark:bg-oldap-bg-dark p-3 rounded-lg shadow-lg w-96";
 	}
 
 	let closeit = (event: Event) => {
