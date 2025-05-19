@@ -84,22 +84,25 @@
 		}
 	}
 
-	function handleDrop(state: DragDropState<{ id: string }>) {
+	function handleDrop(state: DragDropState<TreeNodeInterface>) {
 		const { draggedItem, sourceContainer, targetContainer } = state;
-		console.log("-->", draggedItem, sourceContainer, targetContainer);
-		if (!targetContainer || sourceContainer === targetContainer) return;
+		console.log("-->", $state.snapshot(draggedItem), sourceContainer, targetContainer);
+		const node_move = api_config(authinfo, {
+			project: current_project?.projectShortName.toString() || '',
+			hlistid: draggedItem.hlistid,
+			nodeid: draggedItem.nodeid
+		});
+		const [position, nodeid] = targetContainer?.split(':') || ['', ''];
+		type Position = 'leftOf' | 'rightOf' | 'belowOf';
+		const data: Record<Position, string> = {[position as Position]: nodeid} as Record<Position, string>;
+		apiClient.postAdminhlistProjectHlistidNodeidmove(data, node_move).then((re) => {
+			successInfoStore.set(`!${re.message}`);
+			refreshNodeTreeNow();
+		}).catch(error => {
+			errorInfoStore.set(process_api_error(error as Error));
+			return;
+		});
 	}
-
-	function handleDragEnter(state: DragDropState<{ id: string }>) {
-		const { draggedItem, sourceContainer, targetContainer } = state;
-		console.log("Drag enter-->", draggedItem, sourceContainer, targetContainer);
-	}
-
-	function handleDragLeave(state: DragDropState<{ id: string }>) {
-		const { draggedItem, sourceContainer, targetContainer } = state;
-		console.log("Drag leave-->", draggedItem, sourceContainer, targetContainer);
-	}
-
 
 </script>
 
@@ -116,14 +119,14 @@
 				{expanded ? '▼' : '▶'}
 			</button>
 		{/if}
-		<button type="button" onclick={() => {edit(node)}} use:draggable={{ container: 'nodes', dragData: node.nodeid }} class="cursor-pointer">{node.name}</button>
+		<button type="button" onclick={() => {edit(node)}} use:draggable={{ container: 'nodes', dragData: node }} class="cursor-pointer">{node.name}</button>
 		<div class="flex space-x-3">
 			<Tooltip text={m.add_node_before()}>
 				<button
 					onclick={() => add(node, 'addBefore')}
 					aria-label={m.add_node_before()}
 					class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 rounded-md outline-offset-3"
-					use:droppable={{ container: `before:${node.nodeid}`, callbacks: { onDrop: handleDrop }, attributes: {draggingClass: "text-red-400"} }}
+					use:droppable={{ container: `leftOf:${node.nodeid}`, callbacks: { onDrop: handleDrop }, attributes: {draggingClass: "text-red-400"} }}
 				>
 					<Plus class="size-3 -ml-1" /><ArrowUp class="size-3" />
 				</button>
@@ -133,21 +136,23 @@
 					onclick={() => add(node, 'addAfter')}
 					aria-label={m.add_node_after()}
 					class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 rounded-md outline-offset-3"
-					use:droppable={{ container: `after:${node.nodeid}`, callbacks: { onDrop: handleDrop }, attributes: {draggingClass: "text-red-400"} }}
+					use:droppable={{ container: `rightOf:${node.nodeid}`, callbacks: { onDrop: handleDrop }, attributes: {draggingClass: "text-red-400"} }}
 				>
 					<Plus class="size-3 -ml-1" /><ArrowDown class="size-3" />
 				</button>
 			</Tooltip>
-			<Tooltip text={m.add_node_child()}>
-				<button
-					onclick={() => add(node, 'addBelow')}
-					aria-label={m.add_node_child()}
-					class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 rounded-md outline-offset-3"
-					use:droppable={{ container: `below:${node.nodeid}`, callbacks: { onDrop: handleDrop }, attributes: {draggingClass: "text-red-400"} }}
-				>
-					<Plus class="size-3 -ml-1" /><CornerDownRight class="size-3" />
-				</button>
-			</Tooltip>
+			{#if !(node.children && node.children.length > 0)}
+				<Tooltip text={m.add_node_child()}>
+					<button
+						onclick={() => add(node, 'addBelow')}
+						aria-label={m.add_node_child()}
+						class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 rounded-md outline-offset-3"
+						use:droppable={{ container: `belowOf:${node.nodeid}`, callbacks: { onDrop: handleDrop }, attributes: {draggingClass: "text-red-400"} }}
+					>
+						<Plus class="size-3 -ml-1" /><CornerDownRight class="size-3" />
+					</button>
+				</Tooltip>
+			{/if}
 			<Tooltip text={m.delete_node()}>
 				<button onclick={() => delete_node(node)} aria-label={m.add_node_child()} class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 rounded-md outline-offset-3"><Trash2 class="size-3" /></button>
 			</Tooltip>
