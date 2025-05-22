@@ -19,6 +19,7 @@
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import { authInfoStore } from '$lib/stores/authinfo';
+	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
 
 	let { table_height, project = null }: {
 		table_height: number,
@@ -31,6 +32,11 @@
 	let authinfo = $state<AuthInfo | null>($authInfoStore);
 	let hlists = $state<Record<string, OldapList>>({});
 	let hlist_list = $state<string[]>([]);
+
+	let confirmation_dialog: Confirmation;
+	let confirmation_title = $state('');
+	let confirmation_message = $state('');
+
 
 	authInfoStore.subscribe(data => {
 		authinfo = data;
@@ -71,7 +77,17 @@
 	}
 
 	const delete_hlist = async (hlist_id: string) => {
+		confirmation_title = "DELETE HIERARCHICAL LIST";
+		confirmation_message = "DELETE ... HLIST: " + hlist_id + " ?";
+		const ok = await confirmation_dialog.open();
+		if (ok) {
+			const config_delhlist = api_get_config(authinfo as AuthInfo, { iri: hlist_id });
+			await apiClient.deleteAdminhlistProjectHlistid
+			hlist_list.splice(hlist_list.indexOf(hlist_id), 1);
+			delete hlists[hlist_id];
+		}
 
+		console.log("delete_hlist", hlist_id);
 	}
 
 	let headers : string[] = $state([
@@ -124,3 +140,7 @@
 		{/each}
 	</TableBody>
 </Table>
+
+<Confirmation bind:this={confirmation_dialog} title={confirmation_title}>
+	{confirmation_message}
+</Confirmation>
