@@ -77,13 +77,18 @@
 		if (!topwin || !authinfo) return;
 		if (administrator) { // the administrator has to be defined...
 			if (administrator.isRoot || administrator.inProject?.some(obj => obj.permissions.includes(AdminPermission.ADMIN_LISTS))) {
-				const config_hlistdata = api_notget_config(authinfo as AuthInfo, {
-					project: current_project?.projectShortName.toString() || '',
-					hlistid: data.hlistid
-				});
-				const jsondata = await apiClient.getAdminhlistProjectHlistid(config_hlistdata);
-				hlist = OldapList.fromOldapJson(jsondata);
-				topnodes = process_tnodes(hlist.nodes) || []
+				if (data.hlistid === 'new') {
+
+				}
+				else {
+					const config_hlistdata = api_notget_config(authinfo as AuthInfo, {
+						project: current_project?.projectShortName.toString() || '',
+						hlistid: data.hlistid
+					});
+					const jsondata = await apiClient.getAdminhlistProjectHlistid(config_hlistdata);
+					hlist = OldapList.fromOldapJson(jsondata);
+					topnodes = process_tnodes(hlist.nodes) || []
+				}
 			}
 		}
 	}

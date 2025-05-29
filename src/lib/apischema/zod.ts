@@ -160,6 +160,7 @@ const postAdmindatamodelProjectResource_Body = z.object({ closed: z.boolean(), l
 const putAdmindatamodelProjectResourceProperty_Body = Property.and(z.object({ maxCount: z.number(), minCount: z.number(), order: z.number() }).partial().passthrough());
 const postAdmindatamodelProjectResourceProperty_Body = z.object({ property: Property, maxCount: z.number(), minCount: z.number(), order: z.number() }).partial().passthrough();
 const putAdminhlistProjectHlistid_Body = z.object({ prefLabel: LangString, definition: LangString }).partial().passthrough();
+const postAdminhlistProjectHlistid_Body = z.object({ prefLabel: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), definition: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]) }).partial().passthrough();
 const putAdminhlistProjectHlistidNodeid_Body = z.union([z.object({ prefLabel: LangString, definition: LangString.optional(), position: z.enum(["belowOf", "leftOf", "rightOf"]), refnode: z.string() }).passthrough(), z.object({ prefLabel: LangString, definition: LangString.optional(), position: z.literal("root") }).passthrough()]);
 const postAdminhlistProjectHlistidNodeidmove_Body = z.union([z.object({ leftOf: z.string() }).passthrough(), z.object({ rightOf: z.string() }).passthrough(), z.object({ belowOf: z.string() }).passthrough()]);
 
@@ -173,6 +174,7 @@ export const schemas = {
 	putAdmindatamodelProjectResourceProperty_Body,
 	postAdmindatamodelProjectResourceProperty_Body,
 	putAdminhlistProjectHlistid_Body,
+	postAdminhlistProjectHlistid_Body,
 	putAdminhlistProjectHlistidNodeid_Body,
 	postAdminhlistProjectHlistidNodeidmove_Body,
 };
@@ -231,7 +233,7 @@ const endpoints = makeApi([
 			{
 				status: 500,
 				description: `Internal Server error. Should not be reachable`,
-				schema: z.void()
+				schema: z.object({ message: z.string() }).partial().passthrough()
 			},
 		]
 	},
@@ -783,7 +785,96 @@ const endpoints = makeApi([
 			{
 				status: 500,
 				description: `Internal Server error. Should not be reachable`,
-				schema: z.void()
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+		]
+	},
+	{
+		method: "post",
+		path: "/admin/hlist/:project/:hlistid",
+		alias: "postAdminhlistProjectHlistid",
+		description: `Viewfunction to modify the metadata of a hierarchical list`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "body",
+				type: "Body",
+				schema: postAdminhlistProjectHlistid_Body
+			},
+			{
+				name: "project",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "hlistid",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.object({ message: z.string() }).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Bad request`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 403,
+				description: `Unauthorized`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 404,
+				description: `Not Found`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 500,
+				description: `Internal Server error. Should not be reachable`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+		]
+	},
+	{
+		method: "delete",
+		path: "/admin/hlist/:project/:hlistid",
+		alias: "deleteAdminhlistProjectHlistid",
+		description: `Viewfunction to delete a hierarchical list`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "project",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "hlistid",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.object({ message: z.string() }).partial().passthrough(),
+		errors: [
+			{
+				status: 403,
+				description: `Unauthorized`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 404,
+				description: `Not found`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 409,
+				description: `in use`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 500,
+				description: `Internal Server error. Should not be reachable`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
 			},
 		]
 	},
@@ -820,7 +911,7 @@ const endpoints = makeApi([
 			{
 				status: 500,
 				description: `Internal Server error. Should not be reachable`,
-				schema: z.void()
+				schema: z.object({ message: z.string() }).partial().passthrough()
 			},
 		]
 	},
@@ -1073,6 +1164,48 @@ When there are any number of nodes below the node one wish to move, they get mov
 			{
 				status: 409,
 				description: `Resource already exists`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 500,
+				description: `Internal Server error. Should not be reachable`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+		]
+	},
+	{
+		method: "get",
+		path: "/admin/hlist/:project/:hlistid/in_use",
+		alias: "getAdminhlistProjectHlistidin_use",
+		description: `Viewfunction to check if a hierarchical list is in use. It is in use, if any property in the datamodel references the list.`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "project",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "hlistid",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.object({ in_use: z.unknown() }).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Bad request`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 403,
+				description: `Unauthorized`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 404,
+				description: `Not Found`,
 				schema: z.object({ message: z.string() }).partial().passthrough()
 			},
 			{
@@ -1675,7 +1808,7 @@ When there are any number of nodes below the node one wish to move, they get mov
 			{
 				status: 500,
 				description: `Internal Server error. Should not be reachable`,
-				schema: z.void()
+				schema: z.object({ message: z.string() }).partial().passthrough()
 			},
 		]
 	},
@@ -1771,7 +1904,7 @@ When there are any number of nodes below the node one wish to move, they get mov
 			{
 				status: 500,
 				description: `Internal Server error. Should not be reachable`,
-				schema: z.void()
+				schema: z.object({ message: z.string() }).partial().passthrough()
 			},
 		]
 	},

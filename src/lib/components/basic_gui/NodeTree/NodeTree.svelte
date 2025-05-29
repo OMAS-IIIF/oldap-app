@@ -3,7 +3,7 @@
 	import * as m from '$lib/paraglide/messages';
 	import NodeTree from './NodeTree.svelte';
 	import type { TreeNodeInterface } from '$lib/helpers/treenodeinterface';
-	import { Plus, ArrowDown, ArrowUp, CornerDownRight, Trash2 } from '@lucide/svelte'
+	import { Plus, ArrowDown, ArrowUp, CornerDownRight, Trash2, Pencil } from '@lucide/svelte';
 	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
 	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
 	import Node from '$lib/components/oldap/Node.svelte';
@@ -136,7 +136,7 @@
 					class="flex items-center space-x-0 text-gray-500 hover:text-black dark:hover:text-amber-500 outline-2 rounded-md outline-offset-3"
 					use:droppable={{ container: `leftOf:${node.nodeid}`, callbacks: { onDrop: handleDrop }, attributes: {draggingClass: "text-red-400"} }}
 				>
-					<Plus class="size-3 -ml-1" /><ArrowUp class="size-3" />
+					<Plus class="-ml-1" size="12" strokeWidth="1" /><ArrowUp size="12" strokeWidth="1" />
 				</button>
 			</Tooltip>
 			<Tooltip text={m.add_node_after()}>
@@ -146,7 +146,7 @@
 					class="flex items-center space-x-0 text-gray-500 hover:text-black dark:hover:text-amber-500 outline-2 rounded-md outline-offset-3"
 					use:droppable={{ container: `rightOf:${node.nodeid}`, callbacks: { onDrop: handleDrop }, attributes: {draggingClass: "text-red-400"} }}
 				>
-					<Plus class="size-3 -ml-1" /><ArrowDown class="size-3" />
+					<Plus class="-ml-1" size="12" strokeWidth="1" /><ArrowDown size="12" strokeWidth="1" />
 				</button>
 			</Tooltip>
 			{#if !(node.children && node.children.length > 0)}
@@ -157,12 +157,12 @@
 						class="flex items-center space-x-0 text-gray-500 hover:text-black dark:hover:text-amber-500 outline-2 rounded-md outline-offset-3"
 						use:droppable={{ container: `belowOf:${node.nodeid}`, callbacks: { onDrop: handleDrop }, attributes: {draggingClass: "text-red-400"} }}
 					>
-						<Plus class="size-3 -ml-1" /><CornerDownRight class="size-3" />
+						<Plus class="-ml-1" size="16" strokeWidth="1" /><CornerDownRight size="16" strokeWidth="1" />
 					</button>
 				</Tooltip>
 			{/if}
 			<Tooltip text={m.delete_node()}>
-				<button onclick={() => delete_node(node)} aria-label={m.add_node_child()} class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 dark:hover:text-amber-500 rounded-md outline-offset-3"><Trash2 class="size-3" /></button>
+				<button onclick={() => delete_node(node)} aria-label={m.add_node_child()} class="flex items-center space-x-0 text-gray-500 hover:text-black outline-2 dark:hover:text-amber-500 rounded-md outline-offset-3"><Trash2 size="12" strokeWidth="1" /></button>
 			</Tooltip>
 		</div>
 	</div>
