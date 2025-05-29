@@ -86,14 +86,14 @@
 		}
 	}
 
-	async function handleDrop(state: DragDropState<TreeNodeInterface>) {
+	async function handleDrop(dndstate: DragDropState<TreeNodeInterface>) {
+		const { draggedItem, sourceContainer, targetContainer } = dndstate;
 		confirmation_title = m.move_node();
 		confirmation_message = m.move_node_2({nodename: node.nodeid});
 		const ok = await confirmation_dialog.open();
 
 		if (ok) {
-			const { draggedItem, sourceContainer, targetContainer } = state;
-			console.log("-->", $state.snapshot(draggedItem), sourceContainer, targetContainer);
+			console.log("2-->", $state.snapshot(draggedItem), sourceContainer, targetContainer);
 			const node_move = api_config(authinfo, {
 				project: current_project?.projectShortName.toString() || '',
 				hlistid: draggedItem.hlistid,

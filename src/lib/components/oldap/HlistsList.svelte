@@ -61,7 +61,6 @@
 				}).catch((err) => {
 					errorInfoStore.set(process_api_error(err as Error));
 				});
-
 				//console.log(hldata);
 			});
 		}
