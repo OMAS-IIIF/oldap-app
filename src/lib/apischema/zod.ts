@@ -1191,7 +1191,7 @@ When there are any number of nodes below the node one wish to move, they get mov
 				schema: z.string()
 			},
 		],
-		response: z.object({ in_use: z.unknown() }).partial().passthrough(),
+		response: z.object({ in_use: z.boolean() }).partial().passthrough(),
 		errors: [
 			{
 				status: 400,
@@ -1211,6 +1211,38 @@ When there are any number of nodes below the node one wish to move, they get mov
 			{
 				status: 500,
 				description: `Internal Server error. Should not be reachable`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+		]
+	},
+	{
+		method: "post",
+		path: "/admin/hlist/:project/upload",
+		alias: "postAdminhlistProjectupload",
+		description: `Uploads a hierarchical list to a specific project via a YAML file.`,
+		requestFormat: "form-data",
+		parameters: [
+			{
+				name: "body",
+				type: "Body",
+				schema: z.object({ yamlfile: z.instanceof(File) }).partial().passthrough()
+			},
+			{
+				name: "project",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.object({ message: z.string() }).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Upload failed (invalid input or format)`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 403,
+				description: `Authorization or connection failure`,
 				schema: z.object({ message: z.string() }).partial().passthrough()
 			},
 		]

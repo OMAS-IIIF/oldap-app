@@ -13,6 +13,10 @@ import User from '$lib/components/oldap/User.svelte';
 import Projects from '$lib/components/oldap/Projects.svelte';
 import SuccessMsg from '$lib/components/oldap/SuccessMsg.svelte';
 import { userStore } from '$lib/stores/user';
+import LeftFooter from '$lib/components/basic_gui/footer/LeftFooter.svelte';
+	import RightFooter from '../basic_gui/footer/RightFooter.svelte';
+import { BarLoader } from 'svelte-loading-spinners';
+import { spinnerStore } from '$lib/stores/spinner';
 
 let { children } = $props();
 
@@ -54,7 +58,16 @@ userStore.subscribe(stored_user => {
 		{@render children()}
 	</ContentArea>
 	<Footer>
-		<div>© Lukas & Manuel Rosenthaler (2025)</div>
+		<LeftFooter>
+			<div>© Lukas & Manuel Rosenthaler (2025)</div>
+		</LeftFooter>
+		<RightFooter>
+			{#if $spinnerStore !== null}
+				{$spinnerStore}<BarLoader />
+			{:else}
+				&nbsp;
+			{/if}
+		</RightFooter>
 	</Footer>
 	<ErrorMsg></ErrorMsg>
 	<SuccessMsg></SuccessMsg>

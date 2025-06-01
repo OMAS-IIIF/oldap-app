@@ -112,6 +112,14 @@
     bg-oldap-bg dark:bg-oldap-bg-dark text-xs text-oldap-fg dark:text-oldap-fg-dark;
 }
 
+.oldap-footer-left {
+    @apply absolute left-0 bottom-0 right-0 flex flex-row h-full gap-x-4 items-center p-3
+}
+
+.oldap-footer-right {
+    @apply absolute right-0 bottom-0 right-0 flex flex-row-reverse h-full gap-x-4 items-center p-3
+}
+
 .oldap-tooltip {
     @apply absolute px-2 py-0.5 rounded-lg text-[8px] text-nowrap z-9999
     bg-oldap-bg dark:bg-oldap-bg-dark text-oldap-fg dark:text-oldap-fg-dark outline outline-indigo-700

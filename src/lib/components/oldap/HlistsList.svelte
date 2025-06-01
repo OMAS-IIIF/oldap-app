@@ -6,7 +6,7 @@
 	import { apiClient } from '$lib/shared/apiClient';
 	import { OldapList } from '$lib/oldap/classes/list';
 	import * as m from '$lib/paraglide/messages';
-	import { Pencil, Trash2 } from '@lucide/svelte'
+	import { Pencil, Trash2, Plus, Upload } from '@lucide/svelte'
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
 	import { goto } from '$app/navigation';
 	import Table from '$lib/components/basic_gui/table/Table.svelte';
@@ -21,6 +21,9 @@
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import { authInfoStore } from '$lib/stores/authinfo';
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import FileUpload, { type UploadFunc } from '$lib/components/basic_gui/inputs/FileUpload.svelte';
+	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
+	import { spinnerStore } from '$lib/stores/spinner';
 
 	let { table_height, project = null }: {
 		table_height: number,
@@ -33,6 +36,9 @@
 	let authinfo = $state<AuthInfo | null>($authInfoStore);
 	let hlists = $state<Record<string, OldapList>>({});
 	let hlist_list = $state<string[]>([]);
+	let hlist_in_use = $state<Record<string, boolean>>({});
+	let uploadIsOpen = $state(false);
+	let refresh = $state(0);
 
 	let confirmation_dialog: Confirmation;
 	let confirmation_title = $state('');
@@ -43,6 +49,8 @@
 	})
 
 	$effect(() => {
+		const _ = refresh;
+		hlist_list = [];
 		if (authinfo) {
 			let hlistsearch = api_get_config(authinfo, { project: project?.projectIri?.toString() || ''});
 			apiClient.getAdminhlistsearch(hlistsearch).then(hldata => {
@@ -57,11 +65,19 @@
 						const id = hlist.oldapListId.toString();
 						hlists[id] = hlist;
 						hlist_list.push(id);
+						const config_hlist_in_use = api_config(authinfo as AuthInfo, {
+							project: project?.projectIri?.toString() || '',
+							hlistid: id
+						});
+						apiClient.getAdminhlistProjectHlistidin_use(config_hlist_in_use).then((result2) => {
+							hlist_in_use[id] = result2['in_use'] === undefined ? false : result2['in_use'];
+							console.log("IN_USE:", result2['in_use']);
+						});
 					});
 				}).catch((err) => {
 					errorInfoStore.set(process_api_error(err as Error));
 				});
-				//console.log(hldata);
+					//console.log(hldata);
 			});
 		}
 	});
@@ -88,6 +104,7 @@
 			hlistid: hlist_id
 		});
 		apiClient.deleteAdminhlistProjectHlistid(undefined, config_hlistdata).then((result) => {
+			refresh = refresh + 1;
 			console.log(result);
 		}).catch((error) => {
 			errorInfoStore.set(process_api_error(error as Error));
@@ -100,11 +117,38 @@
 		m.nodeclassiri(),
 		m.action()
 	]);
+
+	const do_upload: UploadFunc = (f: File) => {
+		const config_upload = api_config(authinfo as AuthInfo, {
+			project: project?.projectIri?.toString() || ''
+		});
+		apiClient.postAdminhlistProjectupload({yamlfile: f}, config_upload).then((result) => {
+			console.log(result);
+			spinnerStore.set(null);
+			uploadIsOpen = false;
+			refresh = refresh + 1;
+		}).catch((error) => {
+			console.log(error);
+			spinnerStore.set(null);
+			uploadIsOpen = false;
+			errorInfoStore.set(process_api_error(error as Error));
+		});
+	}
+
 </script>
 
 {#snippet actions()}
 	<div class="flex flex-row items-center justify-end gap-4">
-		<span><Button class="text-xs" onclick={goto_page("/admin/hlist")}>{m.add_list()}</Button></span>
+		<span>
+			<Button round={true} class="text-xs" onclick={goto_page("/admin/hlist")}>
+				<Plus size="16" strokeWidth="1" />
+			</Button>
+		</span>
+		<span>
+			<Button round={true} class="text-xs" onclick={() => {uploadIsOpen = true}}>
+				<Upload size="16" strokeWidth="1" />
+			</Button>
+		</span>
 	</div>
 {/snippet}
 
@@ -127,7 +171,7 @@
 						<Button round={true} onclick={goto_page(`/admin/hlist/${hlist_id}`)}>
 							<Pencil size="16" strokeWidth="1" />
 						</Button>
-						<Button round={true} onclick={() => delete_hlist(hlist_id)}>
+						<Button round={true} onclick={() => delete_hlist(hlist_id)} disabled={hlist_in_use[hlist_id]}>
 							<Trash2 size="16" strokeWidth="1" />
 						</Button>
 					</div>
@@ -140,3 +184,9 @@
 <Confirmation bind:this={confirmation_dialog} title={confirmation_title}>
 	{confirmation_text}
 </Confirmation>
+
+<DialogWin bind:isopen={uploadIsOpen} title="UPLOAD">
+	<form>
+		<FileUpload filexts={[".yaml", ".yml"]} {do_upload}/>
+	</form>
+</DialogWin>
