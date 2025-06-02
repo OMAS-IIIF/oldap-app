@@ -1,8 +1,8 @@
 <script lang="ts">
 
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
-	import { Circle2 } from 'svelte-loading-spinners';
 	import { spinnerStore } from '$lib/stores/spinner';
+	import * as m from '$lib/paraglide/messages';
 
 	export type UploadFunc =  (f: File) => undefined
 
@@ -12,13 +12,20 @@
 	let isDragging = $state(false);
 	let errorMsg = $state<string | null>(null);
 
-	function isYamlFile(file: File): boolean {
-		return file.name.endsWith(".yaml");
+	function hasValidExtension(file: File): boolean {
+		let res = true;
+		filexts?.forEach(filext => {
+			if (!file.name.endsWith(filext)) {
+				res = false;
+			}
+		})
+		return res;
 	}
 
 	function handleFile(file: File) {
-		if (!isYamlFile(file)) {
-			errorMsg = "Only .yaml files are allowed.";
+		if (!hasValidExtension(file)) {
+			const filexts_str = filexts?.join('", "');
+			errorMsg = m.file_ext_err({exts: filexts_str || ''});
 			selectedFile = null;
 			return;
 		}
@@ -50,14 +57,14 @@
 
 	$effect(() => {
 		if (selectedFile) {
-			console.log("✅ YAML file selected:", selectedFile.name);
+			console.log("✅ File selected:", selectedFile.name);
 			// you could upload it here
 		}
 	});
 
 	function upload() {
 		if (selectedFile) {
-			spinnerStore.set(`UPLOADING ${selectedFile?.name}`);
+			spinnerStore.set(m.uploading({fname: selectedFile?.name}));
 			do_upload(selectedFile);
 		}
 	}
@@ -66,7 +73,7 @@
 
 
 <div
-	class="border-2 border-dashed rounded p-6 text-center cursor-pointer transition-all"
+	class="oldap-upload"
 	class:opacity-50={isDragging}
 	class:border-blue-500={isDragging}
 	ondrop={handleDrop}
@@ -74,15 +81,15 @@
 	ondragleave={handleDragLeave}
 	role="group" aria-label="File upload dropzone"
 >
-	<p class="text-sm text-gray-600 mb-2">
+	<p class="oldap-upload-file-selected">
 		{#if selectedFile}
 			<strong>{selectedFile.name}</strong> selected
 		{:else}
-			Drag & drop a <code>{filexts ? filexts.join(", ") : ''}</code> file here or
+			Drag & drop a "<code>{filexts ? filexts.join(", ") : ''}</code>" file here or
 		{/if}
 	</p>
 
-	<label class="text-blue-600 underline cursor-pointer">
+	<label class="text-oldap-link dark:text-oldap-link-dark underline cursor-pointer">
 		<input type="file" class="hidden" accept={filexts ? filexts.join(", ") : ''} onchange={handleInputChange} />
 		browse
 	</label>
@@ -91,6 +98,6 @@
 		<p class="text-red-600 mt-2">{errorMsg}</p>
 	{/if}
 	{#if selectedFile}
-		<Button onclick={upload}>UPLOAD</Button>
+		<Button onclick={upload}>{m.upload()}</Button>
 	{/if}
 </div>

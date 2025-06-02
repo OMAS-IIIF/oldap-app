@@ -16,6 +16,8 @@
     --color-oldap-hover-dark: var(--color-indigo-700);
     --color-oldap-focus: var(--color-purple-800);
     --color-oldap-focus-dark: var(--color-purple-300);
+    --color-oldap-link: var(--color-indigo-700);
+    --color-oldap-link-dark: var(--color-indigo-400);
 
     --color-oldap-button: var(--color-indigo-400);
     --color-oldap-button-dark: var(--color-indigo-700);
@@ -144,5 +146,15 @@
 .oldap-textfield-disabled {
     @apply text-input-text-disabled dark:text-input-text-disabled-dark
     outline-input-outline-valid placeholder:text-input-placeholder-valid focus:outline-oldap-focus
+}
+
+
+.oldap-upload {
+    @apply border-2 border-dashed rounded p-6 text-center cursor-pointer transition-all
+}
+
+
+.oldap-upload-file-selected {
+    @apply text-sm text-oldap-fg dark:text-oldap-fg-dark mb-2
 }
 

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { OldapUser } from '$lib/oldap/classes/user';
 	import type { OldapProject } from '$lib/oldap/classes/project';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { api_config, api_get_config } from '$lib/helpers/api_config';
@@ -185,7 +184,7 @@
 	{confirmation_text}
 </Confirmation>
 
-<DialogWin bind:isopen={uploadIsOpen} title="UPLOAD">
+<DialogWin bind:isopen={uploadIsOpen} title={m.upload_hlist()}>
 	<form>
 		<FileUpload filexts={[".yaml", ".yml"]} {do_upload}/>
 	</form>
