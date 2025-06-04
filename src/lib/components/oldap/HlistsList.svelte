@@ -23,10 +23,12 @@
 	import FileUpload, { type UploadFunc } from '$lib/components/basic_gui/inputs/FileUpload.svelte';
 	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
 	import { spinnerStore } from '$lib/stores/spinner';
+	import { refreshHlistsHlistNow, refreshHlistsList } from '$lib/stores/refresh_hlistslist.svelte';
 
-	let { table_height, project = null }: {
+	let { table_height, project = null, hlistIsOpen = $bindable() }: {
 		table_height: number,
-		project: OldapProject | null
+		project: OldapProject | null,
+		hlistIsOpen?: boolean
 	} = $props();
 
 	let lang = $state(languageTag());
@@ -37,7 +39,6 @@
 	let hlist_list = $state<string[]>([]);
 	let hlist_in_use = $state<Record<string, boolean>>({});
 	let uploadIsOpen = $state(false);
-	let refresh = $state(0);
 
 	let confirmation_dialog: Confirmation;
 	let confirmation_title = $state('');
@@ -45,10 +46,10 @@
 
 	authInfoStore.subscribe(data => {
 		authinfo = data;
-	})
+	});
 
 	$effect(() => {
-		const _ = refresh;
+		const _ = $refreshHlistsList;
 		hlist_list = [];
 		if (authinfo) {
 			let hlistsearch = api_get_config(authinfo, { project: project?.projectIri?.toString() || ''});
@@ -103,8 +104,7 @@
 			hlistid: hlist_id
 		});
 		apiClient.deleteAdminhlistProjectHlistid(undefined, config_hlistdata).then((result) => {
-			refresh = refresh + 1;
-			console.log(result);
+			refreshHlistsHlistNow();
 		}).catch((error) => {
 			errorInfoStore.set(process_api_error(error as Error));
 		})
@@ -125,7 +125,7 @@
 			console.log(result);
 			spinnerStore.set(null);
 			uploadIsOpen = false;
-			refresh = refresh + 1;
+			refreshHlistsHlistNow()
 		}).catch((error) => {
 			console.log(error);
 			spinnerStore.set(null);
@@ -139,7 +139,7 @@
 {#snippet actions()}
 	<div class="flex flex-row items-center justify-end gap-4">
 		<span>
-			<Button round={true} class="text-xs" onclick={goto_page("/admin/hlist")}>
+			<Button round={true} class="text-xs" onclick={() => { hlistIsOpen = true; }}>
 				<Plus size="16" strokeWidth="1" />
 			</Button>
 		</span>

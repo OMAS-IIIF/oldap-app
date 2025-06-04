@@ -18,7 +18,7 @@
 	import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { OldapError } from '$lib/oldap/errors/OldapError';
-	import { refreshNodeTreeNow } from '../../../routes/admin/hlist/[hlistid]/refresh_nodetree.svelte';
+	import { refreshNodeTreeNow } from '../../stores/refresh_nodetree.svelte.js';
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
 
 	const ncname_pattern: RegExp = /^[A-Za-z_][A-Za-z0-9._-]*$/;
@@ -63,17 +63,21 @@
 				confirmation_title = m.store_mod_node();
 				conformation_text = m.store_mod_node_2({nodename: nodeid || ''});
 				break;
+			case 'root':
+				confirmation_title = m.add_root_node() + '?';
+				conformation_text = `${m.store_node_root()}`;
+				break;
 			case 'addBefore':
-				confirmation_title = `${m.add_node_before()}?`;
-				conformation_text = `${m.store_node_below({nodename: refnode || ''})}`;
+				confirmation_title = m.add_node_before() + '?';
+				conformation_text = m.store_node_below({nodename: refnode || ''});
 				break;
 			case 'addAfter':
-				confirmation_title = `${m.add_node_after()}?`;
-				conformation_text = `${m.store_node_after({nodename: refnode || ''})}`;
+				confirmation_title = m.add_node_after() + '?';
+				conformation_text = m.store_node_after({nodename: refnode || ''});
 				break;
 			case 'addBelow':
-				confirmation_title = `${m.add_node_child()}?`;
-				conformation_text = `${m.store_node_child({nodename: refnode || ''})}`;
+				confirmation_title = m.add_node_child() + '?';
+				conformation_text = m.store_node_child({nodename: refnode || ''});
 				break;
 
 		}
@@ -103,12 +107,12 @@
 			}
 
 			if (nodeid) {
-				const node_put = api_config(authinfo, {
+				const node_post = api_config(authinfo, {
 					project: current_project?.projectShortName.toString() || '',
 					hlistid: hlistid,
 					nodeid: nodeid
 				});
-				apiClient.postAdminhlistProjectHlistidNodeid(nodedata, node_put).then((res) => {
+				apiClient.postAdminhlistProjectHlistidNodeid(nodedata, node_post).then((res) => {
 					successInfoStore.set(`!${res.message}`);
 					refreshNodeTreeNow();
 				}).catch((error) => {
@@ -124,8 +128,9 @@
 			const prefLabel = prefLabel_field.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
 			const definition = definition_field.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
 
-			let pos: 'leftOf' | 'rightOf' | 'belowOf';
+			let pos: 'root' | 'leftOf' | 'rightOf' | 'belowOf';
 			switch (action) {
+				case 'root': pos = 'root'; break;
 				case 'addBefore': pos = 'leftOf'; break;
 				case 'addAfter': pos = 'rightOf'; break;
 				case 'addBelow': pos = 'belowOf'; break;
@@ -138,7 +143,7 @@
 			let nodedata: {
 				prefLabel: string[],
 				definition?: string[],
-				position: 'leftOf' | 'rightOf' | 'belowOf',
+				position: 'root' |'leftOf' | 'rightOf' | 'belowOf',
 				refnode: string,
 			} = {
 				prefLabel: prefLabel,

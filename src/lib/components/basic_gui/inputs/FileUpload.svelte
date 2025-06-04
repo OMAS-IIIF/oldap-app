@@ -13,10 +13,10 @@
 	let errorMsg = $state<string | null>(null);
 
 	function hasValidExtension(file: File): boolean {
-		let res = true;
+		let res = false;
 		filexts?.forEach(filext => {
-			if (!file.name.endsWith(filext)) {
-				res = false;
+			if (file.name.endsWith(filext)) {
+				res = true;
 			}
 		})
 		return res;

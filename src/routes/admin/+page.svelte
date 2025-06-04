@@ -13,6 +13,8 @@
 	import ProjectsList from '$lib/components/oldap/ProjectsList.svelte';
 	import { adminTabState } from '$lib/stores/admintabstate';
 	import HlistsList from '$lib/components/oldap/HlistsList.svelte';
+	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
+	import HList from '$lib/components/oldap/HList.svelte';
 
 	let tabs: TabsType = $state({}); // info about the tabs: key and (lang-dependent) name
 	let administrator: OldapUser | null = $state($userStore);  // the admin user...
@@ -21,6 +23,7 @@
 
 	let tabs_height = $state(100); // just an arbitrary value
 	let table_height = $state(($contentAreaHeight || 200) - (() => tabs_height)() - 25);
+	let hlistIsOpen = $state(false);
 
 	//
 	// TODO: this is net working I think...
@@ -28,6 +31,7 @@
 	adminTabState.subscribe((state) => {
 		if (state) {
 			selected_tab = state;
+			hlistIsOpen = false;
 		}
 	})
 
@@ -118,6 +122,9 @@
 	<UsersList table_height={table_height} {administrator} {project}/>
 {/if}
 {#if selected_tab === 'lists'}
-	<HlistsList table_height={table_height} {project}/>
+	<HlistsList table_height={table_height} {project} bind:hlistIsOpen={hlistIsOpen} />
+	<DialogWin title={m.new_hlist_title()} bind:isopen={hlistIsOpen}>
+		<HList bind:isopen={hlistIsOpen} />
+	</DialogWin>
 {/if}
 

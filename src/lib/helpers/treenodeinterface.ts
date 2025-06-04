@@ -1,6 +1,6 @@
 
 export interface TreeNodeInterface {
-	hlistid: string;
+	// hlistid: string;
 	nodeid: string;
 	name: string;
 	children?: TreeNodeInterface[];

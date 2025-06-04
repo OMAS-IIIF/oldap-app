@@ -17,9 +17,10 @@
 	import { languageTag } from '$lib/paraglide/runtime';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import { authInfoStore } from '$lib/stores/authinfo';
-	import { refreshNodeTree } from './refresh_nodetree.svelte';
+	import { refreshNodeTree } from '$lib/stores/refresh_nodetree.svelte.js';
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
 	import { goto } from '$app/navigation';
+	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
 
 
 	let { data }: PageProps = $props();
@@ -35,6 +36,7 @@
 	let topnodes = $state<TreeNodeInterface[]>([]);
 
 	let hlist = $state<OldapList>();
+	let rootIsOpen = $state(false);
 
 	let refresh = $state(0);
 
@@ -78,7 +80,7 @@
 		if (administrator) { // the administrator has to be defined...
 			if (administrator.isRoot || administrator.inProject?.some(obj => obj.permissions.includes(AdminPermission.ADMIN_LISTS))) {
 				if (data.hlistid === 'new') {
-
+					rootIsOpen = true;
 				}
 				else {
 					const config_hlistdata = api_notget_config(authinfo as AuthInfo, {
@@ -109,11 +111,19 @@
 	<div class="py-2"> </div>
 	<form class="max-w-128 min-w-96">
 		<ul class="pl-4 list-none border-l border-gray-300 ml-1 space-y-1">
-			{#each topnodes as node}
-				<NodeTree node={node} />
-			{/each}
+			{#if topnodes.length > 0}
+				{#each topnodes as node}
+					<NodeTree node={node} hlistid={data.hlistid} />
+				{/each}
+			{:else}
+				<NodeTree hlistid={data.hlistid} />
+			{/if}
 		</ul>
 		<div class="py-2"> </div>
 		<Button onclick={() => goto('/admin')}>Back</Button>
 	</form>
 </div>
+
+<DialogWin bind:isopen={rootIsOpen} title="ADD ROOT NODE">
+	ROOT NODE
+</DialogWin>
