@@ -2,10 +2,10 @@
 	import type { OldapProject } from '$lib/oldap/classes/project';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { api_config, api_get_config } from '$lib/helpers/api_config';
-	import { apiClient } from '$lib/shared/apiClient';
+	import { apiClient, apiUrl } from '$lib/shared/apiClient';
 	import { OldapList } from '$lib/oldap/classes/list';
 	import * as m from '$lib/paraglide/messages';
-	import { Pencil, Trash2, Plus, Upload } from '@lucide/svelte'
+	import { Pencil, Trash2, Plus, Upload, Download } from '@lucide/svelte'
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
 	import { goto } from '$app/navigation';
 	import Table from '$lib/components/basic_gui/table/Table.svelte';
@@ -122,7 +122,6 @@
 			project: project?.projectIri?.toString() || ''
 		});
 		apiClient.postAdminhlistProjectupload({yamlfile: f}, config_upload).then((result) => {
-			console.log(result);
 			spinnerStore.set(null);
 			uploadIsOpen = false;
 			refreshHlistsHlistNow()
@@ -134,6 +133,42 @@
 		});
 	}
 
+	const do_download = async (hlist_id: string) => {
+		const config_download = api_config(authinfo as AuthInfo, {
+			project: project?.projectIri?.toString() || '',
+			hlistid: hlist_id
+		});
+		spinnerStore.set("Downloading...");
+
+		const url = `${apiUrl}/admin/hlist/${encodeURIComponent(project?.projectIri?.toString() || '')}/${hlist_id}/download?format=YAML`; // or JSON
+		fetch(url, {
+			method: config_download.method,
+			headers: config_download.headers
+		}).then(async (res) => {
+			const blob = await res.blob();
+			console.log(res);
+			const contentDisposition = res.headers.get('Content-Disposition');
+			let filename = 'download.yaml';
+			if (contentDisposition?.includes('filename=')) {
+				filename = contentDisposition.split('filename=')[1].replaceAll('"', '');
+			}
+			const blobUrl = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = blobUrl;
+			a.download = filename;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(blobUrl);
+
+			spinnerStore.set(null);
+
+		}).catch((error) => {
+			console.log(error);
+			spinnerStore.set(null);
+			errorInfoStore.set(process_api_error(error as Error));
+		});
+	}
 </script>
 
 {#snippet actions()}
@@ -172,6 +207,9 @@
 						</Button>
 						<Button round={true} onclick={() => delete_hlist(hlist_id)} disabled={hlist_in_use[hlist_id]}>
 							<Trash2 size="16" strokeWidth="1" />
+						</Button>
+						<Button round={true} onclick={() => do_download(hlist_id)} >
+							<Download size="16" strokeWidth="1" />
 						</Button>
 					</div>
 				</TableItem>

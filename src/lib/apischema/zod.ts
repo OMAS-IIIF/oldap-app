@@ -922,6 +922,23 @@ const endpoints = makeApi([
 		description: `Viewfunction to retrieve all information of the given node
 `,
 		requestFormat: "json",
+		parameters: [
+			{
+				name: "project",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "hlistid",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "nodeid",
+				type: "Path",
+				schema: z.string()
+			},
+		],
 		response: z.object({ nodeid: z.string(), creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), prefLabel: LangString, description: LangString }).partial().passthrough(),
 		errors: [
 			{
@@ -1169,6 +1186,50 @@ When there are any number of nodes below the node one wish to move, they get mov
 			{
 				status: 500,
 				description: `Internal Server error. Should not be reachable`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+		]
+	},
+	{
+		method: "get",
+		path: "/admin/hlist/:project/:hlistid/download",
+		alias: "downloadHList",
+		description: `Downloads a hierarchical list as YAML or JSON depending on the &#x60;format&#x60; query parameter.
+The user must be authenticated with a Bearer token.
+`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "project",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "hlistid",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "format",
+				type: "Query",
+				schema: z.enum(["YAML", "JSON"]).optional()
+			},
+		],
+		response: z.object({}).partial().passthrough(),
+		errors: [
+			{
+				status: 403,
+				description: `Authentication or permission error`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 404,
+				description: `List not found`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 500,
+				description: `Internal server error`,
 				schema: z.object({ message: z.string() }).partial().passthrough()
 			},
 		]
