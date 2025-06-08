@@ -20,6 +20,8 @@
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import { getLanguageShortname } from '$lib/oldap/enums/language';
 	import { authInfoStore } from '$lib/stores/authinfo';
+	import { goto } from '$app/navigation';
+	import { languageTag } from '$lib/paraglide/runtime';
 
 	let { data }: PageProps = $props();
 
@@ -27,6 +29,8 @@
 	const project_iri_pattern: RegExp = /^(https?:\/\/[^\s<>"]+|urn:[^\s<>"]+|[A-Za-z_][\w.-]*:[\w.-]+)$/;
 	const ncname_pattern: RegExp = /^[A-Za-z_][A-Za-z0-9._-]*$/;
 	const namespace_pattern = /^https?:\/\/[^\s<>"]+[/#]$/;
+
+	let lang = $state(languageTag());
 
 	let authinfo: AuthInfo | null = $authInfoStore;
 	let administrator = $state<OldapUser | null>(null);
@@ -57,6 +61,13 @@
 	function scrollToTop() {
 		if (topwin) {
 			topwin.scrollTo({ top: -1000, behavior: 'smooth' });
+		}
+	}
+
+	const goto_page = (url: string) => {
+		return () => {
+			const cleaned = url.startsWith('/') ? url : `/${url}`;
+			goto(`/${lang}${cleaned}`);
 		}
 	}
 
@@ -174,7 +185,7 @@
 		<DatePicker bind:this={projectEnd_field} label="Project start" name="project_start" id="project_start" value={projectEnd} />
 
 		<div class="flex justify-center gap-4 mt-6">
-			<Button class="mx-4 my-2" onclick={() => window.history.back()}>{m.cancel()}</Button>
+			<Button class="mx-4 my-2" onclick={goto_page('/admin')}>{m.cancel()}</Button>
 			{#if data?.sname === 'new'}
 				<Button class="mx-4 my-2" onclick={() => add_project()}>{m.add()}</Button>
 			{:else}

@@ -50,7 +50,15 @@
 
 	projectStore.subscribe((project) => {
 		current_project = project;
-	})
+	});
+
+	const goto_page = (url: string) => {
+		return () => {
+			const cleaned = url.startsWith('/') ? url : `/${url}`;
+			goto(`/${lang}${cleaned}`);
+		}
+	}
+
 
 	function scrollToTop() {
 		if (topwin) {
@@ -120,7 +128,7 @@
 			{/if}
 		</ul>
 		<div class="py-2"> </div>
-		<Button onclick={() => goto('/admin')}>Back</Button>
+		<Button onclick={goto_page('/admin')}>Back</Button>
 	</form>
 </div>
 

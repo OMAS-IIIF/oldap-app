@@ -20,12 +20,15 @@
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import { authInfoStore } from '$lib/stores/authinfo';
+	import { languageTag } from '$lib/paraglide/runtime';
 
 	let { table_height, administrator = null, project = null }: {
 		table_height: number,
 		administrator: OldapUser | null,
 		project: OldapProject | null
 	} = $props();
+
+	let lang = $state(languageTag());
 
 	let show_all_users = $state(false);
 	let authinfo = $state<AuthInfo | null>($authInfoStore);
@@ -105,7 +108,8 @@
 	 */
 	const goto_page = (url: string) => {
 		return () => {
-			goto(url);
+			const cleaned = url.startsWith('/') ? url : `/${url}`;
+			goto(`/${lang}${cleaned}`);
 		}
 	}
 

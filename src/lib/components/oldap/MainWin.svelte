@@ -14,7 +14,7 @@ import Projects from '$lib/components/oldap/Projects.svelte';
 import SuccessMsg from '$lib/components/oldap/SuccessMsg.svelte';
 import { userStore } from '$lib/stores/user';
 import LeftFooter from '$lib/components/basic_gui/footer/LeftFooter.svelte';
-	import RightFooter from '../basic_gui/footer/RightFooter.svelte';
+import RightFooter from '../basic_gui/footer/RightFooter.svelte';
 import { BarLoader } from 'svelte-loading-spinners';
 import { spinnerStore } from '$lib/stores/spinner';
 
@@ -35,7 +35,6 @@ userStore.subscribe(stored_user => {
 		<!-- left side of header -->
 		<LeftHeader>
 			<a href="/"><img src="/images/oldap-logo.svg" class="me-3 h-6 sm:h-12" alt="OLDAP Logo" /></a>
-			<div>OLDAP</div>
 			<a href="/about" class="hover:underline">{m.about()}</a>
 			{#if user}
 				<a href="/admin" class="hover:underline">{m.admin()}</a>

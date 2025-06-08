@@ -33,6 +33,7 @@
 	import { successInfoStore } from '$lib/stores/successinfo';
 	import { difference, intersection } from '$lib/helpers/setops';
 	import { authInfoStore } from '$lib/stores/authinfo';
+	import { goto } from '$app/navigation';
 
 	type ProjRef = {iri: string, sname: string};
 	type CheckedState = {[key: string]: Record<AdminPermission, boolean>};
@@ -86,6 +87,13 @@
 	function scrollToTop() {
 		if (topwin) {
 			topwin.scrollTo({ top: -1000, behavior: "smooth" });
+		}
+	}
+
+	const goto_page = (url: string) => {
+		return () => {
+			const cleaned = url.startsWith('/') ? url : `/${url}`;
+			goto(`/${lang}${cleaned}`);
 		}
 	}
 
@@ -642,13 +650,13 @@
 
 		<div class="text-sm ">Data Permissions</div>
 		{#each permissionSets as pset}
-			{@const txt = `${pset?.label ? pset?.label[langobj] : ''} (${dataPermissionAsString(pset?.givesPermission)} ${m.fromproj()} "${pset?.projectShortName}")`}
+			{@const txt = `${pset?.label ? pset?.label.get(langobj) : ''} (${dataPermissionAsString(pset?.givesPermission)} ${m.fromproj()} "${pset?.projectShortName}")`}
 			<Checkbox label={txt} position="right" bind:checked={user_permsets[pset?.permissionSetIri.toString()]}></Checkbox>
 		{/each}
 
 
 		<div class="flex justify-center gap-4 mt-6">
-			<Button class="mx-4 my-2" onclick={() => window.history.back()}>{m.cancel()}</Button>
+			<Button class="mx-4 my-2" onclick={goto_page('/admin')}>{m.cancel()}</Button>
 			{#if data?.userid === 'new'}
 				<Button class="mx-4 my-2" onclick={() => add_user()}>{m.add()}</Button>
 			{:else}

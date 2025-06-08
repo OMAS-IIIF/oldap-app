@@ -74,7 +74,8 @@
 	 */
 	const goto_page = (url: string) => {
 		return () => {
-			goto(url);
+			const cleaned = url.startsWith('/') ? url : `/${url}`;
+			goto(`/${lang}${cleaned}`);
 		}
 	}
 
