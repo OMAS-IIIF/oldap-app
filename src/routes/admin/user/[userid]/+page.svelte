@@ -33,7 +33,8 @@
 	import { successInfoStore } from '$lib/stores/successinfo';
 	import { difference, intersection } from '$lib/helpers/setops';
 	import { authInfoStore } from '$lib/stores/authinfo';
-	import { goto } from '$app/navigation';
+	import { goto_page } from '$lib/helpers/goto_page';
+	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
 
 	type ProjRef = {iri: string, sname: string};
 	type CheckedState = {[key: string]: Record<AdminPermission, boolean>};
@@ -72,6 +73,10 @@
 	let user_permsets = $state<Record<string, boolean>>({});
 	let topwin = $state<HTMLElement>();
 
+	let confirmation_dialog: Confirmation;
+	let confirmation_title = $state('');
+	let confirmation_message = $state('');
+
 
 	const allPermissions = Object.keys(AdminPermission)
 		.map(key => AdminPermission[key as keyof typeof AdminPermission]);
@@ -89,14 +94,6 @@
 			topwin.scrollTo({ top: -1000, behavior: "smooth" });
 		}
 	}
-
-	const goto_page = (url: string) => {
-		return () => {
-			const cleaned = url.startsWith('/') ? url : `/${url}`;
-			goto(`/${lang}${cleaned}`);
-		}
-	}
-
 
 	const process_permissions = async (): Promise<void> => {
 		const sysprojref = {iri: "oldap:SystemProject", sname: 'oldap'} as ProjRef;
@@ -290,7 +287,12 @@
 		}
 	}
 
-	const add_user = () => {
+	const add_user = async () => {
+		confirmation_title = m.add_user();
+		confirmation_message = m.confirm_user_add({userid: userId.toString()});
+		const ok = await confirmation_dialog.open();
+		if (!ok) return;
+
 		//
 		// check validity of user data...
 		//
@@ -365,18 +367,18 @@
 		});
 		const user_put = api_notget_config(authinfo as AuthInfo, {userId: userId});
 		apiClient.putAdminuserUserId(userdata, user_put).then((res) => {
-			console.log("ADD NEW USER");
-			console.log(userdata);
 			successInfoStore.set(`User "${res.userId}" added successfully!`);
-			//window.history.back();
 		}).catch((error) => {
-			console.log("ADD NEW USER FAILED");
-			console.log(userdata);
 			errorInfoStore.set(process_api_error(error as Error));
 		});
 	}
 
-	const modify_user = () => {
+	const modify_user = async () => {
+		confirmation_title = m.modify_user();
+		confirmation_message = m.confirm_user_modify({userid: user?.userId.toString() || ''});
+		const ok = await confirmation_dialog.open();
+		if (!ok) return;
+
 		let userdata: {
 			userId?: string,
 			givenName?: string,
@@ -498,13 +500,11 @@
 			if (del_permsets.size > 0) {
 				tmp.del = Array.from(del_permsets);
 			}
-			console.log("====> tmp", tmp);
 			if (tmp && Object.keys(tmp).length > 0) {
 				userdata.hasPermissions = tmp;
 			}
 		}
 
-		console.log("MODIFY USER:", userdata);
 		const user_post = api_notget_config(authinfo as AuthInfo, {userId: user?.userId.toString() || ''});
 		apiClient.postAdminuserUserId(userdata, user_post).then((res) => {
 			successInfoStore.set(`User "${res.userId}" modified successfully!`);
@@ -665,4 +665,9 @@
 		</div>
 	</form>
 </div>
+
+<Confirmation bind:this={confirmation_dialog} title={confirmation_title}>
+	{confirmation_message}
+</Confirmation>
+
 

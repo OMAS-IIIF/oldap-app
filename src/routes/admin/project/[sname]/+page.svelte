@@ -20,8 +20,10 @@
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import { getLanguageShortname } from '$lib/oldap/enums/language';
 	import { authInfoStore } from '$lib/stores/authinfo';
-	import { goto } from '$app/navigation';
 	import { languageTag } from '$lib/paraglide/runtime';
+	import { goto_page } from '$lib/helpers/goto_page';
+	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
+
 
 	let { data }: PageProps = $props();
 
@@ -61,13 +63,6 @@
 	function scrollToTop() {
 		if (topwin) {
 			topwin.scrollTo({ top: -1000, behavior: 'smooth' });
-		}
-	}
-
-	const goto_page = (url: string) => {
-		return () => {
-			const cleaned = url.startsWith('/') ? url : `/${url}`;
-			goto(`/${lang}${cleaned}`);
 		}
 	}
 

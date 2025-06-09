@@ -7,7 +7,7 @@
 	import * as m from '$lib/paraglide/messages';
 	import { Pencil, Trash2, Plus, Upload, Download } from '@lucide/svelte'
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
-	import { goto } from '$app/navigation';
+	import { goto_page } from '$lib/helpers/goto_page';
 	import Table from '$lib/components/basic_gui/table/Table.svelte';
 	import TableHeader from '$lib/components/basic_gui/table/TableHeader.svelte';
 	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
@@ -71,27 +71,14 @@
 						});
 						apiClient.getAdminhlistProjectHlistidin_use(config_hlist_in_use).then((result2) => {
 							hlist_in_use[id] = result2['in_use'] === undefined ? false : result2['in_use'];
-							console.log("IN_USE:", result2['in_use']);
 						});
 					});
 				}).catch((err) => {
 					errorInfoStore.set(process_api_error(err as Error));
 				});
-					//console.log(hldata);
 			});
 		}
 	});
-
-	/**
-	 * Returns a function that can be used for a onclick-action to navigate to the given route
-	 * @param url An URL to goto to...
-	 */
-	const goto_page = (url: string) => {
-		return () => {
-			const cleaned = url.startsWith('/') ? url : `/${url}`;
-			goto(`/${lang}${cleaned}`);
-		}
-	}
 
 	const delete_hlist = async (hlist_id: string) => {
 		confirmation_title = "DELETE HLIST ?";
@@ -147,7 +134,6 @@
 			headers: config_download.headers
 		}).then(async (res) => {
 			const blob = await res.blob();
-			console.log(res);
 			const contentDisposition = res.headers.get('Content-Disposition');
 			let filename = 'download.yaml';
 			if (contentDisposition?.includes('filename=')) {

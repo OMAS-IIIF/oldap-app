@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import Table from '$lib/components/basic_gui/table/Table.svelte';
 	import { OldapUser } from '$lib/oldap/classes/user';
 	import type { OldapProject } from '$lib/oldap/classes/project';
@@ -21,6 +20,8 @@
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import { authInfoStore } from '$lib/stores/authinfo';
 	import { languageTag } from '$lib/paraglide/runtime';
+	import { goto_page } from '$lib/helpers/goto_page';
+
 
 	let { table_height, administrator = null, project = null }: {
 		table_height: number,
@@ -101,17 +102,6 @@
 		}
 		return on;
 	};
-
-	/**
-	 * Returns a function that can be used for a onclick-action to navigate to the given route
-	 * @param url An URL to goto to...
-	 */
-	const goto_page = (url: string) => {
-		return () => {
-			const cleaned = url.startsWith('/') ? url : `/${url}`;
-			goto(`/${lang}${cleaned}`);
-		}
-	}
 
 	const delete_user = async (user_id: string) => {
 		confirmation_for_userid = user_id;

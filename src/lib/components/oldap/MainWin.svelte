@@ -17,6 +17,9 @@ import LeftFooter from '$lib/components/basic_gui/footer/LeftFooter.svelte';
 import RightFooter from '../basic_gui/footer/RightFooter.svelte';
 import { BarLoader } from 'svelte-loading-spinners';
 import { spinnerStore } from '$lib/stores/spinner';
+import { languageTag } from '$lib/paraglide/runtime';
+import { goto_page } from '$lib/helpers/goto_page';
+import { page } from '$app/state';
 
 let { children } = $props();
 
@@ -34,10 +37,10 @@ userStore.subscribe(stored_user => {
 	<Header size="text-xs lg:text-base ">
 		<!-- left side of header -->
 		<LeftHeader>
-			<a href="/"><img src="/images/oldap-logo.svg" class="me-3 h-6 sm:h-12" alt="OLDAP Logo" /></a>
-			<a href="/about" class="hover:underline">{m.about()}</a>
+			<button onclick={goto_page("/")} class="cursor-pointer"><img src="/images/oldap-logo.svg" class="me-3 h-6 sm:h-12" alt="OLDAP Logo" /></button>
+			<button onclick={goto_page("/about")} class="hover:underline cursor-pointer">{m.about()}</button>
 			{#if user}
-				<a href="/admin" class="hover:underline">{m.admin()}</a>
+				<button onclick={goto_page("/admin")} class="hover:underline cursor-pointer">{m.admin()}</button>
 			{/if}
 		</LeftHeader>
 
@@ -61,6 +64,7 @@ userStore.subscribe(stored_user => {
 			<div>© Lukas & Manuel Rosenthaler (2025)</div>
 		</LeftFooter>
 		<RightFooter>
+			Path: {page.url.pathname}
 			{#if $spinnerStore !== null}
 				{$spinnerStore}<BarLoader />
 			{:else}

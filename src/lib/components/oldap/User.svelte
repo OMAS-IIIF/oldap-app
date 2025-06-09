@@ -55,7 +55,6 @@
 			.then(userdata => {
 				user = OldapUser.fromOldapJson(userdata);
 				src = getGravatarUrl(user.email, 200);
-				console.log("AVATAR SRC=", src);
 				user.avatarSrc = src;
 				initials = user.givenName[0] + user.familyName[0];
 				userStore.set(user);

@@ -7,7 +7,6 @@ export function persistentWritable<T>(key: string, initial: T) {
 		const stored = localStorage.getItem(key);
 		if (stored) {
 			value = JSON.parse(stored);
-			console.log("INITIALIZING LOCAL STORE:", key, initial);
 		}
 	}
 
@@ -15,7 +14,6 @@ export function persistentWritable<T>(key: string, initial: T) {
 
 	if (typeof window !== 'undefined') {
 		store.subscribe((val) => {
-			console.log("UPDATING LOCAL STORE:", key, val);
 			localStorage.setItem(key, JSON.stringify(val));
 		});
 	}

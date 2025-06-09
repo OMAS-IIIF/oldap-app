@@ -8,6 +8,7 @@
 	import { goto } from '$app/navigation';
 	import { i18n } from '$lib/i18n';
 
+
 	let langSelOpen = $state(false);
 
 	// Get the datatype for the allowed languages (e.g. 'en' | 'de' | fr' | 'it') or equivalent

@@ -66,7 +66,6 @@
 				orig_vals[lang] = value?.getraw(lobj) || '';
 			}
 		}
-		console.log('EFFECT-1', label, $state.snapshot(vals));
 	});
 
 	$effect(() => {
@@ -76,7 +75,6 @@
 				modified[lang] = false;
 			}
 		}
-		console.log('EFFECT-2', label, orig_vals, $state.snapshot(vals));
 	});
 
 	const value_changed = (lang: string, val?: string) => {

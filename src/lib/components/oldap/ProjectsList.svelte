@@ -2,7 +2,7 @@
 
 	import * as m from '$lib/paraglide/messages';
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
-	import { goto } from '$app/navigation';
+	import { goto_page } from '$lib/helpers/goto_page';
 	import Table from '$lib/components/basic_gui/table/Table.svelte';
 	import { OldapProject } from '$lib/oldap/classes/project';
 	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
@@ -67,17 +67,6 @@
 			})
 		}
 	});
-
-	/**
-	 * Returns a function that can be used for a onclick-action to navigate to the given route
-	 * @param url An URL to goto to...
-	 */
-	const goto_page = (url: string) => {
-		return () => {
-			const cleaned = url.startsWith('/') ? url : `/${url}`;
-			goto(`/${lang}${cleaned}`);
-		}
-	}
 
 	const delete_project = async (sname: string) => {
 		confirmation_for_sname = sname;

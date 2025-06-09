@@ -51,7 +51,6 @@ export class OldapPermissionSet extends OldapObject {
 	}
 
 	static fromOldapJson(json: any): OldapPermissionSet {
-		console.log("==========>", json);
 		const creator = new Iri(json.creator);
 		const created = new Date(json.created);
 		const contributor = new Iri(json.contributor);

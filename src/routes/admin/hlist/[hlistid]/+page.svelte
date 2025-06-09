@@ -19,7 +19,7 @@
 	import { authInfoStore } from '$lib/stores/authinfo';
 	import { refreshNodeTree } from '$lib/stores/refresh_nodetree.svelte.js';
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
-	import { goto } from '$app/navigation';
+	import { goto_page } from '$lib/helpers/goto_page';
 	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
 
 
@@ -51,14 +51,6 @@
 	projectStore.subscribe((project) => {
 		current_project = project;
 	});
-
-	const goto_page = (url: string) => {
-		return () => {
-			const cleaned = url.startsWith('/') ? url : `/${url}`;
-			goto(`/${lang}${cleaned}`);
-		}
-	}
-
 
 	function scrollToTop() {
 		if (topwin) {
