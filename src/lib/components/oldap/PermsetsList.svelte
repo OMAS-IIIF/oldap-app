@@ -14,6 +14,19 @@
 	import { apiClient } from '$lib/shared/apiClient';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
+	import { goto_page } from '$lib/helpers/goto_page';
+	import * as m from '$lib/paraglide/messages';
+	import Checkbox from '$lib/components/basic_gui/checkbox/Checkbox.svelte';
+	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
+	import TableItem from '$lib/components/basic_gui/table/TableItem.svelte';
+	import Toggle from '$lib/components/basic_gui/buttons/Toggle.svelte';
+	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
+	import { Pencil, Trash2 } from '@lucide/svelte';
+	import Table from '$lib/components/basic_gui/table/Table.svelte';
+	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
+	import TableHeader from '$lib/components/basic_gui/table/TableHeader.svelte';
+	import TableBody from '$lib/components/basic_gui/table/TableBody.svelte';
+	import { dataPermissionAsString } from '$lib/oldap/enums/data_permissions';
 
 	let { table_height, administrator = null, project = null }: {
 		table_height: number,
@@ -28,6 +41,7 @@
 	let permsets = $state<Record<string, OldapPermissionSet>>({});
 	let permset_list = $state<string[]>([]);
 	let permset_in_use = $state<Record<string, boolean>>({});
+	let show_all_permsets = $state(false);
 
 	let confirmation_dialog: Confirmation;
 	let confirmation_title = $state('');
@@ -42,7 +56,10 @@
 		const _ = $refreshPermsetsList;
 		permset_list = [];
 		if (authinfo) {
-			let permsetsearch = api_get_config(authinfo, { definedByProject: project?.projectIri?.toString() || ''});
+			let permsetsearch = api_get_config(authinfo);
+			if (!show_all_permsets) {
+				permsetsearch = { ...permsetsearch, queries: { definedByProject: project?.projectIri?.toString() } };
+			}
 			apiClient.getAdminpermissionsetsearch(permsetsearch).then((psdata) => {
 				console.log("==>", psdata);
 				permsets = {} as Record<string, OldapPermissionSet>;
@@ -53,14 +70,12 @@
 				Promise.all(promises)
 					.then((results) => {
 						results.forEach((permsetdata) => {
-							console.log("#####>", permsetdata);
 							const permset = OldapPermissionSet.fromOldapJson(permsetdata);
 							const permsetid = permset.permissionSetId.toString();
 							permsets[permsetid] = permset;
 							permset_list.push(permsetid);
 						});
 						permset_list = permset_list.sort((a, b) => a.localeCompare(b));
-						console.log("*********>", $state.snapshot(permsets));
 					})
 					.catch((err) => {
 						errorInfoStore.set(process_api_error(err as Error));
@@ -71,8 +86,56 @@
 		}
 	});
 
+	const delete_permset = async (permset_id: string) => {
+		;
+	};
+
+		let headers: string[] = $state([
+		m.permset_iri(),
+		m.permset_id(),
+		m.label(),
+		m.project(),
+		m.permission(),
+		m.action()]);
+
 </script>
 
-<div>
-	PERMSETSLIST
-</div>
+{#snippet actions()}
+	<div class="flex flex-row items-center justify-end gap-4">
+		{#if administrator?.isRoot}
+			<span><Checkbox label={m.show_all_permsets()} position="left" bind:checked={show_all_permsets} /></span>
+		{/if}
+		<span><Button class="text-xs" onclick={goto_page("/admin/permset")}>ADD PERMSET</Button></span>
+	</div>
+{/snippet}
+
+<Table height={table_height} title={m.permsets_title()}
+			 description={m.permsets_descr()}
+			 action_elements={actions}>
+	<TableHeader>
+		{#each headers as header}
+			<TableColumnTitle>{header}</TableColumnTitle>
+		{/each}
+	</TableHeader>
+	<TableBody>
+		{#each permset_list as permset_id}
+			<TableRow>
+				<TableItem>{permsets[permset_id].permissionSetIriAsString}</TableItem>
+				<TableItem>{permset_id}</TableItem>
+				<TableItem>{permsets[permset_id].label?.get(langobj)}</TableItem>
+				<TableItem>{permsets[permset_id].definedByProject.toString()}</TableItem>
+				<TableItem>{dataPermissionAsString(permsets[permset_id].givesPermission)}</TableItem>
+				<TableItem>
+					<div class="flex flex-row items-center justify-left gap-2">
+						<Button round={true} onclick={goto_page(`/admin/permset/${permset_id}`)}>
+							<Pencil size="16" strokeWidth="1" />
+						</Button>
+						<Button round={true} onclick={() => delete_permset(permset_id)}>
+							<Trash2  size="16" strokeWidth="1" />
+						</Button>
+					</div>
+				</TableItem>
+			</TableRow>
+		{/each}
+	</TableBody>
+</Table>

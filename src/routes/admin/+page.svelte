@@ -129,6 +129,6 @@
 	</DialogWin>
 {/if}
 {#if selected_tab === 'permsets'}
-	<PermsetsList table_height={table_height} {project} />
+	<PermsetsList table_height={table_height} {administrator} {project} />
 {/if}
 

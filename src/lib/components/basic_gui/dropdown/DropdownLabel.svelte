@@ -2,7 +2,6 @@
 	let { children, isOpen = $bindable(), labelText, name = "", id = null} = $props();
 
 	function toggleDropdown(event) {
-		console.log('toggle Button dropdown');
 		event.preventDefault();
 		isOpen = !isOpen;
 	}

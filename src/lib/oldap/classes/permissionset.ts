@@ -6,9 +6,9 @@ import { LangString } from '$lib/oldap/datatypes/langstring';
 import { OldapErrorInconsistency } from '$lib/oldap/errors/OldapErrorInconsistency';
 
 export class OldapPermissionSet extends OldapObject {
-	#permissionSetIri: Iri;
-	#permissionSetId: NCName;
-	#definedByProject: Iri;
+	readonly #permissionSetIri: Iri;
+	readonly #permissionSetId: NCName;
+	readonly #definedByProject: Iri;
 	givesPermission: DataPermission;
 	label?: LangString;
 	comment?: LangString;

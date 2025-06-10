@@ -85,5 +85,13 @@
     "user_id": "ID utente",
     "user_iri": "Utente IRI",
     "userlist_descr": "Elenco di tutti gli utenti",
-    "users": "Utenti"
+    "users": "Utenti",
+    "show_all_permsets": "Mostra tutte le autorizzazioni",
+    "permsets_title": "Set di autorizzazioni",
+    "permsets_descr": "Autorizzazioni per l'accesso agli oggetti di dati",
+    "permset_iri": "Iri l'autorizzazione",
+    "permset_id": "ID dell'autorizzazione",
+    "permission": "Autorizzazione",
+    "user": "Utente",
+    "permset": "Set di autorizzazioni"
 }

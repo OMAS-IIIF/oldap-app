@@ -85,5 +85,13 @@
     "user_id": "User ID",
     "user_iri": "User IRI",
     "userlist_descr": "List of all the users",
-    "users": "Users"
+    "users": "Users",
+    "show_all_permsets": "Show all permission sets",
+    "permsets_title": "Permission sets",
+    "permsets_descr": "Permissions for access to data objects",
+    "permset_iri": "Iri of permission",
+    "permset_id": "ID of permission",
+    "permission": "Permission",
+    "user": "User",
+    "permset": "Permission set"
 }

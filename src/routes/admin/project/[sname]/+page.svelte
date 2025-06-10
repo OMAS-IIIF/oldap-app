@@ -166,7 +166,7 @@
 </script>
 
 <div class="absolute top-0 left-0 right-0 bottom-0 overflow-auto flex flex-col justify-center items-center" bind:this={topwin}>
-	<div>{data.sname !== 'new' ? m.edit()  : m.add()} Project </div>
+	<div>{data.sname !== 'new' ? m.edit()  : m.add()} {m.project()} </div>
 	<form class="max-w-128 min-w-96">
 		<Textfield type='text' label={m.project_iri()} name="projectiri" id="projectiri" placeholder="project Iri" required={true}
 							 bind:value={projectIri} pattern={project_iri_pattern} disabled={data?.sname !== 'new'} />
