@@ -12,6 +12,8 @@
 	import { refreshPermsetsList } from '$lib/stores/refresh_permsetslist.svelte';
 	import { api_get_config } from '$lib/helpers/api_config';
 	import { apiClient } from '$lib/shared/apiClient';
+	import { errorInfoStore } from '$lib/stores/errorinfo';
+	import { process_api_error } from '$lib/helpers/process_api_error';
 
 	let { table_height, administrator = null, project = null }: {
 		table_height: number,
@@ -44,16 +46,27 @@
 			apiClient.getAdminpermissionsetsearch(permsetsearch).then((psdata) => {
 				console.log("==>", psdata);
 				permsets = {} as Record<string, OldapPermissionSet>;
-				/*
 				const promises = psdata.map(hl => {
 					const config_plistdata = api_get_config(authinfo as AuthInfo, { iri: hl });
-					return apiClient.getAdminhlistget(config_hlistdata);
+					return apiClient.getAdminpermissionsetget(config_plistdata);
 				});
-
-				 */
-
+				Promise.all(promises)
+					.then((results) => {
+						results.forEach((permsetdata) => {
+							console.log("#####>", permsetdata);
+							const permset = OldapPermissionSet.fromOldapJson(permsetdata);
+							const permsetid = permset.permissionSetId.toString();
+							permsets[permsetid] = permset;
+							permset_list.push(permsetid);
+						});
+						permset_list = permset_list.sort((a, b) => a.localeCompare(b));
+						console.log("*********>", $state.snapshot(permsets));
+					})
+					.catch((err) => {
+						errorInfoStore.set(process_api_error(err as Error));
+					});
 			}).catch((error) => {
-
+				errorInfoStore.set(process_api_error(error as Error));
 			});
 		}
 	});
