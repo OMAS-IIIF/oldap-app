@@ -78,7 +78,7 @@
 		</DropdownButton>
 		-->
 		<DropdownLabel bind:isOpen={permission_select_open} name="permission"
-									 labelText={currentPermission}>
+									 labelText={currentPermission} class="text-sm">
 			<DropdownMenu bind:isOpen={permission_select_open} position="left" name="permission" id="permission-id">
 				{#each allPermissions as perm}
 					<DropdownLinkItem bind:isOpen={permission_select_open}
