@@ -23,7 +23,7 @@
 	import FileUpload, { type UploadFunc } from '$lib/components/basic_gui/inputs/FileUpload.svelte';
 	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
 	import { spinnerStore } from '$lib/stores/spinner';
-	import { refreshHlistsHlistNow, refreshHlistsList } from '$lib/stores/refresh_hlistslist.svelte';
+	import { refreshHlistsListNow, refreshHlistsList } from '$lib/stores/refresh_hlistslist.svelte';
 
 	let { table_height, project = null, hlistIsOpen = $bindable() }: {
 		table_height: number,
@@ -49,6 +49,7 @@
 	});
 
 	$effect(() => {
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const _ = $refreshHlistsList;
 		hlist_list = [];
 		if (authinfo) {
@@ -92,7 +93,7 @@
 			hlistid: hlist_id
 		});
 		apiClient.deleteAdminhlistProjectHlistid(undefined, config_hlistdata).then((result) => {
-			refreshHlistsHlistNow();
+			refreshHlistsListNow();
 		}).catch((error) => {
 			errorInfoStore.set(process_api_error(error as Error));
 		})
@@ -112,7 +113,7 @@
 		apiClient.postAdminhlistProjectupload({yamlfile: f}, config_upload).then((result) => {
 			spinnerStore.set(null);
 			uploadIsOpen = false;
-			refreshHlistsHlistNow()
+			refreshHlistsListNow()
 		}).catch((error) => {
 			console.log(error);
 			spinnerStore.set(null);

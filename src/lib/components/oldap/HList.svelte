@@ -15,7 +15,7 @@
 	import { successInfoStore } from '$lib/stores/successinfo';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
-	import { refreshHlistsHlistNow } from '$lib/stores/refresh_hlistslist.svelte';
+	import { refreshHlistsListNow } from '$lib/stores/refresh_hlistslist.svelte';
 
 	const ncname_pattern: RegExp = /^[A-Za-z_][A-Za-z0-9._-]*$/;
 
@@ -55,7 +55,7 @@
 			});
 			apiClient.putAdminhlistProjectHlistid(hlistdata, hlist_put).then((res) => {
 				successInfoStore.set(`!${res.message}`);
-				refreshHlistsHlistNow();
+				refreshHlistsListNow();
 			}).catch((error) => {
 				errorInfoStore.set(process_api_error(error as Error));
 			})
