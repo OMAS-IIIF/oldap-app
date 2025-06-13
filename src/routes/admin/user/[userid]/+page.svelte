@@ -35,6 +35,7 @@
 	import { authInfoStore } from '$lib/stores/authinfo';
 	import { goto_page } from '$lib/helpers/goto_page';
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import { getProjectsOfUser } from '$lib/helpers/get_projects_of_user';
 
 	type ProjRef = {iri: string, sname: string};
 	type CheckedState = {[key: string]: Record<AdminPermission, boolean>};
@@ -148,47 +149,15 @@
 		//
 		// fill "all_projects_iris" containing all the project iri's the current administrator may assign to the given user
 		//
-		let all_projects_iris: string[] = [];
-		if (administrator) { // the administrator has to be defined...
-			if (administrator.isRoot) {
-				const psearch_config = api_get_config(authinfo as AuthInfo);
-				try {
-					const projs = await apiClient.getAdminprojectsearch(psearch_config);
-					projs.forEach(p => {
-						if (p.projectIri) {
-							all_projects_iris.push(p.projectIri);
-						}
-					});
-				}
-				catch (error) {
-					errorInfoStore.set(process_api_error(error as Error));
-					return;
-				}
+
+		if (administrator) {
+			try {
+				all_projects = await getProjectsOfUser(authinfo as AuthInfo, administrator);
 			}
-			else {
-				administrator?.inProject?.forEach(in_project => {
-					if (in_project.permissions.includes(AdminPermission.ADMIN_USERS)) {
-						all_projects_iris.push(in_project.project.toString());
-					}
-				});
+			catch(error) {
+				errorInfoStore.set(process_api_error(error as Error));
+				return;
 			}
-		}
-		//
-		// now retrieve all projects data from the triplestore
-		//
-		const promises = all_projects_iris.map(async iri => {
-			const config_projectdata = api_get_config(authinfo as AuthInfo, { iri: iri });
-			const jsondata = await apiClient.getAdminprojectget(config_projectdata);
-			const project = OldapProject.fromOldapJson(jsondata);
-			return { iri: project.projectIri.toString(), project };
-		});
-		try {
-			const results = await Promise.all(promises);
-			all_projects = Object.fromEntries(results.filter(p => p !== null).map(({ iri, project }) => [iri, project]));
-		}
-		catch (error) {
-			errorInfoStore.set(process_api_error(error as Error));
-			return;
 		}
 
 		if (data?.userid !== 'new') {

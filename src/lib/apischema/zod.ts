@@ -1518,7 +1518,7 @@ The user must be authenticated with a Bearer token.
 			{
 				name: "body",
 				type: "Body",
-				schema: z.object({ label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough()]), givesPermission: z.union([z.array(z.string()), z.object({ add: z.array(z.enum(["DATA_RESTRICTED", "DATA_VIEW", "DATA_EXTEND", "DATA_UPDATE", "DATA_DELETE", "DATA_PERMISSIONS"])), del: z.array(z.array(z.enum(["DATA_RESTRICTED", "DATA_VIEW", "DATA_EXTEND", "DATA_UPDATE", "DATA_DELETE", "DATA_PERMISSIONS"]))) }).partial().passthrough()]) }).partial().passthrough()
+				schema: z.object({ label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.unknown()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), givesPermission: z.enum(["DATA_RESTRICTED", "DATA_VIEW", "DATA_EXTEND", "DATA_UPDATE", "DATA_DELETE", "DATA_PERMISSIONS"]) }).partial().passthrough()
 			},
 			{
 				name: "definedByProject",
@@ -1541,6 +1541,43 @@ The user must be authenticated with a Bearer token.
 			{
 				status: 403,
 				description: `Unauthorized`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 404,
+				description: `Not Found`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
+				status: 500,
+				description: `Internal Server error. Should not be reachable`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+		]
+	},
+	{
+		method: "get",
+		path: "/admin/permissionset/:definedByProject/:permissionSetId/in_use",
+		alias: "getAdminpermissionsetDefinedByProjectPermissionSetIdin_use",
+		description: `Viewfunction to check if a hierarchical list is in use. It is in use, if any property in the datamodel references the list.`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "definedByProject",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "permissionSetId",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.object({ in_use: z.boolean() }).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Bad request`,
 				schema: z.object({ message: z.string() }).partial().passthrough()
 			},
 			{

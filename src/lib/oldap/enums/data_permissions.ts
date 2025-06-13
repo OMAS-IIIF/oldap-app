@@ -19,3 +19,11 @@ export function dataPermissionAsString(value: DataPermission) {
 	);
 	return name;
 }
+
+export function strippedDataPermission() {
+	return Object.values(DataPermission).map(
+		value => value.replace(/^oldap:/, '')
+	);
+}
+
+

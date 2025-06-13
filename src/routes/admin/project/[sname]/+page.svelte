@@ -52,6 +52,10 @@
 
 	let topwin = $state<HTMLElement>();
 
+	let confirmation_dialog: Confirmation;
+	let confirmation_title = $state('');
+	let confirmation_message = $state('');
+
 	userStore.subscribe((admin) => {
 		administrator = admin;
 	});
@@ -93,21 +97,26 @@
 		scrollToTop();
 	});
 
-	const add_project = () => {
+	const add_project = async () => {
+		confirmation_title = m.add_project();
+		confirmation_message = m.confirm_project_add({projectid: project.projectShortName.toString()});
+		const ok = await confirmation_dialog.open();
+		if (!ok) return;
+
 		if (!authinfo) return;
 		const label = label_field.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
 		const comment = comment_field.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
 		const projectStart = projectStart_field.get_value();
 		const projectEnd = projectEnd_field.get_value();
 		let projectdata: {
-			projectIri: string,
+			projectIri?: string,
 			namespaceIri: string,
 			label?: string[],
 			comment?: string[],
 			projectStart?: string,
 			projectEnd?: string,
 		} = {
-			projectIri: projectIri,
+			projectIri: projectIri.length > 0 ? projectIri : undefined,
 			namespaceIri: namespaceIri,
 			label: label.length > 0 ? label : undefined,
 			comment: comment.length > 0 ? comment : undefined,
@@ -122,7 +131,12 @@
 		});
 	};
 
-	const modify_project = () => {
+	const modify_project = async () => {
+		confirmation_title = m.modify_project();
+		confirmation_message = m.confirm_project_modify({sname: project?.projectShortName.toString() || ''});
+		const ok = await confirmation_dialog.open();
+		if (!ok) return;
+
 		let projectdata: {
 			label?: string[] | Partial<Record<'add'|'del', string[]>> | null,
 			comment?: string[] | Partial<Record<'add'|'del', string[]>> | null,
@@ -168,7 +182,7 @@
 <div class="absolute top-0 left-0 right-0 bottom-0 overflow-auto flex flex-col justify-center items-center" bind:this={topwin}>
 	<div>{data.sname !== 'new' ? m.edit()  : m.add()} {m.project()} </div>
 	<form class="max-w-128 min-w-96">
-		<Textfield type='text' label={m.project_iri()} name="projectiri" id="projectiri" placeholder="project Iri" required={true}
+		<Textfield type='text' label={m.project_iri()} name="projectiri" id="projectiri" placeholder="project Iri"
 							 bind:value={projectIri} pattern={project_iri_pattern} disabled={data?.sname !== 'new'} />
 		<Textfield type='text' label={m.project_sname()} name="sname" id="sname" placeholder="shortname" required={true}
 							 bind:value={sname} pattern={ncname_pattern} disabled={data?.sname !== 'new'} />
@@ -190,3 +204,7 @@
 
 	</form>
 </div>
+
+<Confirmation bind:this={confirmation_dialog} title={confirmation_title}>
+	{confirmation_message}
+</Confirmation>

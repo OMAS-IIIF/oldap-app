@@ -5,12 +5,11 @@
 	import { languageTag } from '$lib/paraglide/runtime';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { OldapList } from '$lib/oldap/classes/list';
 	import { authInfoStore } from '$lib/stores/authinfo';
 	import { OldapPermissionSet } from '$lib/oldap/classes/permissionset';
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
-	import { refreshPermsetsList } from '$lib/stores/refresh_permsetslist.svelte';
-	import { api_get_config } from '$lib/helpers/api_config';
+	import { refreshPermsetsList, refreshPermsetsListNow } from '$lib/stores/refresh_permsetslist.svelte';
+	import { api_config, api_get_config } from '$lib/helpers/api_config';
 	import { apiClient } from '$lib/shared/apiClient';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
@@ -19,7 +18,6 @@
 	import Checkbox from '$lib/components/basic_gui/checkbox/Checkbox.svelte';
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
 	import TableItem from '$lib/components/basic_gui/table/TableItem.svelte';
-	import Toggle from '$lib/components/basic_gui/buttons/Toggle.svelte';
 	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
 	import { Pencil, Trash2 } from '@lucide/svelte';
 	import Table from '$lib/components/basic_gui/table/Table.svelte';
@@ -41,11 +39,14 @@
 	let permsets = $state<Record<string, OldapPermissionSet>>({});
 	let permset_list = $state<string[]>([]);
 	let permset_in_use = $state<Record<string, boolean>>({});
+	let permset_projs = $state<Record<string, URLSearchParams>>({});
 	let show_all_permsets = $state(false);
 
 	let confirmation_dialog: Confirmation;
 	let confirmation_title = $state('');
 	let confirmation_text = $state('');
+
+	const params = new URLSearchParams({ tab: 'permissions' });
 
 	authInfoStore.subscribe(data => {
 		authinfo = data;
@@ -61,25 +62,33 @@
 				permsetsearch = { ...permsetsearch, queries: { definedByProject: project?.projectIri?.toString() } };
 			}
 			apiClient.getAdminpermissionsetsearch(permsetsearch).then((psdata) => {
-				console.log("==>", psdata);
 				permsets = {} as Record<string, OldapPermissionSet>;
 				const promises = psdata.map(hl => {
 					const config_plistdata = api_get_config(authinfo as AuthInfo, { iri: hl });
 					return apiClient.getAdminpermissionsetget(config_plistdata);
 				});
-				Promise.all(promises)
-					.then((results) => {
-						results.forEach((permsetdata) => {
-							const permset = OldapPermissionSet.fromOldapJson(permsetdata);
-							const permsetid = permset.permissionSetId.toString();
-							permsets[permsetid] = permset;
-							permset_list.push(permsetid);
+				Promise.all(promises).then((results) => {
+					results.forEach((permsetdata) => {
+						const permset = OldapPermissionSet.fromOldapJson(permsetdata);
+						const permsetid = permset.permissionSetId.toString();
+						permsets[permsetid] = permset;
+						permset_list.push(permsetid);
+						permset_projs[permsetid] = new URLSearchParams({ projectid: permset.definedByProject.toString() || 'XXX' });
+
+						const config_permset_in_use = api_config(authinfo as AuthInfo, {
+							definedByProject: permset.definedByProject.toString(),
+							permissionSetId: permsetid
 						});
-						permset_list = permset_list.sort((a, b) => a.localeCompare(b));
-					})
-					.catch((err) => {
-						errorInfoStore.set(process_api_error(err as Error));
+						apiClient.getAdminpermissionsetDefinedByProjectPermissionSetIdin_use(config_permset_in_use).then((result2) => {
+							permset_in_use[permsetid] = result2['in_use'] === undefined ? false : result2['in_use'];
+						});
+
+
 					});
+					permset_list = permset_list.sort((a, b) => a.localeCompare(b));
+				}).catch((err) => {
+					errorInfoStore.set(process_api_error(err as Error));
+				});
 			}).catch((error) => {
 				errorInfoStore.set(process_api_error(error as Error));
 			});
@@ -87,10 +96,25 @@
 	});
 
 	const delete_permset = async (permset_id: string) => {
-		;
+		confirmation_title = m.delete_permset();
+		confirmation_text = m.delete_permset_2({permsetid: permset_id});
+		const ok = await confirmation_dialog.open();
+		if (!ok) {
+			return;
+		}
+		const config_permset_delete = api_config(authinfo as AuthInfo, {
+			definedByProject: permsets[permset_id].definedByProject.toString(),
+			permissionSetId: permset_id
+		});
+		apiClient.deleteAdminpermissionsetDefinedByProjectPermissionSetId(undefined, config_permset_delete).then((res) => {
+			console.log(res);
+			refreshPermsetsListNow();
+		}).catch((error) => {
+			errorInfoStore.set(process_api_error(error as Error));
+		});
 	};
 
-		let headers: string[] = $state([
+	let headers: string[] = $state([
 		m.permset_iri(),
 		m.permset_id(),
 		m.label(),
@@ -127,10 +151,10 @@
 				<TableItem>{dataPermissionAsString(permsets[permset_id].givesPermission)}</TableItem>
 				<TableItem>
 					<div class="flex flex-row items-center justify-left gap-2">
-						<Button round={true} onclick={goto_page(`/admin/permset/${permset_id}`)}>
+						<Button round={true} onclick={goto_page(`/admin/permset/${permset_id}?${permset_projs[permset_id]}`)}>
 							<Pencil size="16" strokeWidth="1" />
 						</Button>
-						<Button round={true} onclick={() => delete_permset(permset_id)}>
+						<Button round={true} onclick={() => delete_permset(permset_id)}  disabled={permset_in_use[permset_id]}>
 							<Trash2  size="16" strokeWidth="1" />
 						</Button>
 					</div>
@@ -139,3 +163,7 @@
 		{/each}
 	</TableBody>
 </Table>
+
+<Confirmation bind:this={confirmation_dialog} title={confirmation_title}>
+	{confirmation_text}
+</Confirmation>

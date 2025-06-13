@@ -82,8 +82,8 @@
 	});
 
 	const delete_hlist = async (hlist_id: string) => {
-		confirmation_title = "DELETE HLIST ?";
-		confirmation_text = "Do you really want to delete the hlist?";
+		confirmation_title = m.delete_hlist();
+		confirmation_text = m.delete_hlist_2({hlistid: hlist_id});
 		const ok = await confirmation_dialog.open();
 		if (!ok) {
 			return;
@@ -93,6 +93,7 @@
 			hlistid: hlist_id
 		});
 		apiClient.deleteAdminhlistProjectHlistid(undefined, config_hlistdata).then((result) => {
+			console.log(result);
 			refreshHlistsListNow();
 		}).catch((error) => {
 			errorInfoStore.set(process_api_error(error as Error));
@@ -113,7 +114,8 @@
 		apiClient.postAdminhlistProjectupload({yamlfile: f}, config_upload).then((result) => {
 			spinnerStore.set(null);
 			uploadIsOpen = false;
-			refreshHlistsListNow()
+			refreshHlistsListNow();
+			console.log(result);
 		}).catch((error) => {
 			console.log(error);
 			spinnerStore.set(null);

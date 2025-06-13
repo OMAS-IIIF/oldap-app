@@ -48,11 +48,11 @@
     --color-input-text-valid-dark: var(--color-white);
     --color-input-text-invalid: var(--color-red-800);
     --color-input-text-invalid-dark: var(--color-red-400);
-    --color-input-text-disabled: var(--color-gray-700);
+    --color-input-text-disabled: var(--color-gray-500);
     --color-input-text-disabled-dark: var(--color-gray-400);
     --color-input-outline-valid: var(--color-indigo-500);
     --color-input-outline-invalid: var(--color-orange-500);
-    --color-input-placeholder-valid: var(--color-gray-500);
+    --color-input-placeholder-valid: var(--color-sky-600);
     --color-input-placeholder-invalid: var(--color-red-300);
 
     /* Table colors */
