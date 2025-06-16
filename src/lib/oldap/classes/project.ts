@@ -4,7 +4,7 @@ import { LangString } from '$lib/oldap/datatypes/langstring';
 import { OldapObject } from '$lib/oldap/classes/object';
 import { XsdDate } from '$lib/oldap/datatypes/xsd_date';
 
-export class OldapProject extends OldapObject{
+export class OldapProject extends OldapObject {
 	#projectIri: Iri;
 	#projectShortName: NCName;
 	#namespaceIri: Iri;

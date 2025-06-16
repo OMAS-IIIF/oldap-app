@@ -4,6 +4,10 @@ import { z } from "zod";
 
 
 type Property = Partial<{
+    creator: string;
+    created: string;
+    contributor: string;
+    modified: string;
     subPropertyOf: Iri;
     class: Iri;
     /**
@@ -25,7 +29,7 @@ type Property = Partial<{
      *
      * @example true
      */
-    uniqueLand: boolean;
+    uniqueLang: boolean;
     /**
      * @example ["Renault","Opel","BMW","Mercedes"]
      */
@@ -118,6 +122,10 @@ Array<string> | /**
  */
 string;;
 type Resource = Partial<{
+    creator: string;
+    created: string;
+    contributor: string;
+    modified: string;
     label: LangString;
     comment: LangString;
     /**
@@ -153,8 +161,8 @@ type Resource = Partial<{
 
 const LangString = z.union([z.array(z.string()), z.string()]);
 const Iri = z.string();
-const Property: z.ZodType<Property> = z.object({ subPropertyOf: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), class: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), datatype: z.string(), name: LangString, description: LangString, languageIn: z.array(z.string()), uniqueLand: z.boolean(), inSet: z.array(z.string()), minLength: z.union([z.number(), z.number()]), maxLength: z.union([z.number(), z.number()]), pattern: z.string(), minExclusive: z.union([z.number(), z.number()]), minInclusive: z.union([z.number(), z.number()]), maxExclusive: z.union([z.number(), z.number()]), maxInclusive: z.union([z.number(), z.number()]), lessThan: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), lessThanOrEquals: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/) }).partial().passthrough();
-const Resource: z.ZodType<Resource> = z.object({ label: LangString, comment: LangString, closed: z.boolean(), hasProperty: z.array(z.object({ property: z.union([z.object({ iri: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/) }).partial().passthrough().and(Property), Iri]), maxCount: z.number(), minCount: z.number(), order: z.number() }).partial().passthrough()) }).partial().passthrough();
+const Property: z.ZodType<Property> = z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), subPropertyOf: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), class: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), datatype: z.string(), name: LangString, description: LangString, languageIn: z.array(z.string()), uniqueLang: z.boolean(), inSet: z.array(z.string()), minLength: z.union([z.number(), z.number()]), maxLength: z.union([z.number(), z.number()]), pattern: z.string(), minExclusive: z.union([z.number(), z.number()]), minInclusive: z.union([z.number(), z.number()]), maxExclusive: z.union([z.number(), z.number()]), maxInclusive: z.union([z.number(), z.number()]), lessThan: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), lessThanOrEquals: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/) }).partial().passthrough();
+const Resource: z.ZodType<Resource> = z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), label: LangString, comment: LangString, closed: z.boolean(), hasProperty: z.array(z.object({ property: z.union([z.object({ iri: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/) }).partial().passthrough().and(Property), Iri]), maxCount: z.number(), minCount: z.number(), order: z.number() }).partial().passthrough()) }).partial().passthrough();
 const postAdmindatamodelProjectpropertyProperty_Body = z.object({ name: LangString, description: LangString, languageIn: z.array(z.string()), uniqueLand: z.boolean(), minLength: z.union([z.number(), z.number()]), maxLength: z.union([z.number(), z.number()]), pattern: z.string(), minExclusive: z.union([z.number(), z.number()]), minInclusive: z.union([z.number(), z.number()]), maxExclusive: z.union([z.number(), z.number()]), maxInclusive: z.union([z.number(), z.number()]) }).partial().passthrough();
 const postAdmindatamodelProjectResource_Body = z.object({ closed: z.boolean(), label: LangString, comment: LangString }).partial().passthrough();
 const putAdmindatamodelProjectResourceProperty_Body = Property.and(z.object({ maxCount: z.number(), minCount: z.number(), order: z.number() }).partial().passthrough());
@@ -277,7 +285,7 @@ const endpoints = makeApi([
 				schema: z.string()
 			},
 		],
-		response: z.object({ project: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), standaloneProperties: z.array(Property), resources: z.array(Resource) }).partial().passthrough(),
+		response: z.object({ project: z.string(), standaloneProperties: z.array(Property), resources: z.array(Resource) }).partial().passthrough(),
 		errors: [
 			{
 				status: 403,
@@ -621,7 +629,7 @@ const endpoints = makeApi([
 			{
 				name: "body",
 				type: "Body",
-				schema: z.object({ subPropertyOf: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), class: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), datatype: z.string(), name: LangString, description: LangString, languageIn: z.array(z.string()), uniqueLand: z.boolean(), inSet: z.array(z.string()), minLength: z.union([z.number(), z.number()]), maxLength: z.union([z.number(), z.number()]), pattern: z.string(), minExclusive: z.union([z.number(), z.number()]), minInclusive: z.union([z.number(), z.number()]), maxExclusive: z.union([z.number(), z.number()]), maxInclusive: z.union([z.number(), z.number()]), lessThan: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), lessThanOrEquals: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/) }).partial().passthrough()
+				schema: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), subPropertyOf: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), class: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), datatype: z.string(), name: LangString, description: LangString, languageIn: z.array(z.string()), uniqueLang: z.boolean(), inSet: z.array(z.string()), minLength: z.union([z.number(), z.number()]), maxLength: z.union([z.number(), z.number()]), pattern: z.string(), minExclusive: z.union([z.number(), z.number()]), minInclusive: z.union([z.number(), z.number()]), maxExclusive: z.union([z.number(), z.number()]), maxInclusive: z.union([z.number(), z.number()]), lessThan: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), lessThanOrEquals: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/) }).partial().passthrough()
 			},
 			{
 				name: "project",

@@ -41,3 +41,8 @@ export enum XsdDatatypes {
 	unsignedByte = 'xsd:unsignedByte',
 	positiveInteger = 'xsd:positiveInteger'
 }
+
+// Add static-like method via a merged namespace
+export function xsdDatatypeFromString(value: string): XsdDatatypes | undefined {
+	return Object.values(XsdDatatypes).find((v) => v === value);
+}

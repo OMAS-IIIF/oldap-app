@@ -16,6 +16,7 @@
 	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
 	import HList from '$lib/components/oldap/HList.svelte';
 	import PermsetsList from '$lib/components/oldap/PermsetsList.svelte';
+	import PropsList from '$lib/components/oldap/PropsList.svelte';
 
 	let tabs: TabsType = $state({}); // info about the tabs: key and (lang-dependent) name
 	let administrator: OldapUser | null = $state($userStore);  // the admin user...
@@ -127,6 +128,14 @@
 	<DialogWin title={m.new_hlist_title()} bind:isopen={hlistIsOpen}>
 		<HList bind:isopen={hlistIsOpen} />
 	</DialogWin>
+{/if}
+{#if selected_tab === 'models'}
+	<div class="flex flex-row">
+		<div class="basis-1/2">
+			<PropsList table_height={table_height} {project} />
+		</div>
+		<div class="basis-1/2">Resources</div>
+	</div>
 {/if}
 {#if selected_tab === 'permsets'}
 	<PermsetsList table_height={table_height} {administrator} {project} />
