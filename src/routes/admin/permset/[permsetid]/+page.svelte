@@ -64,8 +64,8 @@
 	let confirmation_title = $state('');
 	let confirmation_message = $state('');
 
-	authInfoStore.subscribe(data => {
-		authinfo = data;
+	authInfoStore.subscribe(authdata => {
+		authinfo = authdata;
 	});
 
 	userStore.subscribe((admin) => {

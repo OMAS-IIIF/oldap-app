@@ -8,6 +8,10 @@ type Property = Partial<{
     created: string;
     contributor: string;
     modified: string;
+    /**
+     * ID of project the property is defined in
+     */
+    projectid: string;
     subPropertyOf: Iri;
     class: Iri;
     /**
@@ -161,7 +165,7 @@ type Resource = Partial<{
 
 const LangString = z.union([z.array(z.string()), z.string()]);
 const Iri = z.string();
-const Property: z.ZodType<Property> = z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), subPropertyOf: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), class: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), datatype: z.string(), name: LangString, description: LangString, languageIn: z.array(z.string()), uniqueLang: z.boolean(), inSet: z.array(z.string()), minLength: z.union([z.number(), z.number()]), maxLength: z.union([z.number(), z.number()]), pattern: z.string(), minExclusive: z.union([z.number(), z.number()]), minInclusive: z.union([z.number(), z.number()]), maxExclusive: z.union([z.number(), z.number()]), maxInclusive: z.union([z.number(), z.number()]), lessThan: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), lessThanOrEquals: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/) }).partial().passthrough();
+const Property: z.ZodType<Property> = z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), projectid: z.string(), subPropertyOf: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), class: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), datatype: z.string(), name: LangString, description: LangString, languageIn: z.array(z.string()), uniqueLang: z.boolean(), inSet: z.array(z.string()), minLength: z.union([z.number(), z.number()]), maxLength: z.union([z.number(), z.number()]), pattern: z.string(), minExclusive: z.union([z.number(), z.number()]), minInclusive: z.union([z.number(), z.number()]), maxExclusive: z.union([z.number(), z.number()]), maxInclusive: z.union([z.number(), z.number()]), lessThan: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), lessThanOrEquals: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/) }).partial().passthrough();
 const Resource: z.ZodType<Resource> = z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), label: LangString, comment: LangString, closed: z.boolean(), hasProperty: z.array(z.object({ property: z.union([z.object({ iri: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/) }).partial().passthrough().and(Property), Iri]), maxCount: z.number(), minCount: z.number(), order: z.number() }).partial().passthrough()) }).partial().passthrough();
 const postAdmindatamodelProjectpropertyProperty_Body = z.object({ name: LangString, description: LangString, languageIn: z.array(z.string()), uniqueLand: z.boolean(), minLength: z.union([z.number(), z.number()]), maxLength: z.union([z.number(), z.number()]), pattern: z.string(), minExclusive: z.union([z.number(), z.number()]), minInclusive: z.union([z.number(), z.number()]), maxExclusive: z.union([z.number(), z.number()]), maxInclusive: z.union([z.number(), z.number()]) }).partial().passthrough();
 const postAdmindatamodelProjectResource_Body = z.object({ closed: z.boolean(), label: LangString, comment: LangString }).partial().passthrough();
@@ -261,6 +265,11 @@ const endpoints = makeApi([
 		response: z.object({ message: z.string() }).partial().passthrough(),
 		errors: [
 			{
+				status: 400,
+				description: `Bad request`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
 				status: 403,
 				description: `Unauthorized`,
 				schema: z.object({ message: z.string() }).partial().passthrough()
@@ -319,6 +328,11 @@ const endpoints = makeApi([
 		],
 		response: z.object({ message: z.string() }).partial().passthrough(),
 		errors: [
+			{
+				status: 400,
+				description: `Bad request`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
 			{
 				status: 403,
 				description: `Unauthorized`,
@@ -408,6 +422,11 @@ const endpoints = makeApi([
 		],
 		response: z.object({ message: z.string() }).partial().passthrough(),
 		errors: [
+			{
+				status: 400,
+				description: `Bad request`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
 			{
 				status: 403,
 				description: `Unauthorized`,
@@ -603,6 +622,11 @@ const endpoints = makeApi([
 		response: z.object({ message: z.string() }).partial().passthrough(),
 		errors: [
 			{
+				status: 400,
+				description: `Bad Request`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
 				status: 403,
 				description: `Unauthorized`,
 				schema: z.object({ message: z.string() }).partial().passthrough()
@@ -629,7 +653,7 @@ const endpoints = makeApi([
 			{
 				name: "body",
 				type: "Body",
-				schema: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), subPropertyOf: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), class: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), datatype: z.string(), name: LangString, description: LangString, languageIn: z.array(z.string()), uniqueLang: z.boolean(), inSet: z.array(z.string()), minLength: z.union([z.number(), z.number()]), maxLength: z.union([z.number(), z.number()]), pattern: z.string(), minExclusive: z.union([z.number(), z.number()]), minInclusive: z.union([z.number(), z.number()]), maxExclusive: z.union([z.number(), z.number()]), maxInclusive: z.union([z.number(), z.number()]), lessThan: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), lessThanOrEquals: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/) }).partial().passthrough()
+				schema: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), projectid: z.string(), subPropertyOf: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), class: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), datatype: z.string(), name: LangString, description: LangString, languageIn: z.array(z.string()), uniqueLang: z.boolean(), inSet: z.array(z.string()), minLength: z.union([z.number(), z.number()]), maxLength: z.union([z.number(), z.number()]), pattern: z.string(), minExclusive: z.union([z.number(), z.number()]), minInclusive: z.union([z.number(), z.number()]), maxExclusive: z.union([z.number(), z.number()]), maxInclusive: z.union([z.number(), z.number()]), lessThan: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), lessThanOrEquals: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/) }).partial().passthrough()
 			},
 			{
 				name: "project",
@@ -644,6 +668,11 @@ const endpoints = makeApi([
 		],
 		response: z.object({ message: z.string() }).partial().passthrough(),
 		errors: [
+			{
+				status: 400,
+				description: `Bad request`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
 			{
 				status: 403,
 				description: `Unauthorized`,
@@ -681,6 +710,11 @@ const endpoints = makeApi([
 		],
 		response: z.object({ message: z.string() }).partial().passthrough(),
 		errors: [
+			{
+				status: 400,
+				description: `Bad request`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
 			{
 				status: 403,
 				description: `Unauthorized`,
@@ -865,6 +899,11 @@ const endpoints = makeApi([
 		response: z.object({ message: z.string() }).partial().passthrough(),
 		errors: [
 			{
+				status: 400,
+				description: `Bad request`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
 				status: 403,
 				description: `Unauthorized`,
 				schema: z.object({ message: z.string() }).partial().passthrough()
@@ -906,6 +945,11 @@ const endpoints = makeApi([
 		],
 		response: z.union([z.object({}).partial().passthrough(), z.array(z.any()), z.string(), z.number(), z.boolean(), z.unknown()]),
 		errors: [
+			{
+				status: 400,
+				description: `Bad request`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
 			{
 				status: 403,
 				description: `Unauthorized`,
@@ -949,6 +993,11 @@ const endpoints = makeApi([
 		],
 		response: z.object({ nodeid: z.string(), creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), prefLabel: LangString, description: LangString }).partial().passthrough(),
 		errors: [
+			{
+				status: 400,
+				description: `Bad request`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
 			{
 				status: 403,
 				description: `Invalid data`,
@@ -1226,6 +1275,11 @@ The user must be authenticated with a Bearer token.
 		response: z.object({}).partial().passthrough(),
 		errors: [
 			{
+				status: 400,
+				description: `Bad request`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
 				status: 403,
 				description: `Authentication or permission error`,
 				schema: z.object({ message: z.string() }).partial().passthrough()
@@ -1463,6 +1517,11 @@ The user must be authenticated with a Bearer token.
 		response: z.object({ message: z.string() }).partial().passthrough(),
 		errors: [
 			{
+				status: 400,
+				description: `Several Errors that involve bad requests`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
 				status: 403,
 				description: `Unauthorized`,
 				schema: z.object({ message: z.string() }).partial().passthrough()
@@ -1504,6 +1563,11 @@ The user must be authenticated with a Bearer token.
 		],
 		response: z.object({ permissionSetIri: z.string(), creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), permissionSetId: z.string(), label: LangString, comment: LangString, givesPermission: z.string(), definedByProject: z.string() }).partial().passthrough(),
 		errors: [
+			{
+				status: 400,
+				description: `Several Errors that involve bad requests`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
 			{
 				status: 403,
 				description: `Unauthorized`,
@@ -1732,6 +1796,11 @@ The user must be authenticated with a Bearer token.
 		response: z.object({ message: z.string() }).partial().passthrough(),
 		errors: [
 			{
+				status: 400,
+				description: `Bad request`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
 				status: 403,
 				description: `Unauthorized`,
 				schema: z.object({ message: z.string() }).partial().passthrough()
@@ -1763,6 +1832,11 @@ The user must be authenticated with a Bearer token.
 		],
 		response: z.object({ projectIri: z.string(), creator: z.string(), created: z.string(), contributor: z.string(), modified: z.string(), label: LangString, comment: LangString, message: z.string(), shortName: z.string().regex(/^[a-zA-Z_][a-zA-Z0-9._-]*$/), "namespace IRI": z.string(), "project start": z.string(), "project end": z.string() }).partial().passthrough(),
 		errors: [
+			{
+				status: 400,
+				description: `Bad request`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
 			{
 				status: 403,
 				description: `Unauthorized`,
@@ -1832,6 +1906,11 @@ The user must be authenticated with a Bearer token.
 		],
 		response: z.object({ projectIri: z.string(), creator: z.string(), created: z.string(), contributor: z.string(), modified: z.string(), label: LangString, comment: LangString, message: z.string(), shortName: z.string().regex(/^[a-zA-Z_][a-zA-Z0-9._-]*$/), "namespace IRI": z.string(), "project start": z.string(), "project end": z.string() }).partial().passthrough(),
 		errors: [
+			{
+				status: 400,
+				description: `Bad request`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
 			{
 				status: 403,
 				description: `Unauthorized`,
@@ -1966,6 +2045,11 @@ The user must be authenticated with a Bearer token.
 		response: z.object({ message: z.string() }).partial().passthrough(),
 		errors: [
 			{
+				status: 400,
+				description: `Bad request`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
+			{
 				status: 403,
 				description: `Unauthorized`,
 				schema: z.object({ message: z.string() }).partial().passthrough()
@@ -1992,6 +2076,11 @@ The user must be authenticated with a Bearer token.
 		],
 		response: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), userIri: z.string(), userId: z.string(), family_name: z.string(), given_name: z.string(), email: z.string(), is_active: z.boolean().optional(), in_projects: z.array(z.object({ project: z.string(), permissions: z.array(z.string()) }).partial().passthrough()).optional(), has_permissions: z.array(z.string()).optional() }).passthrough(),
 		errors: [
+			{
+				status: 400,
+				description: `Bad request`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
 			{
 				status: 403,
 				description: `Unauthorized`,
@@ -2061,6 +2150,11 @@ The user must be authenticated with a Bearer token.
 		],
 		response: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), userIri: z.string(), userId: z.string(), family_name: z.string(), given_name: z.string(), email: z.string(), is_active: z.boolean().optional(), in_projects: z.array(z.object({ project: z.string(), permissions: z.array(z.string()) }).partial().passthrough()).optional(), has_permissions: z.array(z.string()).optional() }).passthrough(),
 		errors: [
+			{
+				status: 400,
+				description: `Bad request`,
+				schema: z.object({ message: z.string() }).partial().passthrough()
+			},
 			{
 				status: 403,
 				description: `Unauthorized`,

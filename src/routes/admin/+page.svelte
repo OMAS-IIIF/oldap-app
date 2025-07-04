@@ -17,6 +17,15 @@
 	import HList from '$lib/components/oldap/HList.svelte';
 	import PermsetsList from '$lib/components/oldap/PermsetsList.svelte';
 	import PropsList from '$lib/components/oldap/PropsList.svelte';
+	import { AuthInfo } from '$lib/oldap/classes/authinfo';
+	import { authInfoStore } from '$lib/stores/authinfo';
+	import { api_config } from '$lib/helpers/api_config';
+	import { spinnerStore } from '$lib/stores/spinner';
+	import { apiClient } from '$lib/shared/apiClient';
+	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
+	import { errorInfoStore } from '$lib/stores/errorinfo';
+	import { process_api_error } from '$lib/helpers/process_api_error';
+	import { datamodelStore } from '$lib/stores/datamodel';
 
 	let tabs: TabsType = $state({}); // info about the tabs: key and (lang-dependent) name
 	let administrator: OldapUser | null = $state($userStore);  // the admin user...
@@ -26,6 +35,9 @@
 	let tabs_height = $state(100); // just an arbitrary value
 	let table_height = $state(($contentAreaHeight || 200) - (() => tabs_height)() - 25);
 	let hlistIsOpen = $state(false);
+
+	let authinfo = $state<AuthInfo | null>($authInfoStore);
+
 
 	//
 	// TODO: this is net working I think...
@@ -74,6 +86,19 @@
 						break;
 				}
 			});
+			if (authinfo) {
+				const dm_config = api_config(authinfo, {project: project?.projectShortName.toString() || ''});
+				spinnerStore.set("RETRIEVING DATAMODEL");
+				apiClient.getAdmindatamodelProject(dm_config).then((jsonresult) => {
+					const datamodel = DatamodelClass.fromOldapJson(jsonresult);
+					datamodelStore.set(datamodel);
+					spinnerStore.set(null);
+				}).catch((error) => {
+					spinnerStore.set(null);
+					errorInfoStore.set(process_api_error(error as Error));
+				});
+			}
+
 			if (!selected_tab || !(selected_tab in tabs)) {
 				// no tab selected, or the tab selected is not available for this administrator
 				if (tabs['projects']) {

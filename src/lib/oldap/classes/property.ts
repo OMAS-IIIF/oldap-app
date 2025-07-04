@@ -3,8 +3,10 @@ import { Iri } from '$lib/oldap/datatypes/xsd_iri';
 import { xsdDatatypeFromString, XsdDatatypes } from '$lib/oldap/enums/xsd_datatypes';
 import { LangString } from '$lib/oldap/datatypes/langstring';
 import { convertToLanguage, Language } from '$lib/oldap/enums/language';
+import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
 
 export type PropertyClassOptions = {
+	projectId: NCName;
 	propertyIri: Iri;
 	creator: Iri,
 	created: Date,
@@ -15,7 +17,7 @@ export type PropertyClassOptions = {
 	datatype?: XsdDatatypes;
 	name?: LangString;
 	description?: LangString;
-	languageIn: Set<Language>;
+	languageIn?: Set<Language>;
 	uniqueLang?: boolean;
 	inSet?: Set<string|number>
 	minLength?: number;
@@ -30,7 +32,8 @@ export type PropertyClassOptions = {
 }
 
 export class PropertyClass extends OldapObject {
-	#propertyIri: Iri
+	#projectId: NCName;
+	#propertyIri: Iri;
 	subPropertyOf?: Iri;
 	toClass?: Iri;
 	datatype?: XsdDatatypes;
@@ -50,11 +53,12 @@ export class PropertyClass extends OldapObject {
 	lessThanOrEquals?: Iri;
 
 	constructor({
-								propertyIri, creator, created, contributor, modified, subPropertyOf, toClass, datatype,
+								creator, created, contributor, modified, projectId, propertyIri, subPropertyOf, toClass, datatype,
 								name, description, languageIn, uniqueLang, inSet, minLength, maxLength, pattern,
 								minExclusive, minInclusive, maxExclusive, maxInclusive, lessThan, lessThanOrEquals
 							}: PropertyClassOptions) {
 		super(creator, created, contributor, modified);
+		this.#projectId = projectId;
 		this.#propertyIri = propertyIri;
 		this.subPropertyOf = subPropertyOf;
 		this.toClass = toClass;
@@ -75,6 +79,10 @@ export class PropertyClass extends OldapObject {
 		this.lessThanOrEquals = lessThanOrEquals;
 	}
 
+	get projectId() {
+		return this.#projectId;
+	}
+
 	get propertyIri() {
 		return this.#propertyIri;
 	}
@@ -84,6 +92,7 @@ export class PropertyClass extends OldapObject {
 		const created = new Date(json.created);
 		const contributor = new Iri(json.contributor);
 		const modified = new Date(json.modified);
+		const projectId = new NCName(json.projectid);
 		const propertyIri = new Iri(json.iri);
 		const subPropertyOf: Iri = new Iri(json?.subPropertyOf);
 		const toClass = new Iri(json?.toClass);
@@ -108,6 +117,7 @@ export class PropertyClass extends OldapObject {
 			created: created,
 			contributor: contributor,
 			modified: modified,
+			projectId: projectId,
 			propertyIri: propertyIri,
 			subPropertyOf: subPropertyOf,
 			toClass: toClass,

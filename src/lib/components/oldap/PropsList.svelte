@@ -22,13 +22,16 @@
 	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
 	import { PropertyClass } from '$lib/oldap/classes/property';
 	import { Download, Pencil, Trash2 } from '@lucide/svelte';
+	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
+	import { datamodelStore } from '$lib/stores/datamodel';
+	import { on } from 'svelte/events';
+	import { onMount } from 'svelte';
 
 	let { table_height, project = null }: {
 		table_height: number,
 		project: OldapProject | null,
 	} = $props();
 
-	let authinfo = $state<AuthInfo | null>($authInfoStore);
 	let prop_list = $state<string[]>([]);
 	let properties = $state<Record<string, PropertyClass>>({});
 
@@ -39,35 +42,18 @@
 	let confirmation_title = $state('');
 	let confirmation_for_sname = $state('');
 
-	authInfoStore.subscribe(data => {
-		authinfo = data;
-	});
 
-	$effect(() => {
+	onMount(() => {
 		prop_list = [];
-		if (authinfo) {
-			const dm_config = api_config(authinfo, {project: project?.projectShortName.toString() || ''});
-			spinnerStore.set("RETRIEVING DATAMODEL");
-			console.log("START QUERY OF DATAMODEL....");
-			apiClient.getAdmindatamodelProject(dm_config).then((result) => {
-				console.log("QUERY FINISHED!!! Processing....");
-				console.log(result);
-				const props = result['standaloneProperties'];
-				for (const prop of (props || [])) {
-					const property = PropertyClass.fromOldapJson(prop);
-					console.log(property);
-					properties[property.propertyIri.toString()] = property;
-					prop_list.push(property.propertyIri.toString() || 'XXXX');
-				}
-				spinnerStore.set(null);
-			}).catch((error) => {
-				spinnerStore.set(null);
-				errorInfoStore.set(process_api_error(error as Error));
-			});
+		const datamodel = $datamodelStore;
+		for (const property of (datamodel?.standaloneProperties || [])) {
+			properties[property.propertyIri.toString()] = property;
+			prop_list.push(property.propertyIri.toString() || 'XXXX');
 		}
 	});
 
 	let headers: string[] = $state([
+		"PROJECT",
 		"NAME",
 		"DATATYPE",
 		m.action()]);
@@ -80,7 +66,7 @@
 	</div>
 {/snippet}
 
-<Table height={table_height} title="STANDALONE PROEPRTIES"}
+<Table height={table_height} title="STANDALONE PROPERTIES"
 			 description="PROPERTIES THAT CAN BE REUSED..."
 			 action_elements={actions}>
 	<TableHeader>
@@ -91,14 +77,17 @@
 	<TableBody>
 		{#each prop_list as propiri}
 			<TableRow>
+				<TableItem>{properties[propiri]?.projectId.toString() }</TableItem>
 				<TableItem>{properties[propiri]?.name?.get(langobj) || propiri }</TableItem>
 				<TableItem>{properties[propiri]?.datatype}</TableItem>
 				<TableItem>
 					<div class="flex flex-row items-center justify-left gap-2">
-						<Button round={true} onclick={goto_page(`/admin/property/${propiri}`)}>
+						<Button round={true}
+										onclick={goto_page(`/admin/property/${encodeURIComponent(propiri)}`, {projectid: project?.projectIri.toString() || ''})}
+										disabled={properties[propiri]?.projectId.toString() === 'shared'}>
 							<Pencil size="16" strokeWidth="1" />
 						</Button>
-						<Button round={true} onclick={() => {}} >
+						<Button round={true} onclick={() => {}} disabled={properties[propiri]?.projectId.toString() === 'shared'}>
 							<Trash2 size="16" strokeWidth="1" />
 						</Button>
 					</div>
