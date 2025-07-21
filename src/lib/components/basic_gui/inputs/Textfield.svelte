@@ -70,16 +70,7 @@
 	let invalid = $state(false);
 	let errortext = $state('');
 	let modified = $state(false);
-	let orig_value: string = '';
-
-	/**
-	 * Must use effect here to access the bindable variable `value`
-	 */
-	$effect(() => {
-		if (value && orig_value === '') {
-			orig_value = value;
-		}
-	})
+	let orig_value: string = value || '';
 
 	if (!allowed_types.includes(type)) {
 		throw error(400, `Internal error: invalid type "${type}"cfor Input-field. must be "text", "password", "email", "number", "search", "tel" or "url"`);
