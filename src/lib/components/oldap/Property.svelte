@@ -110,6 +110,9 @@
 				max_value = prop?.maxInclusive?.toString() || '0';
 				max_inclusive = true;
 			}
+			if (prop?.languageIn) {
+				allowedLanguages = Array.from(prop.languageIn).map(l => l.toString());
+			}
 		}
 	});
 
@@ -126,6 +129,10 @@
 			datatype = prop?.datatype;
 			toClass = prop?.toClass?.toString();
 		}
+	});
+
+	$effect(() => {
+		console.log("LANGLANG: ", $state.snapshot(allowedLanguages));
 	});
 
 </script>
@@ -152,6 +159,8 @@
 					placeholder={m.sel_lang()}
 					searchLabel={m.search_lang()}
 				/>
+			{:else}
+				ALLOWED VALUES
 			{/if}
 		{/if}
 		{#if numeric_datatypes.includes(datatype || '')}
