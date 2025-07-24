@@ -21,6 +21,7 @@
     "adminpermsets": "Administrate permission sets",
     "adminres": "Override resource permissions",
     "adminusers": "Administrate users",
+    "allowed_langs_sel": "Permitted languages",
     "apply_for_acc": "Apply for an account",
     "cancel": "Cancel",
     "comment": "Comment",
@@ -60,6 +61,8 @@
     "iri_qname": "Iri/QName",
     "is_active": "Is active",
     "label": "Label",
+    "lang": "Language",
+    "langs": "Languages",
     "lists": "Lists",
     "modify": "Modify",
     "modify_permset": "Change permission set",
@@ -70,6 +73,7 @@
     "namespaceiri": "Namespace-IRI",
     "new_hlist_conf": "Do You really want to create a new hierarchical list?",
     "new_hlist_title": "New hierarchical list",
+    "no_lang_found": "No language found",
     "no_reg": "Not yet registered?",
     "nodeclassiri": "Node class IRI",
     "password": "Password",
@@ -87,6 +91,9 @@
     "project_sname": "Project shortname",
     "projectlist_descr": "List of all projects",
     "projects": "Projects",
+    "search_lang": "Search language...",
+    "sel_lang": "Select language for this field...",
+    "selected": "selected",
     "shortname": "Shortname",
     "show_all_permsets": "Show all permission sets",
     "sign_in": "Sign in",
@@ -105,5 +112,6 @@
     "user_id": "User ID",
     "user_iri": "User IRI",
     "userlist_descr": "List of all the users",
-    "users": "Users"
+    "users": "Users",
+    "n_langs": "{n_langs} of {all_langs} languages selected"
 }

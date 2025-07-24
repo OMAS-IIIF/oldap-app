@@ -21,6 +21,7 @@
     "adminpermsets": "Amministrare i set di autorizzazioni",
     "adminres": "Sovrascrivere le autorizzazioni delle risorse",
     "adminusers": "Amministrare gli utenti",
+    "allowed_langs_sel": "Lingue consentite",
     "apply_for_acc": "Richiedere un account",
     "cancel": "Annullamento",
     "comment": "Commento",
@@ -60,6 +61,8 @@
     "iri_qname": "Iri/QName",
     "is_active": "È attivo",
     "label": "Label",
+    "lang": "Lingua",
+    "langs": "Le lingue",
     "lists": "Elenchi",
     "modify": "Modificare",
     "modify_permset": "Modifica dell'autorizzazione",
@@ -70,6 +73,7 @@
     "namespaceiri": "Spazio dei nomi-IRI",
     "new_hlist_conf": "Si vuole davvero creare un nuovo elenco gerarchico?",
     "new_hlist_title": "Nuovo elenco gerarchico",
+    "no_lang_found": "Nessuna lingua trovata",
     "no_reg": "Non siete ancora registrati?",
     "nodeclassiri": "Node class IRI",
     "password": "Password",
@@ -87,6 +91,9 @@
     "project_sname": "Nome breve del progetto",
     "projectlist_descr": "Elenco di tutti i progetti",
     "projects": "Progetti",
+    "search_lang": "Lingua di ricerca...",
+    "sel_lang": "Selezionare la lingua per questo campo...",
+    "selected": "selezionato",
     "shortname": "Nome breve",
     "show_all_permsets": "Mostra tutte le autorizzazioni",
     "sign_in": "Accedi",
@@ -105,5 +112,6 @@
     "user_id": "ID utente",
     "user_iri": "Utente IRI",
     "userlist_descr": "Elenco di tutti gli utenti",
-    "users": "Utenti"
+    "users": "Utenti",
+    "n_langs": "{n_langs} di {all_langs} lingue selezionate"
 }

@@ -12,6 +12,9 @@
 	import { XsdDatatypes } from '$lib/oldap/enums/xsd_datatypes';
 	import PropTypeSelector from '$lib/components/oldap/PropTypeSelector.svelte';
 	import LabeledDivider from '$lib/components/basic_gui/inputs/LabeledDivider.svelte';
+	import Checkbox from '$lib/components/basic_gui/checkbox/Checkbox.svelte';
+	import AllowedLangSelector from '$lib/components/oldap/AllowedLangSelector.svelte';
+	import * as m from '$lib/paraglide/messages';
 
 	let { propiri, projectid } : { propiri: string, projectid : string } = $props();
 
@@ -39,8 +42,12 @@
 	let min_length = $state<string>('0');
 	let max_length = $state<string>('0');
 	let pattern = $state<string>('');
-	let min_exclusive = $state<string | undefined>(undefined);
-	let min_inclusive = $state<string | undefined>(undefined);
+	let min_value = $state<string | undefined>(undefined);
+	let min_inclusive = $state<boolean>(false);
+	let max_value = $state<string | undefined>(undefined);
+	let max_inclusive = $state<boolean>(false);
+	let allowedLanguages = $state<string[]>([]);
+
 
 	authInfoStore.subscribe(data => {
 		authinfo = data;
@@ -87,8 +94,22 @@
 			pattern = prop?.pattern?.toString() || '';
 			min_length = prop?.minLength?.toString() || '0';
 			max_length = prop?.maxLength?.toString() || '0';
-			min_exclusive = prop?.minExclusive?.toString() || undefined;
-			min_inclusive = prop?.minInclusive?.toString() || undefined;
+			if (prop?.minExclusive) {
+				min_value = prop?.minExclusive?.toString() || '0';
+				min_inclusive = false;
+			}
+			else if (prop?.minInclusive) {
+				min_value = prop?.minInclusive?.toString() || '0';
+				min_inclusive = true;
+			}
+			if (prop?.maxExclusive) {
+				max_value = prop?.maxExclusive?.toString() || '0';
+				max_inclusive = false;
+			}
+			else if (prop?.minInclusive) {
+				max_value = prop?.maxInclusive?.toString() || '0';
+				max_inclusive = true;
+			}
 		}
 	});
 
@@ -108,6 +129,7 @@
 	});
 
 </script>
+
 <div>
 	<div>{propiri === 'new' ?  'ADD PROPERTY' : 'EDIT PROPERTY'} {propiri} </div>
 	<form class="max-w-128 min-w-96">
@@ -121,10 +143,22 @@
 			<Textfield label="PATTERN" name="pattern" id="pattern" placeholder="pattern" type="text" bind:value={pattern} validate={isValidRegex}/>
 			<Textfield label="MIN_LENGTH" name="minlength" id="minlength" placeholder="min length" type="number" bind:value={min_length} />
 			<Textfield label="MAX_LENGTH" name="maxlength" id="maxlength" placeholder="max length" type="number" bind:value={max_length} />
+			{#if datatype === 'rdf:langString'}
+				<AllowedLangSelector
+					bind:selectedLanguages={allowedLanguages}
+					label={m.allowed_langs_sel()}
+					id="allowed-languages"
+					name="allowedLanguages"
+					placeholder={m.sel_lang()}
+					searchLabel={m.search_lang()}
+				/>
+			{/if}
 		{/if}
 		{#if numeric_datatypes.includes(datatype || '')}
-			<Textfield label="MINIMUM EXCLUSIVE (>)" name="minExclusive" id="minExclusive" placeholder="min exclusive" type="number" bind:value={min_exclusive} />
-			<Textfield label="MINIMUM INCLUSIVE (>=)" name="minInclusive" id="minInclusive" placeholder="min inclusive" type="number" bind:value={min_inclusive} />
+			<Textfield label="MINIMUM VALUE" name="minValue" id="minValue" placeholder="min value" type="number" bind:value={min_value} />
+			<Checkbox label="INCLUSIVE" class="text-xs" bind:checked={min_inclusive} name="min_inclusive"/>
+			<Textfield label="MAXIMUM VALUE" name="maxValue" id="maxValue" placeholder="max value" type="number" bind:value={max_value} />
+			<Checkbox label="INCLUSIVE" class="text-xs" bind:checked={max_inclusive} name="max_inclusive"/>
 		{/if}
 	</form>
 </div>

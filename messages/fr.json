@@ -21,6 +21,7 @@
     "adminpermsets": "Administrer les jeux d'autorisations",
     "adminres": "Remplacer les autorisations sur les ressources",
     "adminusers": "Administrer les utilisateurs",
+    "allowed_langs_sel": "Langues autorisées",
     "apply_for_acc": "Demande d'ouverture de compte",
     "cancel": "Annuler",
     "comment": "Commentaire",
@@ -60,6 +61,8 @@
     "iri_qname": "Iri/Qname",
     "is_active": "Est actif",
     "label": "Label",
+    "lang": "Langue",
+    "langs": "Langues",
     "lists": "Listes",
     "modify": "Modifier",
     "modify_permset": "Modifier l'autorisation",
@@ -70,6 +73,7 @@
     "namespaceiri": "Espace nominatif-IRI",
     "new_hlist_conf": "Voulez-vous vraiment créer une nouvelle liste hiérarchique ?",
     "new_hlist_title": "Nouvelle liste hiérarchique",
+    "no_lang_found": "Aucune langue trouvée",
     "no_reg": "Vous n'êtes pas encore inscrit ?",
     "nodeclassiri": "Node class IRI",
     "password": "Mot de passe",
@@ -87,6 +91,9 @@
     "project_sname": "Nom abrégé du projet",
     "projectlist_descr": "Liste de tous les projets",
     "projects": "Projets",
+    "search_lang": "Recherche de langue...",
+    "sel_lang": "Choisir la langue pour ce champ...",
+    "selected": "sélectionné",
     "shortname": "Nom court",
     "show_all_permsets": "Afficher toutes les autorisations",
     "sign_in": "S'inscrire",
@@ -105,5 +112,6 @@
     "user_id": "ID utilisateur",
     "user_iri": "Utilisateur IRI",
     "userlist_descr": "Liste de tous les utilisateurs",
-    "users": "Utilisateurs"
+    "users": "Utilisateurs",
+    "n_langs": "{n_langs} de {all_langs} langues sélectionnées"
 }
