@@ -15,6 +15,7 @@
 	import Checkbox from '$lib/components/basic_gui/checkbox/Checkbox.svelte';
 	import AllowedLangSelector from '$lib/components/oldap/AllowedLangSelector.svelte';
 	import * as m from '$lib/paraglide/messages';
+	import AllowedValues from '$lib/components/oldap/AllowedValues.svelte';
 
 	let { propiri, projectid } : { propiri: string, projectid : string } = $props();
 
@@ -47,6 +48,8 @@
 	let max_value = $state<string | undefined>(undefined);
 	let max_inclusive = $state<boolean>(false);
 	let allowedLanguages = $state<string[]>([]);
+	let allowedStrings = $state<Set<string|number>>(new Set());
+	let allowedNumbers = $state<Set<string|number>>(new Set());
 
 
 	authInfoStore.subscribe(data => {
@@ -160,7 +163,12 @@
 					searchLabel={m.search_lang()}
 				/>
 			{:else}
-				ALLOWED VALUES
+				<AllowedValues
+					bind:values={allowedStrings}
+					valueType="string"
+					label="Erlaubte Textwerte"
+					placeholder="Text eingeben..."
+				/>
 			{/if}
 		{/if}
 		{#if numeric_datatypes.includes(datatype || '')}
@@ -168,6 +176,12 @@
 			<Checkbox label="INCLUSIVE" class="text-xs" bind:checked={min_inclusive} name="min_inclusive"/>
 			<Textfield label="MAXIMUM VALUE" name="maxValue" id="maxValue" placeholder="max value" type="number" bind:value={max_value} />
 			<Checkbox label="INCLUSIVE" class="text-xs" bind:checked={max_inclusive} name="max_inclusive"/>
+			<AllowedValues
+				bind:values={allowedNumbers}
+				valueType="number"
+				label="Erlaubte Zahlenwerte"
+				placeholder="Zahl eingeben..."
+			/>
 		{/if}
 	</form>
 </div>

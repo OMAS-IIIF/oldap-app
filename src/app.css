@@ -23,7 +23,7 @@
     --color-oldap-button-dark: var(--color-indigo-700);
     --color-oldap-button-hover: var(--color-indigo-300);
     --color-oldap-button-hover-dark: var(--color-indigo-700);
-    --color-oldap-button-: var(--color-indigo-900);
+    --color-oldap-button-outline: var(--color-indigo-900);
     --color-oldap-button-outline-dark: var(--color-indigo-900);
 
     --color-oldap-error-bg: var(--color-red-600);
@@ -148,11 +148,9 @@
     outline-input-outline-valid placeholder:text-input-placeholder-valid focus:outline-oldap-focus
 }
 
-
 .oldap-upload {
     @apply border-2 border-dashed rounded p-6 text-center cursor-pointer transition-all
 }
-
 
 .oldap-upload-file-selected {
     @apply text-sm text-oldap-fg dark:text-oldap-fg-dark mb-2
