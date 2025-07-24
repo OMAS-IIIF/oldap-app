@@ -58,7 +58,8 @@
 	}
 */
 
-	function isValidRegex(pattern: string): [boolean, string] {
+	function isValidRegex(pattern?: string): [boolean, string] {
+		if (!pattern) return [true, 'OK'];
 		try {
 			new RegExp(pattern);
 			return [true, 'OK'];
