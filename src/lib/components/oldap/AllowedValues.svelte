@@ -8,6 +8,7 @@
 -->
 <script lang="ts">
 	import { PlusCircle, X } from '@lucide/svelte';
+	import * as m from '$lib/paraglide/messages';
 
 	type ValueType = 'string' | 'number';
 
@@ -42,7 +43,7 @@
 		name?: string
 	} = $props();
 
-	let currentInput = $state('');
+	let currentInput = $state<string|number>('');
 	let inputElement: HTMLInputElement | undefined = $state();
 	let errorMessage = $state('');
 
@@ -55,24 +56,24 @@
 	const addValue = () => {
 		if (!currentInput) {
 			if (valueType === 'number') {
-				errorMessage = 'Bitte geben Sie eine gültige Zahl ein';
+				errorMessage = m.enter_valid_num();
 				return;
 			}
 			else {
-				errorMessage = 'Bitte geben Sie einen Wert ein';
+				errorMessage = m.enter_valid_text();
 				return;
 			}
 		}
+		if (!currentInput) return;
 		const trimmedInput = typeof currentInput === 'string' ? currentInput.trim() : currentInput;
 		if (!trimmedInput) return;
 
 		let processedValue: string | number;
 
 		if (valueType === 'number') {
-			const numValue = parseFloat(trimmedInput);
-			console.log("GAGAGAG=", numValue);
+			const numValue = parseFloat(trimmedInput as string);
 			if (isNaN(numValue)) {
-				errorMessage = 'Bitte geben Sie eine gültige Zahl ein';
+				errorMessage = m.enter_valid_num();
 				return;
 			}
 			processedValue = numValue;
@@ -81,7 +82,7 @@
 		}
 
 		if (values.has(processedValue)) {
-			errorMessage = 'Dieser Wert existiert bereits';
+			errorMessage = m.val_exists();
 			return;
 		}
 

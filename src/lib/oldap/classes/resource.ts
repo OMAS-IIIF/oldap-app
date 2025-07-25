@@ -39,7 +39,6 @@ export class ResourceClass extends OldapObject {
 	}
 
 	static fromOldapJson(json: any): ResourceClass {
-		console.log("======>", json.superclass)
 		const creator = new Iri(json.creator);
 		const created = new Date(json.created);
 		const contributor = new Iri(json.contributor);

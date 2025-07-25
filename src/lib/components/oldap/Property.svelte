@@ -25,7 +25,12 @@
 	const numeric_datatypes = [
 		'xsd:integer', 'xsd:nonPositiveInteger', 'xsd:negativeInteger', 'xsd:nonNegativeInteger', 'xsd:positiveInteger',
 		'xsd:long', 'xsd:int', 'xsd:short', 'xsd:byte', 'xsd:unsignedLong', 'xsd:unsignedInt', 'xsd:unsignedShort', 'xsd:unsignedByte',
-		'xsd:decimal', 'xsd:double', 'xsd:float'
+		'xsd:decimal', 'xsd:double', 'xsd:float', 'xsd:dateTimeStamp', 'xsd:time',
+	];
+	const comparable_datatypes = [
+		'xsd:integer', 'xsd:nonPositiveInteger', 'xsd:negativeInteger', 'xsd:nonNegativeInteger', 'xsd:positiveInteger',
+		'xsd:long', 'xsd:int', 'xsd:short', 'xsd:byte', 'xsd:unsignedLong', 'xsd:unsignedInt', 'xsd:unsignedShort', 'xsd:unsignedByte',
+		'xsd:decimal', 'xsd:double', 'xsd:float', 'xsd:dateTime', 'xsd:date', 'xsd:gYearMonth', 'xsd:gYear',
 	];
 
 	let authinfo: AuthInfo | null = $authInfoStore;
@@ -85,7 +90,7 @@
 		console.log("PROJECTID: ", projectid);
 
 		// filter the iri of the property from the list, because a property cannot be a subproperty of itself!
-		all_prop_list = $datamodelStore?.standaloneProperties.filter(p => p.propertyIri.toString() !== propiri).map(p => p.propertyIri.toString()) || [];
+		all_prop_list = $datamodelStore?.standaloneProperties.filter(p => p.propertyIri.toString() === propiri).map(p => p.propertyIri.toString()) || [];
 		all_prop_list.push('NONE');
 
 		if (propiri !== 'new') {
@@ -127,32 +132,30 @@
 			const ancestorprop = $datamodelStore?.standaloneProperties.find(p => p.propertyIri.toString() === subPropertyOf);
 			datatype = ancestorprop?.datatype;
 			toClass = ancestorprop?.toClass?.toString();
-			console.log("DATATYPE/CLASS: ", $state.snapshot(datatype), $state.snapshot(toClass));
 		} else {
 			datatype = prop?.datatype;
 			toClass = prop?.toClass?.toString();
 		}
 	});
 
-	$effect(() => {
-		console.log("LANGLANG: ", $state.snapshot(allowedLanguages));
-	});
+
+
 
 </script>
 
 <div>
-	<div>{propiri === 'new' ?  'ADD PROPERTY' : 'EDIT PROPERTY'} {propiri} </div>
+	<div>{propiri === 'new' ?  m.add_prop() : m.edit_prop()} <span class="italic">{propiri}</span> </div>
 	<form class="max-w-128 min-w-96">
-		<LabeledDivider>BASIC ATTRIBUTES:</LabeledDivider>
-		<Textfield type='text' label="PROPIRI" name="propiri" id="propdiri" placeholder="property IRI" required={true}
+		<LabeledDivider>{m.basic_attr()}:</LabeledDivider>
+		<Textfield type='text' label={m.prop_iri()} name="propiri" id="propdiri" placeholder="property IRI" required={true}
 							 bind:value={propertyIri} pattern={ncname_pattern} disabled={propiri !== 'new'} />
-		<DropdownField items={all_prop_list} id="allprops_id" name="allprops" label="SUBPROP OF" bind:selectedItem={subPropertyOf} />
-		<PropTypeSelector {propiri} bind:datatype={datatype} bind:toClass={toClass} disabled={subPropertyOf !== 'NONE'} />
-		<LabeledDivider>RESTRICTIONS:</LabeledDivider>
+		<DropdownField items={all_prop_list} id="allprops_id" name="allprops" label={m.subprop_of()} bind:selectedItem={subPropertyOf} />
+		<PropTypeSelector label={m.property()} {propiri} bind:datatype={datatype} bind:toClass={toClass} disabled={subPropertyOf !== 'NONE'} />
+		<LabeledDivider>{m.restrictions()}:</LabeledDivider>
 		{#if string_datatypes.includes(datatype || '')}
-			<Textfield label="PATTERN" name="pattern" id="pattern" placeholder="pattern" type="text" bind:value={pattern} validate={isValidRegex}/>
-			<Textfield label="MIN_LENGTH" name="minlength" id="minlength" placeholder="min length" type="number" bind:value={min_length} />
-			<Textfield label="MAX_LENGTH" name="maxlength" id="maxlength" placeholder="max length" type="number" bind:value={max_length} />
+			<Textfield label={m.regex_pattern()} name="pattern" id="pattern" placeholder="pattern" type="text" bind:value={pattern} validate={isValidRegex}/>
+			<Textfield label={m.min_length()} name="minlength" id="minlength" placeholder="min length" type="number" bind:value={min_length} />
+			<Textfield label={m.max_length()} name="maxlength" id="maxlength" placeholder="max length" type="number" bind:value={max_length} />
 			{#if datatype === 'rdf:langString'}
 				<AllowedLangSelector
 					bind:selectedLanguages={allowedLanguages}
@@ -166,22 +169,24 @@
 				<AllowedValues
 					bind:values={allowedStrings}
 					valueType="string"
-					label="Erlaubte Textwerte"
-					placeholder="Text eingeben..."
+					label={m.allowed_textvals()}
+					placeholder={m.enter_text()}
 				/>
 			{/if}
 		{/if}
 		{#if numeric_datatypes.includes(datatype || '')}
-			<Textfield label="MINIMUM VALUE" name="minValue" id="minValue" placeholder="min value" type="number" bind:value={min_value} />
-			<Checkbox label="INCLUSIVE" class="text-xs" bind:checked={min_inclusive} name="min_inclusive"/>
-			<Textfield label="MAXIMUM VALUE" name="maxValue" id="maxValue" placeholder="max value" type="number" bind:value={max_value} />
-			<Checkbox label="INCLUSIVE" class="text-xs" bind:checked={max_inclusive} name="max_inclusive"/>
 			<AllowedValues
 				bind:values={allowedNumbers}
 				valueType="number"
-				label="Erlaubte Zahlenwerte"
-				placeholder="Zahl eingeben..."
+				label={m.allowed_numvals()}
+				placeholder={m.enter_num()}
 			/>
 		{/if}
-	</form>
+		{#if comparable_datatypes.includes(datatype || '')}
+			<Textfield label={m.min_val()} name="minValue" id="minValue" placeholder="min value" type="number" bind:value={min_value} />
+			<Checkbox label={m.inclusive()} class="text-xs" bind:checked={min_inclusive} name="min_inclusive"/>
+			<Textfield label={m.max_val()} name="maxValue" id="maxValue" placeholder="max value" type="number" bind:value={max_value} />
+			<Checkbox label={m.inclusive()} class="text-xs" bind:checked={max_inclusive} name="max_inclusive"/>
+		{/if}
+		</form>
 </div>

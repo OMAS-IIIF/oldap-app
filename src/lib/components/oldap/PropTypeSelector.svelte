@@ -8,7 +8,7 @@
 	import { datamodelStore } from '$lib/stores/datamodel';
 	import { Iri } from '$lib/oldap/datatypes/xsd_iri';
 
-	let { propiri, datatype = $bindable(), toClass = $bindable(), disabled = false }: {propiri: string, datatype?: string, toClass?: string, disabled: boolean} = $props();
+	let { propiri, datatype = $bindable(), toClass = $bindable(), label = 'PROPERTY', disabled = false }: {propiri: string, datatype?: string, toClass?: string, label: string, disabled: boolean} = $props();
 
 	let proptype_is_open = $state(false);
 	let selectedType = $state('LITERAL');
@@ -82,7 +82,7 @@
 </script>
 
 <div class="mt-3">
-	<label for="proptypesel_id" class="block text-xs/4 font-medium text-input-label-fg dark:text-input-label-fg-dark">PROPERTY</label>
+	<label for="proptypesel_id" class="block text-xs/4 font-medium text-input-label-fg dark:text-input-label-fg-dark">{label}</label>
 	<DropdownButton bind:isOpen={proptype_is_open} buttonText={selectedType} name="proptypesel" {disabled} class="text-xs">
 		<DropdownMenu bind:isOpen={proptype_is_open} position="left" name="proptypesel" id="proptypesel_id">
 			{#each types as type}
