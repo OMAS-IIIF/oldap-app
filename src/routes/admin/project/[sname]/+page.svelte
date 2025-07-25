@@ -189,7 +189,7 @@
 		<Textfield type='text' label={m.namespaceiri()} name="namespaceiri" id="namespaceiri" placeholder="namespace iri" required={true}
 							 bind:value={namespaceIri} pattern={namespace_pattern} disabled={data?.sname !== 'new'} />
 		<LangstringField bind:this={label_field} label={m.label()} name="label" id="label" placeholder="label" value={label} />
-		<LangstringField bind:this={comment_field} label="COMMENT" name="comment" id="comment" placeholder="comment" value={comment} />
+		<LangstringField bind:this={comment_field} label={m.comment()} name="comment" id="comment" placeholder="comment" value={comment} />
 		<DatePicker bind:this={projectStart_field} label="Project start" name="project_start" id="project_start" value={projectStart} />
 		<DatePicker bind:this={projectEnd_field} label="Project start" name="project_start" id="project_start" value={projectEnd} />
 

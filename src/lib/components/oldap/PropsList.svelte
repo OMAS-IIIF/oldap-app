@@ -62,12 +62,12 @@
 
 {#snippet actions()}
 	<div class="flex flex-row items-center justify-end gap-4">
-		<span><Button class="text-xs" onclick={goto_page("/admin/model")}>ADD PROPERTY</Button></span>
+		<span><Button class="text-xs" onclick={goto_page("/admin/property")}>{m.add_property()}</Button></span>
 	</div>
 {/snippet}
 
-<Table height={table_height} title="STANDALONE PROPERTIES"
-			 description="PROPERTIES THAT CAN BE REUSED..."
+<Table height={table_height} title={m.standalone_props()}
+			 description={m.props_to_reuse()}
 			 action_elements={actions}>
 	<TableHeader>
 		{#each headers as header}

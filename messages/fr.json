@@ -133,5 +133,10 @@
     "userlist_descr": "Liste de tous les utilisateurs",
     "users": "Utilisateurs",
     "val_exists": "Cette valeur existe déjà !",
-    "property": "Propriété"
+    "property": "Propriété",
+    "standalone_props": "Caractéristiques indépendantes",
+    "props_to_reuse": "Propriétés réutilisables",
+    "add_property": "Ajouter une propriété autonome",
+    "description": "Description",
+    "name": "Nom"
 }

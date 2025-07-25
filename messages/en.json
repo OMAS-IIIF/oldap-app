@@ -133,5 +133,10 @@
     "userlist_descr": "List of all the users",
     "users": "Users",
     "val_exists": "This value already exists!",
-    "property": "Property"
+    "property": "Property",
+    "standalone_props": "Independent properties",
+    "props_to_reuse": "Properties that can be reused",
+    "add_property": "Add standalone property ",
+    "description": "Description",
+    "name": "Name"
 }

@@ -4,7 +4,7 @@
 	import { OldapUser } from '$lib/oldap/classes/user';
 	import { authInfoStore } from '$lib/stores/authinfo';
 	import { userStore } from '$lib/stores/user';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { PropertyClass } from '$lib/oldap/classes/property';
 	import Textfield from '$lib/components/basic_gui/inputs/Textfield.svelte';
 	import { datamodelStore } from '$lib/stores/datamodel';
@@ -16,8 +16,12 @@
 	import AllowedLangSelector from '$lib/components/oldap/AllowedLangSelector.svelte';
 	import * as m from '$lib/paraglide/messages';
 	import AllowedValues from '$lib/components/oldap/AllowedValues.svelte';
+	import { goto_page } from '$lib/helpers/goto_page';
+	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
+	import LangstringField from '$lib/components/basic_gui/inputs/LangstringField.svelte';
+	import { LangString } from '$lib/oldap/datatypes/langstring';
 
-	let { propiri, projectid } : { propiri: string, projectid : string } = $props();
+	let { propiri, projectid, topwin } : { propiri: string, projectid : string, topwin: HTMLElement } = $props();
 
 	const ncname_pattern: RegExp = /^[A-Za-z_][A-Za-z0-9._-]*$/;
 
@@ -33,6 +37,7 @@
 		'xsd:decimal', 'xsd:double', 'xsd:float', 'xsd:dateTime', 'xsd:date', 'xsd:gYearMonth', 'xsd:gYear',
 	];
 
+
 	let authinfo: AuthInfo | null = $authInfoStore;
 	let administrator = $state<OldapUser | null>(null);
 	let property: PropertyClass | null = null;
@@ -42,6 +47,11 @@
 	let subPropertyOf = $state('');
 	let datatype = $state<string|undefined>();
 	let toClass = $state<string|undefined>();
+	let name_field: LangstringField;
+	let name = $state<LangString | null>(null);
+	let description_field: LangstringField;
+	let description = $state<LangString | null>(null);
+
 
 	let all_prop_list = $state<string[]>([]);
 
@@ -65,13 +75,13 @@
 		administrator = admin;
 	});
 
-/*
+
 	function scrollToTop() {
 		if (topwin) {
 			topwin.scrollTo({ top: -1000, behavior: 'smooth' });
 		}
 	}
-*/
+
 
 	function isValidRegex(pattern?: string): [boolean, string] {
 		if (!pattern) return [true, 'OK'];
@@ -90,7 +100,7 @@
 		console.log("PROJECTID: ", projectid);
 
 		// filter the iri of the property from the list, because a property cannot be a subproperty of itself!
-		all_prop_list = $datamodelStore?.standaloneProperties.filter(p => p.propertyIri.toString() === propiri).map(p => p.propertyIri.toString()) || [];
+		all_prop_list = $datamodelStore?.standaloneProperties.filter(p => p.propertyIri.toString() !== propiri).map(p => p.propertyIri.toString()) || [];
 		all_prop_list.push('NONE');
 
 		if (propiri !== 'new') {
@@ -99,6 +109,8 @@
 			subPropertyOf = prop?.subPropertyOf?.toString() || 'NONE'
 			datatype = prop?.datatype;
 			toClass = prop?.toClass?.toString();
+			name = prop?.name || null;
+			description = prop?.description || null;
 			pattern = prop?.pattern?.toString() || '';
 			min_length = prop?.minLength?.toString() || '0';
 			max_length = prop?.maxLength?.toString() || '0';
@@ -122,6 +134,13 @@
 				allowedLanguages = Array.from(prop.languageIn).map(l => l.toString());
 			}
 		}
+		else {
+			subPropertyOf = 'NONE'
+			datatype = 'xsd:string';
+			toClass = undefined;
+		}
+		await tick();
+		scrollToTop();
 	});
 
 	$effect(() => {
@@ -138,7 +157,13 @@
 		}
 	});
 
+	function add_property() {
 
+	}
+
+	function modify_property() {
+
+	}
 
 
 </script>
@@ -151,6 +176,8 @@
 							 bind:value={propertyIri} pattern={ncname_pattern} disabled={propiri !== 'new'} />
 		<DropdownField items={all_prop_list} id="allprops_id" name="allprops" label={m.subprop_of()} bind:selectedItem={subPropertyOf} />
 		<PropTypeSelector label={m.property()} {propiri} bind:datatype={datatype} bind:toClass={toClass} disabled={subPropertyOf !== 'NONE'} />
+		<LangstringField bind:this={name_field} label={m.name()} name="name" id="name" placeholder="name" value={name} />
+		<LangstringField bind:this={description_field} label={m.description()} name="descritpion" id="description" placeholder="description" value={description} />
 		<LabeledDivider>{m.restrictions()}:</LabeledDivider>
 		{#if string_datatypes.includes(datatype || '')}
 			<Textfield label={m.regex_pattern()} name="pattern" id="pattern" placeholder="pattern" type="text" bind:value={pattern} validate={isValidRegex}/>
@@ -188,5 +215,15 @@
 			<Textfield label={m.max_val()} name="maxValue" id="maxValue" placeholder="max value" type="number" bind:value={max_value} />
 			<Checkbox label={m.inclusive()} class="text-xs" bind:checked={max_inclusive} name="max_inclusive"/>
 		{/if}
-		</form>
+
+		<div class="flex justify-center gap-4 mt-6">
+			<Button class="mx-4 my-2" onclick={goto_page('/admin')}>{m.cancel()}</Button>
+			{#if propiri === 'new'}
+				<Button class="mx-4 my-2" onclick={() => add_property()}>{m.add()}</Button>
+			{:else}
+				<Button class="mx-4 my-2" onclick={() => modify_property()}>{m.modify()}</Button>
+			{/if}
+		</div>
+
+	</form>
 </div>
