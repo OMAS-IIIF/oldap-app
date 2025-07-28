@@ -138,5 +138,6 @@
     "props_to_reuse": "Proprietà che possono essere riutilizzate",
     "add_property": "Aggiungere una proprietà indipendente",
     "description": "Descrizione del",
-    "name": "Nome"
+    "name": "Nome",
+    "datatype": "Tipo di dati"
 }

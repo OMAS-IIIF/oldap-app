@@ -53,9 +53,9 @@
 	});
 
 	let headers: string[] = $state([
-		"PROJECT",
-		"NAME",
-		"DATATYPE",
+		m.project(),
+		m.name(),
+		m.datatype(),
 		m.action()]);
 
 </script>
@@ -84,10 +84,10 @@
 					<div class="flex flex-row items-center justify-left gap-2">
 						<Button round={true}
 										onclick={goto_page(`/admin/property/${encodeURIComponent(propiri)}`, {projectid: project?.projectIri.toString() || ''})}
-										disabled={properties[propiri]?.projectId.toString() === 'shared'}>
+										disabled={properties[propiri]?.projectId.toString() === 'shared' && project?.projectShortName.toString() !== 'shared'}>
 							<Pencil size="16" strokeWidth="1" />
 						</Button>
-						<Button round={true} onclick={() => {}} disabled={properties[propiri]?.projectId.toString() === 'shared'}>
+						<Button round={true} onclick={() => {}} disabled={properties[propiri]?.projectId.toString() === 'shared' && project?.projectShortName.toString() !== 'shared'}>
 							<Trash2 size="16" strokeWidth="1" />
 						</Button>
 					</div>

@@ -1,10 +1,11 @@
 <script lang="ts">
-	let { children, isOpen = $bindable(), href = '#', id = null, onclick = undefined, selected = false } = $props();
+	let { children, value = undefined, isOpen = $bindable(), href = '#', id = null, onclick = undefined, selected = false } = $props();
 
 	let myevent = (event: MouseEvent) => {
 		if (onclick) {
 			event.preventDefault();
-			onclick(event);
+			//onclick(event);
+			onclick(value);
 		}
 		isOpen = false;
 	}

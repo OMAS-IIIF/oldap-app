@@ -6,56 +6,62 @@
 	import { onMount } from 'svelte';
 	import { XsdDatatypes } from '$lib/oldap/enums/xsd_datatypes';
 	import { datamodelStore } from '$lib/stores/datamodel';
-	import { Iri } from '$lib/oldap/datatypes/xsd_iri';
+	import { PropType, propTypeFromString } from '$lib/oldap/enums/proptypes';
 
-	let { propiri, datatype = $bindable(), toClass = $bindable(), label = 'PROPERTY', disabled = false }: {propiri: string, datatype?: string, toClass?: string, label: string, disabled: boolean} = $props();
+
+	let {
+		propiri,
+		proptype = $bindable(PropType.LITERAL),
+		datatype = $bindable(),
+		toClass = $bindable(),
+		label = 'PROPERTY',
+		all_res_list,
+		all_lists_list,
+		disabled = false
+	}: {
+		propiri: string,
+		proptype: PropType,
+		datatype?: string,
+		toClass?: string,
+		label: string,
+		all_res_list: string[],
+		all_lists_list: string[],
+		disabled: boolean
+	} = $props();
 
 	let proptype_is_open = $state(false);
-	let selectedType = $state('LITERAL');
+	//let proptype = $state<PropType>(PropType.LITERAL);
 
 	let datatype_is_open = $state(false);
 	let datatypeOptions = $state<string[]>([]);
 
 	let reslink_is_open = $state(false);
-	let all_res_list = $state<string[]>([]);
+	//let all_res_list = $state<string[]>([]);
 
 	let list_is_open = $state(false);
-	let all_lists_list = $state<string[]>([]);
+	//let all_lists_list = $state<string[]>([]);
 
-	const types = [
-		'LITERAL', 'LINK', 'LIST'
-	]
+	const types = Object.values(PropType);
 
 	onMount(() => {
 		datatypeOptions = Object.values(XsdDatatypes);
-		const tmp_resources = $datamodelStore?.resouces.filter(x => {
-			const gaga = x?.superclass?.map(s => s.toString()) || [];
-			return !gaga.includes('oldap:OldapListNode');
-		}) || [];
-		all_res_list = tmp_resources.map(r => r.iri.toString()) ?? [];
-
-		const tmp_lists = $datamodelStore?.resouces.filter(x => {
-			const gaga = x?.superclass?.map(s => s.toString()) || [];
-			return gaga.includes('oldap:OldapListNode');
-		}) || [];
-		all_lists_list = tmp_lists.map(r => r.iri.toString()) ?? [];
 
 		if (propiri === 'new') {
-			selectedType = 'LITERAL';
+			proptype = PropType.LITERAL;
 		}
 		else {
 			if (datatype !== undefined) {
-				selectedType = 'LITERAL';
+				proptype = PropType.LITERAL;
 			}
 			else if (toClass !== undefined) {
 				//
 				// distinguish between link to other resource or link to a list
 				//
 				if (all_res_list.includes(toClass)) {
-					selectedType = 'LINK';
+					proptype = PropType.LINK;
 				}
 				else if (all_lists_list.includes(toClass)) {
-					selectedType = 'LIST';
+					proptype = PropType.LIST;
 				}
 			}
 			else {
@@ -64,18 +70,32 @@
 		}
 	});
 
+/*
 	$effect(() => {
 		if (datatype !== undefined) {
-			selectedType = 'LITERAL';
+			proptype = PropType.LITERAL;
 		} else if (toClass !== undefined) {
 			//
 			// distinguish between link to other resource or link to a list
 			//
 			if (all_res_list.includes(toClass)) {
-				selectedType = 'LINK';
+				proptype = PropType.LINK;
 			} else if (all_lists_list.includes(toClass)) {
-				selectedType = 'LIST';
+				proptype = PropType.LIST;
 			}
+		}
+	});
+*/
+
+	$effect(() => {
+		if (proptype === PropType.LITERAL) {
+			datatype = datatypeOptions[0];
+		}
+		else if (proptype === PropType.LINK) {
+			toClass = all_res_list[0];
+		}
+		else if (proptype === PropType.LIST) {
+			toClass = all_lists_list[0];
 		}
 	});
 
@@ -83,18 +103,19 @@
 
 <div class="mt-3">
 	<label for="proptypesel_id" class="block text-xs/4 font-medium text-input-label-fg dark:text-input-label-fg-dark">{label}</label>
-	<DropdownButton bind:isOpen={proptype_is_open} buttonText={selectedType} name="proptypesel" {disabled} class="text-xs">
+	<DropdownButton bind:isOpen={proptype_is_open} buttonText={proptype} name="proptypesel" {disabled} class="text-xs">
 		<DropdownMenu bind:isOpen={proptype_is_open} position="left" name="proptypesel" id="proptypesel_id">
 			{#each types as type}
 				<DropdownLinkItem bind:isOpen={proptype_is_open}
-													onclick={() => {selectedType = type}}
-													selected={type === selectedType}>
+													value={propTypeFromString(type)}
+													onclick={(x: PropType) => {proptype = x}}
+													selected={type === proptype}>
 					{type}
 				</DropdownLinkItem>
 			{/each}
 		</DropdownMenu>
 	</DropdownButton>
-	{#if selectedType === 'LITERAL'}
+	{#if proptype === 'LITERAL'}
 		<DropdownButton bind:isOpen={datatype_is_open} buttonText={datatype || datatypeOptions[0]} name="datatype" {disabled} class="text-xs">
 			<DropdownMenu bind:isOpen={datatype_is_open} position="left" name="datatype">
 				{#each datatypeOptions as dtype}
@@ -106,8 +127,8 @@
 				{/each}
 			</DropdownMenu>
 		</DropdownButton>
-	{:else if selectedType === 'LINK'}
-		<DropdownButton bind:isOpen={reslink_is_open} buttonText={toClass || all_lists_list[0]} name="reslink" {disabled} class="text-xs">
+	{:else if proptype === 'LINK'}
+		<DropdownButton bind:isOpen={reslink_is_open} buttonText={toClass || all_res_list[0]} name="reslink" {disabled} class="text-xs">
 			<DropdownMenu bind:isOpen={reslink_is_open} position="left" name="reslink">
 				{#each all_res_list as res}
 					<DropdownLinkItem bind:isOpen={reslink_is_open}
@@ -118,8 +139,8 @@
 				{/each}
 			</DropdownMenu>
 		</DropdownButton>
-	{:else if selectedType === 'LIST'}
-		<DropdownButton bind:isOpen={list_is_open} buttonText={toClass || all_res_list[0]} name="listlink" {disabled} class="text-xs">
+	{:else if proptype === 'LIST'}
+		<DropdownButton bind:isOpen={list_is_open} buttonText={toClass || all_lists_list[0]} name="listlink" {disabled} class="text-xs">
 			<DropdownMenu bind:isOpen={list_is_open} position="left" name="listlink">
 				{#each all_lists_list as list}
 					<DropdownLinkItem bind:isOpen={list_is_open}

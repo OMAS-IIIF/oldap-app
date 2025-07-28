@@ -99,7 +99,8 @@
 
 	const add_project = async () => {
 		confirmation_title = m.add_project();
-		confirmation_message = m.confirm_project_add({projectid: project.projectShortName.toString()});
+		//confirmation_message = m.confirm_project_add({projectid: project.projectShortName.toString()}); // TODO: HIER PASSIERT FEHLER
+		confirmation_message = m.confirm_project_add({projectid: sname}); // TODO: HIER PASSIERT FEHLER
 		const ok = await confirmation_dialog.open();
 		if (!ok) return;
 

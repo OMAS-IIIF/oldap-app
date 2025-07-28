@@ -138,5 +138,6 @@
     "props_to_reuse": "Propriétés réutilisables",
     "add_property": "Ajouter une propriété autonome",
     "description": "Description",
-    "name": "Nom"
+    "name": "Nom",
+    "datatype": "Type de données"
 }

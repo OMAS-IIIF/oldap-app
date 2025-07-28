@@ -68,7 +68,8 @@
 			if (!selected_tab) { // if we have already a selected tab (e.g. from the adminTabState), we use this
 				selected_tab = 'projects';
 			}
-		} else { // administrator is not root
+		}
+		else { // administrator is not root
 			// select the tabs that the administrator has access to
 			in_project?.permissions.forEach((x) => {
 				switch (x) {
@@ -86,8 +87,9 @@
 						break;
 				}
 			});
+		}
 			if (authinfo) {
-				const dm_config = api_config(authinfo, {project: project?.projectShortName.toString() || ''});
+				const dm_config = api_config(authinfo, { project: project?.projectShortName.toString() || '' });
 				spinnerStore.set("RETRIEVING DATAMODEL");
 				apiClient.getAdmindatamodelProject(dm_config).then((jsonresult) => {
 					const datamodel = DatamodelClass.fromOldapJson(jsonresult);
@@ -115,7 +117,7 @@
 					selected_tab = '';
 				}
 			}
-		}
+
 	});
 
 

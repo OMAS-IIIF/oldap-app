@@ -138,5 +138,6 @@
     "props_to_reuse": "Eigenschaften, die wiederverwendet werden können",
     "add_property": "Eigenständige Eigenschaft hinzufügen",
     "description": "Beschreibung",
-    "name": "Name"
+    "name": "Name",
+    "datatype": "Datentyp"
 }
