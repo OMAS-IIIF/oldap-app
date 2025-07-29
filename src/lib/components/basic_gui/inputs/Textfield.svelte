@@ -9,7 +9,7 @@
 -->
 <script lang="ts">
 	import { error } from '@sveltejs/kit';
-	import { onMount } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 
 	type ValidateFunction = (value?: string) => [boolean, string];
 
@@ -47,6 +47,8 @@
 		/** @param {RegExp} [pattern] Optional RegExp pattern that is being validated if the field looses focus. Default to undefined */
 		pattern = undefined,
 
+		additional_snippet = undefined,
+
 		/** @param {string} [class] Optional string that is passed to the class attribute of HTML input element. Defaults to an empty string */
 		class: userClass = ""
 	}: {
@@ -61,6 +63,7 @@
 		disabled?: boolean,
 		required?: boolean,
 		pattern?: RegExp,
+		additional_snippet?: Snippet,
 		class?: string
 	} = $props();
 
@@ -77,7 +80,7 @@
 	}
 
 	/**
-	 * Callback when the field looses the focus. Performs validation (required field, regex pattern and,
+	 * Callback when the field loses the focus. Performs validation (required field, regex pattern and,
 	 * if given, user supplied validation function)
 	 */
 	const loose_focus = () => {
@@ -139,7 +142,48 @@
 
 <div class="mt-3">
 	<label for={id} class="{required ? 'underline' : ''} block text-xs/4 font-medium text-input-label-fg dark:text-input-label-fg-dark">{label}:</label>
-	<div class="mt-2 grid grid-cols-1">
+
+	<!-- Grid mit Snippet und Input auf derselben Zeile -->
+	<div class="{additional_snippet ? 'mt-2 grid grid-cols-[auto_1fr] gap-2 items-center' : 'mt-2'}">
+		{#if additional_snippet}
+			<div class="flex-shrink-0">
+				{@render additional_snippet()}
+			</div>
+		{/if}
+
+		<!-- Input Container mit relativer Positionierung für Icons -->
+		<div class="relative">
+			<input bind:this={thisele} type={type} name={name} id={id} onblur={loose_focus} oninput={() => value_changed(value)} {disabled} {required} {readonly}
+						 class="w-full py-1.0 oldap-textfield-common {disabled ? 'oldap-textfield-disabled' : (invalid ? 'oldap-textfield-invalid' : 'oldap-textfield-valid')} {userClass}"
+						 placeholder={placeholder} bind:value={value} aria-invalid="true" aria-describedby="{id}-error">
+
+			<!-- Error/Reset Icons -->
+			{#if invalid}
+				<svg class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none size-5 text-red-500 sm:size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" data-slot="icon">
+					<path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14ZM8 4a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0v-3A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
+				</svg>
+			{:else if modified}
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+						 role="button" tabindex="0" onkeydown={handle_reset_key} class="absolute right-3 top-1/2 transform -translate-y-1/2 size-3 cursor-pointer" onclick={reset_value}>
+					<path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+				</svg>
+			{/if}
+		</div>
+	</div>
+
+	<!-- Error message -->
+	{#if invalid}
+		<span class="mt-0 text-[8px]/2 text-red-600" id="text-field-error">{errortext}</span>
+	{/if}
+</div>
+
+<!--
+<div class="mt-3">
+	<label for={id} class="{required ? 'underline' : ''} block text-xs/4 font-medium text-input-label-fg dark:text-input-label-fg-dark">{label}:</label>
+		<div class={additional_snippet ? "mt-2 grid grid-cols-2" : "mt-2 grid grid-cols-1"}>
+			{#if additional_snippet}
+				{@render additional_snippet()}
+			{/if}
 		<input bind:this={thisele} type={type} name={name} id={id} onblur={loose_focus} oninput={() => value_changed(value)} {disabled} {required} {readonly}
 					 class="py-1.0 oldap-textfield-common {disabled ? 'oldap-textfield-disabled' : (invalid ? 'oldap-textfield-invalid' : 'oldap-textfield-valid')} {userClass}"
 					 placeholder={placeholder} bind:value={value} aria-invalid="true" aria-describedby={`${id}-error`}>
@@ -158,3 +202,4 @@
 		<span class="mt-0 text-[8px]/2 text-red-600" id="text-field-error">{errortext}</span>
 	{/if}
 </div>
+-->

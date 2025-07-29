@@ -4,6 +4,7 @@
 	import Property from '$lib/components/oldap/Property.svelte';
 	import type { PageProps } from '../../../../../.svelte-kit/types/src/routes/admin/property/[propiri]/$types';
 	import { onMount } from 'svelte';
+	import { projectStore } from '$lib/stores/project';
 
 	let topwin = $state<HTMLElement>();
 
@@ -11,8 +12,8 @@
 
 	let projectid = $state<string>('');
 
-	onMount(() => {
-		projectid = page.url.searchParams.get('projectid');
+	projectStore.subscribe(project => {
+		projectid = project?.projectShortName.toString() || '';
 	})
 
 </script>

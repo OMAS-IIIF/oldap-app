@@ -26,6 +26,7 @@
 	import { datamodelStore } from '$lib/stores/datamodel';
 	import { on } from 'svelte/events';
 	import { onMount } from 'svelte';
+	import { refreshPropertiesList } from '$lib/stores/refresh_propertieslist.svelte';
 
 	let { table_height, project = null }: {
 		table_height: number,
@@ -43,12 +44,26 @@
 	let confirmation_for_sname = $state('');
 
 
+/*
 	onMount(() => {
 		prop_list = [];
 		const datamodel = $datamodelStore;
 		for (const property of (datamodel?.standaloneProperties || [])) {
 			properties[property.propertyIri.toString()] = property;
 			prop_list.push(property.propertyIri.toString() || 'XXXX');
+		}
+	});
+*/
+	$effect(() => {
+		const _ = $refreshPropertiesList;
+		let tmp_list = [];
+		let tmp_properties: Record<string, PropertyClass> = {};
+		//const datamodel = $datamodelStore;
+		for (const property of ($datamodelStore?.standaloneProperties || [])) {
+			tmp_properties[property.propertyIri.toString()] = property;
+			tmp_list.push(property.propertyIri.toString() || 'XXXX');
+			prop_list = tmp_list
+			properties = tmp_properties;
 		}
 	});
 

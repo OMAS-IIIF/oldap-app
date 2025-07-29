@@ -17,6 +17,14 @@ export class QName {
 		return null; // Default fallback
 	}
 
+	get prefix(): NCName {
+		return this.#prefix;
+	}
+
+	get fragment(): NCName {
+		return this.#fragment;
+	}
+
 
 	toString() {
 		return this.#prefix.toString() + ':' + this.#fragment.toString();

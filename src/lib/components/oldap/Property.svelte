@@ -1,3 +1,8 @@
+<!--
+Copyright
+
+@component
+-->
 <script lang="ts">
 
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
@@ -21,16 +26,41 @@
 	import LangstringField from '$lib/components/basic_gui/inputs/LangstringField.svelte';
 	import { LangString } from '$lib/oldap/datatypes/langstring';
 	import { getLanguageShortname } from '$lib/oldap/enums/language';
-	import { PropType } from '$lib/oldap/enums/proptypes';
+	import { PropType, propTypeFromString } from '$lib/oldap/enums/proptypes';
+	import DropdownButton from '$lib/components/basic_gui/dropdown/DropdownButton.svelte';
+	import DropdownMenu from '$lib/components/basic_gui/dropdown/DropdownMenu.svelte';
+	import DropdownLinkItem from '$lib/components/basic_gui/dropdown/DropdownLinkItem.svelte';
+	import { QName } from '$lib/oldap/datatypes/xsd_qname';
+	import { projectStore } from '$lib/stores/project';
+	import { api_notget_config } from '$lib/helpers/api_config';
+	import { apiClient } from '$lib/shared/apiClient';
+	import { successInfoStore } from '$lib/stores/successinfo';
+	import { errorInfoStore } from '$lib/stores/errorinfo';
+	import { process_api_error } from '$lib/helpers/process_api_error';
+	import { refreshPropertiesListNow } from '$lib/stores/refresh_propertieslist.svelte';
 
 	let {
+		/** @param {string} propiri The IRI of the property, or the string 'new' */
 		propiri,
+
+		/** @param {string} projectid The project ID (shortname) */
 		projectid,
-		topwin } : { propiri: string, projectid : string, topwin: HTMLElement } = $props();
 
-	const ncnameOrQname_pattern: RegExp = /^([A-Za-z_][\w.-]*(:[A-Za-z_][\w.-]*)?)$/;
+		/** @param {HTMLElement} topwin The top HTML that is been used to scroll to the top */
+		topwin
+	} : {
+			propiri: string,
+			projectid : string,
+			topwin: HTMLElement
+		} = $props();
 
-	const string_datatypes = ['xsd:string', 'rdf:langString', 'xsd:normalizedString'];
+	//const ncnameOrQname_pattern: RegExp = /^([A-Za-z_][\w.-]*(:[A-Za-z_][\w.-]*)?)$/;
+	const ncname_pattern: RegExp = /^[A-Za-z_][A-Za-z0-9._-]*$/;
+
+	const string_datatypes = [
+		'xsd:string', 'rdf:langString', 'xsd:normalizedString', 'xsd:QName', 'xsd:token', 'xsd:name', 'xsd:NCName',
+		'xsd:NMTOKEN', 'xsd:ID', 'xsd:IDREF'
+	];
 	const numeric_datatypes = [
 		'xsd:integer', 'xsd:nonPositiveInteger', 'xsd:negativeInteger', 'xsd:nonNegativeInteger', 'xsd:positiveInteger',
 		'xsd:long', 'xsd:int', 'xsd:short', 'xsd:byte', 'xsd:unsignedLong', 'xsd:unsignedInt', 'xsd:unsignedShort', 'xsd:unsignedByte',
@@ -49,6 +79,10 @@
 	let prop = $state<PropertyClass | undefined>();
 
 	let propertyIri = $state('');
+	let prefix_is_open = $state(false);
+	let prefix = $state('');
+	let fragment = $state('');
+	let all_prefixes = $state<string[]>([]);
 	let subPropertyOf = $state('');
 	let proptype = $state<PropType>(PropType.LITERAL);
 	let datatype = $state<string|undefined>();
@@ -74,7 +108,6 @@
 	let allowedStrings = $state<Set<string|number>>(new Set());
 	let allowedNumbers = $state<Set<string|number>>(new Set());
 
-
 	authInfoStore.subscribe(data => {
 		authinfo = data;
 	});
@@ -83,14 +116,20 @@
 		administrator = admin;
 	});
 
-
 	function scrollToTop() {
 		if (topwin) {
 			topwin.scrollTo({ top: -1000, behavior: 'smooth' });
 		}
 	}
 
-
+	/**
+	 * Tests whether a given string is a valid regular expression pattern.
+	 *
+	 * @param {string} [pattern] The string to be evaluated as a potential regular expression. If no pattern is provided,
+	 * the function will return true with an "OK" message.
+	 * @return {[boolean, string]} Returns a tuple where the first element is a boolean indicating if the pattern is valid,
+	 * and the second element is a string providing feedback or error details.
+	 */
 	function isValidRegex(pattern?: string): [boolean, string] {
 		if (!pattern) return [true, 'OK'];
 		try {
@@ -101,12 +140,16 @@
 		}
 	}
 
+	/**
+	 * Initialize the component when it's being mounted
+	 */
 	onMount(async () => {
 		if (!authinfo) return;
 
 		// filter the iri of the property from the list, because a property cannot be a subproperty of itself!
 		all_prop_list = $datamodelStore?.standaloneProperties.filter(p => p.propertyIri.toString() !== propiri).map(p => p.propertyIri.toString()) || [];
 		all_prop_list = ['NONE', ...all_prop_list];
+		all_prefixes = [$projectStore?.projectShortName.toString() || '', 'shared', 'dc', 'dcterms', 'skos', 'schema', 'cidoc']
 
 		// get the list of all resource classes that can be the target of a link
 		const tmp_resources = $datamodelStore?.resouces.filter(x => {
@@ -122,51 +165,68 @@
 		}) || [];
 		all_lists_list = tmp_lists.map(r => r.iri.toString()) ?? [];
 
-		if (propiri !== 'new') {
-			prop = $datamodelStore?.standaloneProperties.find(p => p.propertyIri.toString() === propiri);
-			propertyIri = prop?.propertyIri.toString() || '';
-			subPropertyOf = prop?.subPropertyOf?.toString() || 'NONE'
-			datatype = prop?.datatype;
-			toClass = prop?.toClass?.toString();
-			name = prop?.name || null;
-			description = prop?.description || null;
-			pattern = prop?.pattern?.toString() || '';
-			min_length = prop?.minLength?.toString();
-			max_length = prop?.maxLength?.toString();
-			if (prop?.minExclusive) {
-				min_value = prop?.minExclusive?.toString() || '0';
-				min_inclusive = false;
-			}
-			else if (prop?.minInclusive) {
-				min_value = prop?.minInclusive?.toString() || '0';
-				min_inclusive = true;
-			}
-			if (prop?.maxExclusive) {
-				max_value = prop?.maxExclusive?.toString() || '0';
-				max_inclusive = false;
-			}
-			else if (prop?.minInclusive) {
-				max_value = prop?.maxInclusive?.toString() || '0';
-				max_inclusive = true;
-			}
-			if (prop?.languageIn) {
-				allowedLanguages = Array.from(prop.languageIn).map(l => l.toString());
-			}
-		}
-		else {
+		if (propiri === 'new') {
+			// initialize a new property to be added to reasonable values...
+			console.log("Property.svelte: onMount (NEW)");
+
+			prefix = $projectStore?.projectShortName.toString() || '';
+			fragment = '';
 			subPropertyOf = 'NONE'
 			datatype = 'xsd:string';
 			toClass = undefined;
+		}
+		else {
+			console.log("Property.svelte: onMount (EDIT)");
+		  const tmp = QName.createQName(propiri);
+			prefix = tmp.prefix.toString();
+			fragment = tmp.fragment.toString();
+			prop = $datamodelStore?.standaloneProperties.find(p => p.propertyIri.toString() === propiri);
+			subPropertyOf = prop?.subPropertyOf?.toString() || 'NONE';
+			//propertyIri = prop?.propertyIri.toString() || '';
 		}
 		await tick();
 		scrollToTop();
 	});
 
+	/**
+	 * This callback is fired on initialization and if the subPropertyOf changes...
+	 */
 	$effect(() => {
 		//
 		// if we select the property to be a sub-property, it must have the same data type as the ancestor property!
 		//
-		if (subPropertyOf !== 'NONE') {
+		if (subPropertyOf === 'NONE') {
+			if (propiri === 'new') {
+				datatype = 'xsd:string';
+				toClass = undefined;
+			} else {
+				subPropertyOf = prop?.subPropertyOf?.toString() || 'NONE'
+				datatype = prop?.datatype;
+				toClass = prop?.toClass?.toString();
+				name = prop?.name || null;
+				description = prop?.description || null;
+				pattern = prop?.pattern?.toString() || '';
+				min_length = prop?.minLength?.toString();
+				max_length = prop?.maxLength?.toString();
+				if (prop?.minExclusive) {
+					min_value = prop?.minExclusive?.toString() || '0';
+					min_inclusive = false;
+				} else if (prop?.minInclusive) {
+					min_value = prop?.minInclusive?.toString() || '0';
+					min_inclusive = true;
+				}
+				if (prop?.maxExclusive) {
+					max_value = prop?.maxExclusive?.toString() || '0';
+					max_inclusive = false;
+				} else if (prop?.minInclusive) {
+					max_value = prop?.maxInclusive?.toString() || '0';
+					max_inclusive = true;
+				}
+				if (prop?.languageIn) {
+					allowedLanguages = Array.from(prop.languageIn).map(l => l.toString());
+				}
+			}
+		} else {
 			const ancestorprop = $datamodelStore?.standaloneProperties.find(p => p.propertyIri.toString() === subPropertyOf);
 			datatype = ancestorprop?.datatype;
 			toClass = ancestorprop?.toClass?.toString();
@@ -181,15 +241,6 @@
 				} else if (all_lists_list.includes(toClass)) {
 					proptype = PropType.LIST;
 				}
-			}
-
-		} else {
-			if (propiri === 'new') {
-				datatype = 'xsd:string';
-				toClass = undefined;
-			} else {
-				datatype = prop?.datatype;
-				toClass = prop?.toClass?.toString();
 			}
 		}
 	});
@@ -229,7 +280,6 @@
 		}
 
 		let propertydata: {
-			projectid: string,
 			subpropertyOf?: string,
 			class?: string,
 			datatype?: string,
@@ -249,24 +299,51 @@
 			// inverse?: boolean, TODO: Implement later
 			// symmetric?: boolean, TODO: Implement later
 		} = {
-			projectid: projectid,
-			subpropertyOf: subPropertyOf.length > 0 ? subPropertyOf : undefined,
-			class: toClass,
-			datatype: datatype,
-			name: name.length > 0 ? name : undefined,
-			description: description.length > 0 ? description : undefined,
-			languageIn: allowedLanguages.length > 0 ? allowedLanguages : undefined,
-			inSet: inSet.length > 0 ? inSet : undefined,
-			minLength: min_length ? Number(min_length) : undefined,
-			maxLength: min_length ? Number(max_length) : undefined,
-			pattern: pattern.length > 0 ? pattern : undefined,
-			minExclusive: minExclusive,
-			minInclusive: minInclusive,
-			maxExclusive: maxExclusive,
-			maxInclusive: maxInclusive,
+			subpropertyOf: subPropertyOf.length > 0 && subPropertyOf !== 'NONE' ? subPropertyOf : undefined
+		};
+		if (proptype === PropType.LITERAL) {
+			propertydata.datatype = datatype;
+			propertydata.name = name.length > 0 ? name : undefined;
+			propertydata.description = description.length > 0 ? description : undefined;
+			if (string_datatypes.includes(datatype || '')) {
+				propertydata.minLength = min_length ? Number(min_length) : undefined;
+				propertydata.maxLength = min_length ? Number(max_length) : undefined;
+				propertydata.pattern = pattern.length > 0 ? pattern : undefined;
+				propertydata.inSet = inSet.length > 0 ? inSet : undefined;
+				if (datatype === 'rdf:langString') {
+					propertydata.languageIn = allowedLanguages.length > 0 ? allowedLanguages : undefined;
+					propertydata.uniqueLang = true; // TODO: add GUI element for this!
+				}
+			}
+			else if (comparable_datatypes.includes(datatype || '')) {
+				propertydata.minExclusive = minExclusive;
+				propertydata.minInclusive = minInclusive;
+				propertydata.maxExclusive = maxExclusive;
+				propertydata.maxInclusive = maxInclusive;
+			}
 		}
-		console.log(propertydata);
-
+		else if (proptype === PropType.LINK) {
+			propertydata.class = toClass;
+			propertydata.name = name.length > 0 ? name : undefined;
+			propertydata.description = description.length > 0 ? description : undefined;
+		}
+		else if (proptype === PropType.LIST) {
+			propertydata.class = toClass;
+			propertydata.name = name.length > 0 ? name : undefined;
+			propertydata.description = description.length > 0 ? description : undefined;
+		}
+		propertyIri = prefix + ':' + fragment;
+		if (authinfo) {
+			const property_put = api_notget_config(authinfo, {project: projectid, property: propertyIri});
+			console.log(property_put);
+			apiClient.putAdmindatamodelProjectpropertyProperty(propertydata, property_put).then(res => {
+				console.log(res);
+				successInfoStore.set(`Property "${propertyIri}" added successfully!`);
+				refreshPropertiesListNow()
+			}).catch((error) => {
+				errorInfoStore.set(process_api_error(error as Error));
+			});
+		}
 	}
 
 	function modify_property() {
@@ -276,12 +353,28 @@
 
 </script>
 
+{#snippet prefixes()}
+	<DropdownButton bind:isOpen={prefix_is_open} buttonText={prefix} name="prefixselsel" disabled={propiri !== 'new'} class="text-xs">
+		<DropdownMenu bind:isOpen={prefix_is_open} position="left" name="prefixselsel" id="prefixselsel_id">
+			{#each all_prefixes as p}
+				<DropdownLinkItem bind:isOpen={prefix_is_open}
+													onclick={() => {prefix = p; prefix_is_open = false;}}
+													selected={p === prefix}>
+					{p}
+				</DropdownLinkItem>
+			{/each}
+		</DropdownMenu>
+	</DropdownButton>
+{/snippet}
+
 <div>
 	<div>{propiri === 'new' ?  m.add_prop() : m.edit_prop()} <span class="italic">{propiri}</span> </div>
 	<form class="max-w-128 min-w-96">
 		<LabeledDivider>{m.basic_attr()}:</LabeledDivider>
-		<Textfield type='text' label={m.prop_iri()} name="propiri" id="propdiri" placeholder="property IRI" required={true}
-							 bind:value={propertyIri} pattern={ncnameOrQname_pattern} disabled={propiri !== 'new'} />
+		<Textfield type='text' label={m.prop_iri()} name="fragment" id="fragment" placeholder="property ID" required={true}
+							 bind:value={fragment} pattern={ncname_pattern} disabled={propiri !== 'new'}
+							 additional_snippet={prefixes}
+		/>
 		<DropdownField items={all_prop_list} id="allprops_id" name="allprops" label={m.subprop_of()} bind:selectedItem={subPropertyOf} />
 		<PropTypeSelector
 			label={m.property()}

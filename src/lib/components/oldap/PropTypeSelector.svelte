@@ -70,22 +70,6 @@
 		}
 	});
 
-/*
-	$effect(() => {
-		if (datatype !== undefined) {
-			proptype = PropType.LITERAL;
-		} else if (toClass !== undefined) {
-			//
-			// distinguish between link to other resource or link to a list
-			//
-			if (all_res_list.includes(toClass)) {
-				proptype = PropType.LINK;
-			} else if (all_lists_list.includes(toClass)) {
-				proptype = PropType.LIST;
-			}
-		}
-	});
-*/
 
 	$effect(() => {
 		if (proptype === PropType.LITERAL) {
