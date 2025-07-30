@@ -62,7 +62,7 @@
 
 	authInfoStore.subscribe(data => {
 		authinfo = data;
-	})
+	});
 
 	function scrollToTop() {
 		if (topwin) {

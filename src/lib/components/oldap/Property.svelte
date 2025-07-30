@@ -3,6 +3,7 @@ Copyright
 
 @component
 -->
+
 <script lang="ts">
 
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
@@ -38,6 +39,7 @@ Copyright
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import { refreshPropertiesListNow } from '$lib/stores/refresh_propertieslist.svelte';
+	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
 
 	let {
 		/** @param {string} propiri The IRI of the property, or the string 'new' */
@@ -107,6 +109,7 @@ Copyright
 	let allowedLanguages = $state<string[]>([]);
 	let allowedStrings = $state<Set<string|number>>(new Set());
 	let allowedNumbers = $state<Set<string|number>>(new Set());
+	let datamodel = $state<DatamodelClass | null>(null);
 
 	authInfoStore.subscribe(data => {
 		authinfo = data;
@@ -115,6 +118,10 @@ Copyright
 	userStore.subscribe((admin) => {
 		administrator = admin;
 	});
+
+	datamodelStore.subscribe(data => {
+		datamodel = data;
+	})
 
 	function scrollToTop() {
 		if (topwin) {
@@ -147,19 +154,19 @@ Copyright
 		if (!authinfo) return;
 
 		// filter the iri of the property from the list, because a property cannot be a subproperty of itself!
-		all_prop_list = $datamodelStore?.standaloneProperties.filter(p => p.propertyIri.toString() !== propiri).map(p => p.propertyIri.toString()) || [];
+		all_prop_list = datamodel?.standaloneProperties.filter(p => p.propertyIri.toString() !== propiri).map(p => p.propertyIri.toString()) || [];
 		all_prop_list = ['NONE', ...all_prop_list];
 		all_prefixes = [$projectStore?.projectShortName.toString() || '', 'shared', 'dc', 'dcterms', 'skos', 'schema', 'cidoc']
 
 		// get the list of all resource classes that can be the target of a link
-		const tmp_resources = $datamodelStore?.resouces.filter(x => {
+		const tmp_resources = datamodel?.resouces.filter(x => {
 			const gaga = x?.superclass?.map(s => s.toString()) || [];
 			return !gaga.includes('oldap:OldapListNode');
 		}) || [];
 		all_res_list = tmp_resources.map(r => r.iri.toString()) ?? [];
 
 		// get the list of hierarchical lists that are available
-		const tmp_lists = $datamodelStore?.resouces.filter(x => {
+		const tmp_lists = datamodel?.resouces.filter(x => {
 			const gaga = x?.superclass?.map(s => s.toString()) || [];
 			return gaga.includes('oldap:OldapListNode');
 		}) || [];
@@ -176,11 +183,10 @@ Copyright
 			toClass = undefined;
 		}
 		else {
-			console.log("Property.svelte: onMount (EDIT)");
 		  const tmp = QName.createQName(propiri);
 			prefix = tmp.prefix.toString();
 			fragment = tmp.fragment.toString();
-			prop = $datamodelStore?.standaloneProperties.find(p => p.propertyIri.toString() === propiri);
+			prop = datamodel?.standaloneProperties.find(p => p.propertyIri.toString() === propiri);
 			subPropertyOf = prop?.subPropertyOf?.toString() || 'NONE';
 			//propertyIri = prop?.propertyIri.toString() || '';
 		}
@@ -227,7 +233,7 @@ Copyright
 				}
 			}
 		} else {
-			const ancestorprop = $datamodelStore?.standaloneProperties.find(p => p.propertyIri.toString() === subPropertyOf);
+			const ancestorprop = datamodel?.standaloneProperties.find(p => p.propertyIri.toString() === subPropertyOf);
 			datatype = ancestorprop?.datatype;
 			toClass = ancestorprop?.toClass?.toString();
 			if (datatype !== undefined) {
@@ -353,6 +359,10 @@ Copyright
 
 </script>
 
+<!--
+The property IRI consists of a prefix (usually the project shortname) or a common prefix like "dcterms", "schema" etc.
+and the actual property id (which is a xs:NCName
+-->
 {#snippet prefixes()}
 	<DropdownButton bind:isOpen={prefix_is_open} buttonText={prefix} name="prefixselsel" disabled={propiri !== 'new'} class="text-xs">
 		<DropdownMenu bind:isOpen={prefix_is_open} position="left" name="prefixselsel" id="prefixselsel_id">
@@ -378,6 +388,7 @@ Copyright
 		<DropdownField items={all_prop_list} id="allprops_id" name="allprops" label={m.subprop_of()} bind:selectedItem={subPropertyOf} />
 		<PropTypeSelector
 			label={m.property()}
+			{projectid}
 			{propiri}
 			bind:proptype={proptype}
 			bind:datatype={datatype}

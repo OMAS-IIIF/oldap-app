@@ -39,11 +39,15 @@
 	let lang = $state(languageTag());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
 
+	let datamodel = $state<DatamodelClass | null>(null);
+
 	let confirmation_dialog: Confirmation;
 	let confirmation_title = $state('');
 	let confirmation_for_sname = $state('');
 
-
+	datamodelStore.subscribe(dm => {
+		datamodel = dm;
+	});
 /*
 	onMount(() => {
 		prop_list = [];
@@ -59,7 +63,7 @@
 		let tmp_list = [];
 		let tmp_properties: Record<string, PropertyClass> = {};
 		//const datamodel = $datamodelStore;
-		for (const property of ($datamodelStore?.standaloneProperties || [])) {
+		for (const property of (datamodel?.standaloneProperties || [])) {
 			tmp_properties[property.propertyIri.toString()] = property;
 			tmp_list.push(property.propertyIri.toString() || 'XXXX');
 			prop_list = tmp_list
@@ -77,7 +81,7 @@
 
 {#snippet actions()}
 	<div class="flex flex-row items-center justify-end gap-4">
-		<span><Button class="text-xs" onclick={goto_page("/admin/property")}>{m.add_property()}</Button></span>
+		<span><Button class="text-xs" onclick={goto_page("/admin/property", {projectid: project?.projectIri.toString() || ''})}>{m.add_property()}</Button></span>
 	</div>
 {/snippet}
 

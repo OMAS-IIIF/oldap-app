@@ -1,3 +1,12 @@
+<!--
+	@component
+
+	This component implements the selection of the kind of property. Basically a property can be
+	- a literal (PropType.LITERAL)
+	- a pointer to another resource (PropType.LINK)
+	- a pointer to a (hierarchical9 list entry (PropType.LIST)
+
+-->
 <script lang="ts">
 
 	import DropdownMenu from '$lib/components/basic_gui/dropdown/DropdownMenu.svelte';
@@ -5,20 +14,49 @@
 	import DropdownLinkItem from '$lib/components/basic_gui/dropdown/DropdownLinkItem.svelte';
 	import { onMount } from 'svelte';
 	import { XsdDatatypes } from '$lib/oldap/enums/xsd_datatypes';
-	import { datamodelStore } from '$lib/stores/datamodel';
 	import { PropType, propTypeFromString } from '$lib/oldap/enums/proptypes';
+	import { api_get_config } from '$lib/helpers/api_config';
+	import { authInfoStore } from '$lib/stores/authinfo';
+	import { AuthInfo } from '$lib/oldap/classes/authinfo';
+	import { apiClient } from '$lib/shared/apiClient';
+	import { errorInfoStore } from '$lib/stores/errorinfo';
+	import { process_api_error } from '$lib/helpers/process_api_error';
+	import { OldapList } from '$lib/oldap/classes/list';
+	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
+	import { languageTag } from '$lib/paraglide/runtime';
 
 
 	let {
+		/** @param {string} propjectid The project ID (shortname) */
+		projectid,
+
+		/** @param {string} propiri The full QName of the property  */
 		propiri,
+
+		/** @param {propType} proptype The type of the property, one of PropType.LITERAL, PropType.LINK or PropType.LIST */
 		proptype = $bindable(PropType.LITERAL),
+
+		/** @param {string} datatype Iri of the datatype, in the form of "xsd:<datatype>". Supported ate most XSD datatypes
+		 *                           The datatype must be only defined for PropType.LITERAL, for all others it's undefined!
+		 */
 		datatype = $bindable(),
+
+		/** @param {string} toClass If the property points to anoither resource, this param contains the class IRI */
 		toClass = $bindable(),
+
+		/** @param {string} label The label to be used for the field */
 		label = 'PROPERTY',
+
+		/** @param {string[]} all_res_list LIst of all resource Iri's that can be used for toClass */
 		all_res_list,
+
+		/** @param {string[]} all_lists_list List of all available list node classes */
 		all_lists_list,
+
+		/** @param {boolean} disabled True, if the field should be disabled */
 		disabled = false
 	}: {
+		projectid: string,
 		propiri: string,
 		proptype: PropType,
 		datatype?: string,
@@ -29,22 +67,49 @@
 		disabled: boolean
 	} = $props();
 
+	let authinfo: AuthInfo | null = $authInfoStore;
+	let lang = $state(languageTag());
+	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
+
 	let proptype_is_open = $state(false);
-	//let proptype = $state<PropType>(PropType.LITERAL);
 
 	let datatype_is_open = $state(false);
 	let datatypeOptions = $state<string[]>([]);
 
 	let reslink_is_open = $state(false);
-	//let all_res_list = $state<string[]>([]);
 
 	let list_is_open = $state(false);
-	//let all_lists_list = $state<string[]>([]);
 
 	const types = Object.values(PropType);
 
+	let hlists = $state<Record<string, OldapList>>({});
+
+	console.log("ALL_LISTS_LIST: " + all_lists_list);
+
 	onMount(() => {
+		console.log("LANGUAGEOBJECT: " + langobj);
 		datatypeOptions = Object.values(XsdDatatypes);
+
+		// Get hlists associated with the project
+		const config_hlist_search = api_get_config(authinfo || new AuthInfo('', ''), {project: projectid});
+		apiClient.getAdminhlistsearch(config_hlist_search).then(hlistiris => {
+			const promises = hlistiris.map(hl => {
+				const config_hlist_get = api_get_config(authinfo || new AuthInfo('', ''), {iri: hl});
+				return apiClient.getAdminhlistget(config_hlist_get);
+			});
+			Promise.all(promises).then((results) => {
+				let tmp: Record<string, OldapList> = {};
+				results.forEach((hlistdata) => {
+					const hlist = OldapList.fromOldapJson(hlistdata, true);
+					tmp[hlist.nodeClassIri.toString()] = hlist;
+				});
+				hlists = tmp;
+			}).catch(error => {
+				errorInfoStore.set(process_api_error(error as Error));
+			});
+		}).catch(error => {
+			errorInfoStore.set(process_api_error(error as Error));
+		});
 
 		if (propiri === 'new') {
 			proptype = PropType.LITERAL;
@@ -124,13 +189,20 @@
 			</DropdownMenu>
 		</DropdownButton>
 	{:else if proptype === 'LIST'}
-		<DropdownButton bind:isOpen={list_is_open} buttonText={toClass || all_lists_list[0]} name="listlink" {disabled} class="text-xs">
+		<DropdownButton
+			bind:isOpen={list_is_open}
+			buttonText={hlists[toClass || all_lists_list[0]]?.prefLabel?.get(langobj) || hlists[toClass || all_lists_list[0]]?.oldapListId || all_lists_list[0]}
+			name="listlink"
+			{disabled}
+			class="text-xs"
+		>
 			<DropdownMenu bind:isOpen={list_is_open} position="left" name="listlink">
 				{#each all_lists_list as list}
 					<DropdownLinkItem bind:isOpen={list_is_open}
-														onclick={() => {toClass = list}}
-														selected={list === toClass}>
-						{list}
+														value={hlists[list].nodeClassIri.toString()}
+														onclick={(val) => {toClass = val}}
+														selected={hlists[list].nodeClassIri.toString() === toClass}>
+						{hlists[list]?.prefLabel?.get(langobj) || hlists[list]?.oldapListId || list}
 					</DropdownLinkItem>
 				{/each}
 			</DropdownMenu>
@@ -139,4 +211,3 @@
 	{/if}
 
 </div>
-
