@@ -16,6 +16,7 @@
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import { refreshHlistsListNow } from '$lib/stores/refresh_hlistslist.svelte';
+	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
 
 	const ncname_pattern: RegExp = /^[A-Za-z_][A-Za-z0-9._-]*$/;
 
@@ -73,7 +74,7 @@
 
 		<LangstringField bind:this={prefLabel_field} label={m.label()} name="label" id="label" placeholder="label"
 										 value={prefLabel} />
-		<LangstringField bind:this={definition_field} label="COMMENT" name="comment" id="comment" placeholder="comment"
+		<LangstringField bind:this={definition_field} label={m.comment()} name="comment" id="comment" placeholder="comment"
 										 value={definition} />
 		<div class="flex justify-center gap-4 mt-6">
 			<Button class="mx-4 my-2" onclick={() => {isopen = false}}>{m.cancel()}</Button>

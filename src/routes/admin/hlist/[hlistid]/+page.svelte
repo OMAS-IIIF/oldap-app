@@ -4,7 +4,6 @@
 	import { userStore } from '$lib/stores/user';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { OldapUser } from '$lib/oldap/classes/user';
-	import { onMount } from 'svelte';
 	import { AdminPermission } from '$lib/oldap/enums/admin_permissions';
 	import { projectStore } from '$lib/stores/project';
 	import { OldapProject } from '$lib/oldap/classes/project';
@@ -21,7 +20,10 @@
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
 	import { goto_page } from '$lib/helpers/goto_page';
 	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
-
+	import HList from '$lib/components/oldap/HList.svelte';
+	import LabeledDivider from '$lib/components/basic_gui/inputs/LabeledDivider.svelte';
+	import LangstringField from '$lib/components/basic_gui/inputs/LangstringField.svelte';
+	import { LangString } from '$lib/oldap/datatypes/langstring';
 
 	let { data }: PageProps = $props();
 	let current_project = $state<OldapProject | null>(null);
@@ -37,6 +39,11 @@
 
 	let hlist = $state<OldapList>();
 	let rootIsOpen = $state(false);
+
+	let prefLabel_field: LangstringField;
+	let prefLabel = $state<LangString | null>(null);
+	let definition_field: LangstringField;
+	let definition = $state<LangString | null>(null);
 
 	let refresh = $state(0);
 
@@ -88,21 +95,24 @@
 						hlistid: data.hlistid
 					});
 					const jsondata = await apiClient.getAdminhlistProjectHlistid(config_hlistdata);
+					console.log(jsondata);
 					hlist = OldapList.fromOldapJson(jsondata);
+					prefLabel = hlist.prefLabel || null;
+					definition = hlist.definition || null;
 					topnodes = process_tnodes(hlist.nodes) || []
 				}
 			}
 		}
 	}
 
-	onMount(async () => {
-		await read_data();
-	});
-
 	$effect(() => {
 		const _ = $refreshNodeTree;
 		read_data();
 	})
+
+	function modify_hlist(event: Event) {
+
+	}
 
 </script>
 
@@ -110,6 +120,16 @@
 	<div>{data.hlistid !== 'new' ? m.edit()  : m.add()} Hierarchical List for "{hlist?.prefLabel?.get(langobj)}"</div>
 	<div class="py-2"> </div>
 	<form class="max-w-128 min-w-96">
+		<LabeledDivider>LIST</LabeledDivider>
+		<LangstringField bind:this={prefLabel_field} label={m.label()} name="label" id="label" placeholder="label"
+										 value={prefLabel} />
+		<LangstringField bind:this={definition_field} label={m.comment()} name="comment" id="comment" placeholder="comment"
+										 value={definition} />
+		<Button class="mx-4 my-2" onclick={(event: Event) => {modify_hlist(event)}}>{m.modify()}</Button>
+
+	</form>
+	<form class="max-w-128 min-w-96">
+		<LabeledDivider>NODES</LabeledDivider>
 		<ul class="pl-4 list-none border-l border-gray-300 ml-1 space-y-1">
 			{#if topnodes.length > 0}
 				{#each topnodes as node}
@@ -125,5 +145,5 @@
 </div>
 
 <DialogWin bind:isopen={rootIsOpen} title="ADD ROOT NODE">
-	ROOT NODE
+		<HList bind:isopen={rootIsOpen} />
 </DialogWin>
