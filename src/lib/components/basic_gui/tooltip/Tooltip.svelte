@@ -27,14 +27,14 @@
 				if (!tooltipEl) return;
 				let ele_width2 = Math.round(tooltipEl.offsetWidth / 2.0);
 				let ele_height = tooltipEl.offsetHeight;
-
 				if (left < (ele_width2 + 10)) {
 					Object.assign(tooltipEl.style, {
 						left: `${rect.left + window.scrollX}px`
 					});
 				} else if (right < (ele_width2 + 10)) {
 					Object.assign(tooltipEl.style, {
-						right: `${rect.right + window.scrollX}px`
+						//right: `${rect.right + window.scrollX - ele_width2}px`
+						right: `${ele_width2}px`
 					});
 				} else {
 					Object.assign(tooltipEl.style, {

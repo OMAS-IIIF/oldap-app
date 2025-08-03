@@ -24,6 +24,11 @@
 	import LabeledDivider from '$lib/components/basic_gui/inputs/LabeledDivider.svelte';
 	import LangstringField from '$lib/components/basic_gui/inputs/LangstringField.svelte';
 	import { LangString } from '$lib/oldap/datatypes/langstring';
+	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import { successInfoStore } from '$lib/stores/successinfo';
+	import { errorInfoStore } from '$lib/stores/errorinfo';
+	import { process_api_error } from '$lib/helpers/process_api_error';
+	import { onMount, tick } from 'svelte';
 
 	let { data }: PageProps = $props();
 	let current_project = $state<OldapProject | null>(null);
@@ -44,6 +49,10 @@
 	let prefLabel = $state<LangString | null>(null);
 	let definition_field: LangstringField;
 	let definition = $state<LangString | null>(null);
+
+	let confirmation_dialog: Confirmation;
+	let confirmation_title = $state('');
+	let confirmation_message = $state('');
 
 	let refresh = $state(0);
 
@@ -105,13 +114,52 @@
 		}
 	}
 
+	onMount(async () => {
+		await tick();
+		scrollToTop();
+	})
+
 	$effect(() => {
 		const _ = $refreshNodeTree;
 		read_data();
 	})
 
-	function modify_hlist(event: Event) {
+	const modify_hlist = async () => {
+		//confirmation_title = m.modify_project();
+		//confirmation_message = m.confirm_project_modify({sname: project?.projectShortName.toString() || ''});
+		confirmation_title = m.mod_hlist();
+		confirmation_message = m.mod_hlist2({hlist: hlist?.prefLabel?.get(langobj) || ''});
 
+		const ok = await confirmation_dialog.open();
+		if (!ok) return;
+
+		let hlistdata: {
+			prefLabel?: string[] | Partial<Record<'add'|'del', string[]>> | null,
+			definition?: string[] | Partial<Record<'add'|'del', string[]>> | null,
+		} = {};
+
+		const new_prefLabel = prefLabel_field.get_value();
+		const tmp_modprefLabel = new_prefLabel.modify_data(hlist?.prefLabel || null);
+		if (tmp_modprefLabel !== undefined) {
+			hlistdata.prefLabel = new_prefLabel.modify_data(hlist?.prefLabel || null);
+		}
+
+		const new_definition = definition_field.get_value();
+		const tmp_modcomment = new_definition.modify_data(hlist?.definition || null);
+		if (tmp_modcomment !== undefined) {
+			hlistdata.definition = new_definition.modify_data(hlist?.definition || null);
+		}
+		if (hlistdata) {
+			const hlist_post = api_notget_config(authinfo, {
+				project: current_project?.projectShortName.toString() || '',
+				hlistid: data.hlistid
+			});
+			apiClient.postAdminhlistProjectHlistid(hlistdata, hlist_post).then((res) => {
+				successInfoStore.set(m.mod_hlist3({hlist: hlist?.oldapListId?.toString() || ''}));
+			}).catch((error) => {
+				errorInfoStore.set(process_api_error(error as Error));
+			});
+		}
 	}
 
 </script>
@@ -147,3 +195,8 @@
 <DialogWin bind:isopen={rootIsOpen} title="ADD ROOT NODE">
 		<HList bind:isopen={rootIsOpen} />
 </DialogWin>
+
+<Confirmation bind:this={confirmation_dialog} title={confirmation_title}>
+	{confirmation_message}
+</Confirmation>
+

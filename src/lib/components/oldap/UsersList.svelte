@@ -7,7 +7,7 @@
 	import Checkbox from '$lib/components/basic_gui/checkbox/Checkbox.svelte';
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
 	import * as m from '$lib/paraglide/messages.js';
-	import { Pencil, Trash2 } from '@lucide/svelte'
+	import { Pencil, Plus, Trash2 } from '@lucide/svelte';
 	import TableHeader from '$lib/components/basic_gui/table/TableHeader.svelte';
 	import TableBody from '$lib/components/basic_gui/table/TableBody.svelte';
 	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
@@ -21,6 +21,7 @@
 	import { authInfoStore } from '$lib/stores/authinfo';
 	import { languageTag } from '$lib/paraglide/runtime';
 	import { goto_page } from '$lib/helpers/goto_page';
+	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
 
 
 	let { table_height, administrator = null, project = null }: {
@@ -134,7 +135,12 @@
 		{#if administrator?.isRoot}
 			<span><Checkbox label="Show all users" position="left" bind:checked={show_all_users} /></span>
 		{/if}
-		<span><Button class="text-xs" onclick={goto_page("/admin/user")}>{m.add_user()}</Button></span>
+		<Tooltip text={m.add_user()}>
+			<Button round={true} class="text-xs" onclick={goto_page("/admin/user")}>
+				<Plus size="16" strokeWidth="1" />
+			</Button>
+		</Tooltip>
+
 	</div>
 {/snippet}
 

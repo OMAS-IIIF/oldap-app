@@ -19,12 +19,13 @@
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
 	import TableItem from '$lib/components/basic_gui/table/TableItem.svelte';
 	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
-	import { Pencil, Trash2 } from '@lucide/svelte';
+	import { Pencil, Plus, Trash2 } from '@lucide/svelte';
 	import Table from '$lib/components/basic_gui/table/Table.svelte';
 	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
 	import TableHeader from '$lib/components/basic_gui/table/TableHeader.svelte';
 	import TableBody from '$lib/components/basic_gui/table/TableBody.svelte';
 	import { dataPermissionAsString } from '$lib/oldap/enums/data_permissions';
+	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
 
 	let { table_height, administrator = null, project = null }: {
 		table_height: number,
@@ -129,7 +130,13 @@
 		{#if administrator?.isRoot}
 			<span><Checkbox label={m.show_all_permsets()} position="left" bind:checked={show_all_permsets} /></span>
 		{/if}
-		<span><Button class="text-xs" onclick={goto_page("/admin/permset")}>ADD PERMSET</Button></span>
+		<!--<span><Button class="text-xs" onclick={goto_page("/admin/permset")}>ADD PERMSET</Button></span>-->
+		<Tooltip text={m.add_permset()}>
+			<Button round={true} class="text-xs" onclick={goto_page("/admin/permset")}>
+				<Plus size="16" strokeWidth="1" />
+			</Button>
+		</Tooltip>
+
 	</div>
 {/snippet}
 

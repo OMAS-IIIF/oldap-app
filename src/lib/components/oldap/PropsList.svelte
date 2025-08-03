@@ -21,12 +21,13 @@
 	import { spinnerStore } from '$lib/stores/spinner';
 	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
 	import { PropertyClass } from '$lib/oldap/classes/property';
-	import { Download, Pencil, Trash2 } from '@lucide/svelte';
+	import { Download, Pencil, Plus, Trash2 } from '@lucide/svelte';
 	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
 	import { datamodelStore } from '$lib/stores/datamodel';
 	import { on } from 'svelte/events';
 	import { onMount } from 'svelte';
 	import { refreshPropertiesList } from '$lib/stores/refresh_propertieslist.svelte';
+	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
 
 	let { table_height, project = null }: {
 		table_height: number,
@@ -48,16 +49,7 @@
 	datamodelStore.subscribe(dm => {
 		datamodel = dm;
 	});
-/*
-	onMount(() => {
-		prop_list = [];
-		const datamodel = $datamodelStore;
-		for (const property of (datamodel?.standaloneProperties || [])) {
-			properties[property.propertyIri.toString()] = property;
-			prop_list.push(property.propertyIri.toString() || 'XXXX');
-		}
-	});
-*/
+
 	$effect(() => {
 		const _ = $refreshPropertiesList;
 		let tmp_list = [];
@@ -65,7 +57,7 @@
 		//const datamodel = $datamodelStore;
 		for (const property of (datamodel?.standaloneProperties || [])) {
 			tmp_properties[property.propertyIri.toString()] = property;
-			tmp_list.push(property.propertyIri.toString() || 'XXXX');
+			tmp_list.push(property.propertyIri.toString() || '');
 			prop_list = tmp_list
 			properties = tmp_properties;
 		}
@@ -81,7 +73,11 @@
 
 {#snippet actions()}
 	<div class="flex flex-row items-center justify-end gap-4">
-		<span><Button class="text-xs" onclick={goto_page("/admin/property", {projectid: project?.projectIri.toString() || ''})}>{m.add_property()}</Button></span>
+		<Tooltip text={m.add_property()}>
+			<Button round={true} class="text-xs" onclick={goto_page("/admin/property", {projectid: project?.projectIri.toString() || ''})}>
+				<Plus size="16" strokeWidth="1" />
+			</Button>
+		</Tooltip>
 	</div>
 {/snippet}
 

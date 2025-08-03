@@ -1,12 +1,14 @@
 import { OldapObject } from '$lib/oldap/classes/object';
 import { Iri } from '$lib/oldap/datatypes/xsd_iri';
 import { LangString } from '$lib/oldap/datatypes/langstring';
+import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
 
 export type ResourceClassOptions = {
 	creator: Iri,
 	created: Date,
 	contributor: Iri,
 	modified: Date,
+	projectid: NCName,
 	iri: Iri,
 	superclass?: Iri[],
 	label?: LangString,
@@ -15,6 +17,7 @@ export type ResourceClassOptions = {
 };
 
 export class ResourceClass extends OldapObject {
+	#projectid: NCName;
 	#iri: Iri;
 	#superclass?: Iri[];
 	label?: LangString;
@@ -23,11 +26,16 @@ export class ResourceClass extends OldapObject {
 
 	constructor(options: ResourceClassOptions) {
 		super(options.creator, options.created, options.contributor, options.modified);
+		this.#projectid = options.projectid;
 		this.#iri = options.iri;
 		this.#superclass = options.superclass;
 		this.label = options.label;
 		this.comment = options.comment;
 		this.closed = options.closed;
+	}
+
+	get projectid() {
+		return this.#projectid;
 	}
 
 	get iri() {
@@ -43,6 +51,7 @@ export class ResourceClass extends OldapObject {
 		const created = new Date(json.created);
 		const contributor = new Iri(json.contributor);
 		const modified = new Date(json.modified);
+		const projectid = new NCName(json.projectid);
 		const iri = new Iri(json.iri);
 		const superclass = json.superclass?.map(x => new Iri(x)) //new Iri(json.superclass);
 		const label = LangString.fromJson(json.label);
@@ -53,6 +62,7 @@ export class ResourceClass extends OldapObject {
 			created: created,
 			contributor: contributor,
 			modified: modified,
+			projectid: projectid,
 			iri: iri,
 			superclass: superclass,
 			label: label,

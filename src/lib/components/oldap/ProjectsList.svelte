@@ -19,7 +19,8 @@
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
 	import { authInfoStore } from '$lib/stores/authinfo';
-	import { Pencil, Trash2 } from '@lucide/svelte';
+	import { Pencil, Plus, Trash2 } from '@lucide/svelte';
+	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
 
 	let { table_height }: {
 		table_height: number,
@@ -97,7 +98,11 @@
 
 {#snippet actions()}
 	<div class="flex flex-row items-center justify-end gap-4">
-		<span><Button class="text-xs" onclick={goto_page("/admin/project")}>{m.add_project()}</Button></span>
+		<Tooltip text={m.add_project()}>
+			<Button round={true} class="text-xs" onclick={goto_page("/admin/project")}>
+				<Plus size="16" strokeWidth="1" />
+			</Button>
+		</Tooltip>
 	</div>
 {/snippet}
 

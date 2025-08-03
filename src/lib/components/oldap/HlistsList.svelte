@@ -24,6 +24,7 @@
 	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
 	import { spinnerStore } from '$lib/stores/spinner';
 	import { refreshHlistsListNow, refreshHlistsList } from '$lib/stores/refresh_hlistslist.svelte';
+	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
 
 	let { table_height, project = null, hlistIsOpen = $bindable() }: {
 		table_height: number,
@@ -164,14 +165,18 @@
 {#snippet actions()}
 	<div class="flex flex-row items-center justify-end gap-4">
 		<span>
-			<Button round={true} class="text-xs" onclick={() => { hlistIsOpen = true; }}>
-				<Plus size="16" strokeWidth="1" />
-			</Button>
+			<Tooltip text={m.add_list()}>
+				<Button round={true} class="text-xs" onclick={() => { hlistIsOpen = true; }}>
+					<Plus size="16" strokeWidth="1" />
+				</Button>
+			</Tooltip>
 		</span>
 		<span>
-			<Button round={true} class="text-xs" onclick={() => {uploadIsOpen = true}}>
-				<Upload size="16" strokeWidth="1" />
-			</Button>
+			<Tooltip text={m.upload_hlist()}>
+				<Button round={true} class="text-xs" onclick={() => {uploadIsOpen = true}}>
+					<Upload size="16" strokeWidth="1" />
+				</Button>
+			</Tooltip>
 		</span>
 	</div>
 {/snippet}

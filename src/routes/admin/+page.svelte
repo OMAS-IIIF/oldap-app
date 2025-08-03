@@ -26,6 +26,7 @@
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import { datamodelStore } from '$lib/stores/datamodel';
+	import ResourcesList from '$lib/components/oldap/ResourcesList.svelte';
 
 	let tabs: TabsType = $state({}); // info about the tabs: key and (lang-dependent) name
 	let administrator: OldapUser | null = $state($userStore);  // the admin user...
@@ -157,11 +158,13 @@
 	</DialogWin>
 {/if}
 {#if selected_tab === 'models'}
-	<div class="flex flex-row">
-		<div class="basis-1/2">
-			<PropsList table_height={table_height} {project} />
+	<div class="grid grid-cols-2 gap-4 h-full">
+		<div class="min-w-0">
+			<PropsList {table_height} {project} />
 		</div>
-		<div class="basis-1/2">Resources</div>
+		<div class="min-w-0">
+			<ResourcesList {table_height} {project} />
+		</div>
 	</div>
 {/if}
 {#if selected_tab === 'permsets'}
