@@ -2,6 +2,14 @@ import { OldapObject } from '$lib/oldap/classes/object';
 import { Iri } from '$lib/oldap/datatypes/xsd_iri';
 import { LangString } from '$lib/oldap/datatypes/langstring';
 import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
+import { PropertyClass } from '$lib/oldap/classes/property';
+
+export interface HasProperty {
+	maxCount?: number
+	minCount?: number;
+	order?: number;
+	property: PropertyClass;
+}
 
 export type ResourceClassOptions = {
 	creator: Iri,
@@ -13,7 +21,8 @@ export type ResourceClassOptions = {
 	superclass?: Iri[],
 	label?: LangString,
 	comment?: LangString,
-	closed?: boolean
+	closed?: boolean,
+	hasProperty?: HasProperty[]
 };
 
 export class ResourceClass extends OldapObject {
@@ -23,6 +32,7 @@ export class ResourceClass extends OldapObject {
 	label?: LangString;
 	comment?: LangString;
 	closed?: boolean;
+	hasProperty?: HasProperty[];
 
 	constructor(options: ResourceClassOptions) {
 		super(options.creator, options.created, options.contributor, options.modified);
@@ -32,6 +42,7 @@ export class ResourceClass extends OldapObject {
 		this.label = options.label;
 		this.comment = options.comment;
 		this.closed = options.closed;
+		this.hasProperty = options.hasProperty;
 	}
 
 	get projectid() {
@@ -57,6 +68,33 @@ export class ResourceClass extends OldapObject {
 		const label = LangString.fromJson(json.label);
 		const comment = LangString.fromJson(json.comment);
 		const closed = json.closed;
+		let hasProperty: HasProperty[] = []; // TODO: maybe we must make "undefined" as default value...
+		if (json?.hasProperty && json?.hasProperty?.length > 0) {
+			const hps: HasProperty[] = [];
+			for (const tmphp of json.hasProperty) {
+				const hp: HasProperty = {} as HasProperty;
+				if (tmphp?.minCount) hp.minCount = parseInt(tmphp.minCount);
+				if (tmphp?.maxCount) hp.maxCount = parseInt(tmphp.maxCount);
+				if (tmphp?.order)	hp.order = parseFloat(tmphp.order);
+				tmphp.property = PropertyClass.fromOldapJson(tmphp.property);
+				hp.property = tmphp.property;
+				hps.push(hp)
+			}
+			hps.sort((a, b) => {
+				// beide haben keine order → gleichgestellt
+				if (a.order === undefined && b.order === undefined) return 0
+
+				// a hat keine order → nach hinten
+				if (a.order === undefined) return 1
+
+				// b hat keine order → nach hinten
+				if (b.order === undefined) return -1
+
+				// beide haben order → nach Zahl sortieren
+				return a.order - b.order
+			});
+			hasProperty = hps;
+		}
 		return new ResourceClass({
 			creator: creator,
 			created: created,
@@ -68,6 +106,31 @@ export class ResourceClass extends OldapObject {
 			label: label,
 			comment: comment,
 			closed: closed,
+			hasProperty: hasProperty,
 		});
+	}
+
+	clone() {
+		const tmp = new ResourceClass({
+			creator: this.creator.clone(),
+			created: new Date(this.created.getTime()),
+			contributor: this.contributor.clone(),
+			modified: new Date(this.modified.getTime()),
+			projectid: this.projectid.clone(),
+			iri: this.iri.clone(),
+			superclass: this.superclass?.map(x => x.clone()),
+			label: this.label?.clone(),
+			comment: this.comment?.clone(),
+			closed: this.closed,
+			hasProperty: this.hasProperty?.map(x => {
+				return {
+					property: x.property.clone(),
+					minCount: x.minCount,
+					maxCount: x.maxCount,
+					order: x.order
+				}
+			})
+		});
+		return tmp;
 	}
 }

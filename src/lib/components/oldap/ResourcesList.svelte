@@ -47,11 +47,10 @@
 	$effect(() => {
 		//const _ = $refreshPropertiesList;
 		// get the list of all resource classes that can be the target of a link
-		const tmp_res = datamodel?.resouces.filter(x => {
+		const tmp_res = datamodel?.resources.filter(x => {
 			const gaga = x?.superclass?.map(s => s.toString()) || [];
 			return !gaga.includes('oldap:OldapListNode');
 		}) || [];
-		console.log("-------->", tmp_res);
 
 		let tmp_list = [];
 		let tmp_resources: Record<string, ResourceClass> = {};

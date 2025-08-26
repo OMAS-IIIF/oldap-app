@@ -133,4 +133,8 @@ export class XsdDate {
 	get day() {
 		return this.#day;
 	}
+
+	clone(): XsdDate {
+		return new XsdDate(this.#year, this.#month, this.#day);
+	}
 }

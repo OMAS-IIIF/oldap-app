@@ -1,6 +1,14 @@
 <script lang="ts">
 
-	let { children, onclick = null, id = null, disabled=false, class: userClass = "", ariaExpanded = null, ariaHaspopup = null, round = false } = $props();
+	let {
+		children,
+		onclick = null,
+		id = null,
+		disabled=false,
+		class: userClass = "",
+		ariaExpanded = null,
+		ariaHaspopup = null,
+		round = false } = $props();
 
 </script>
 

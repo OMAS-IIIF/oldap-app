@@ -87,6 +87,34 @@ export class PropertyClass extends OldapObject {
 		return this.#propertyIri;
 	}
 
+	clone(): PropertyClass {
+		return new PropertyClass({
+			creator: this.creator.clone(),
+			created: new Date(this.created.getTime()),
+			contributor: this.contributor.clone(),
+			modified: new Date(this.modified.getTime()),
+			projectId: this.projectId.clone(),
+			propertyIri: this.propertyIri.clone(),
+			subPropertyOf: this.subPropertyOf?.clone(),
+			toClass: this.toClass?.clone(),
+			datatype: this.datatype,
+			name: this.name?.clone(),
+			description: this.description?.clone(),
+			languageIn: this.languageIn ? new Set<Language>([...this.languageIn]) : undefined,
+			uniqueLang: this.uniqueLang,
+			inSet: this.inSet ? new Set<string | number>([...this.inSet]) : undefined,
+			minLength: this.minLength,
+			maxLength: this.maxLength,
+			pattern: this.pattern,
+			minExclusive: this.minExclusive,
+			minInclusive: this.minInclusive,
+			maxExclusive: this.maxExclusive,
+			maxInclusive: this.maxInclusive,
+			lessThan: this.lessThan?.clone(),
+			lessThanOrEquals: this.lessThanOrEquals?.clone()
+		})
+	}
+
 	static fromOldapJson(json: any): PropertyClass {
 		const creator = new Iri(json.creator);
 		const created = new Date(json.created);

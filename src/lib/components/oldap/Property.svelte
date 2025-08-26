@@ -33,27 +33,60 @@ Copyright
 	import DropdownLinkItem from '$lib/components/basic_gui/dropdown/DropdownLinkItem.svelte';
 	import { QName } from '$lib/oldap/datatypes/xsd_qname';
 	import { projectStore } from '$lib/stores/project';
-	import { api_notget_config } from '$lib/helpers/api_config';
+	import { api_config, api_notget_config } from '$lib/helpers/api_config';
 	import { apiClient } from '$lib/shared/apiClient';
 	import { successInfoStore } from '$lib/stores/successinfo';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import { refreshPropertiesListNow } from '$lib/stores/refresh_propertieslist.svelte';
 	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
+	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import Numberfield from '$lib/components/basic_gui/inputs/Numberfield.svelte';
+	import type { HasProperty } from '$lib/oldap/classes/resource';
+	import { OldapError } from '$lib/oldap/errors/OldapError';
+	import { spinnerStore } from '$lib/stores/spinner';
+
+	interface PropertyData {
+		subPropertyOf?: string,
+		class?: string,
+		datatype?: string,
+		name?: string[] | Partial<Record<'add' | 'del', string[]>> | null,
+		description?: string[] | Partial<Record<'add' | 'del', string[]>> | null,
+		languageIn?: string[],
+		uniqueLang?: boolean,
+		inSet?: string[],
+		minLength?: number | null,
+		maxLength?: number | null,
+		pattern?: string | null,
+		minExclusive?: number | null,
+		minInclusive?: number | null,
+		maxExclusive?: number | null,
+		maxInclusive?: number | null,
+		// transitive?: boolean, TODO: Implement later
+		// inverse?: boolean, TODO: Implement later
+		// symmetric?: boolean, TODO: Implement later
+	}
 
 	let {
 		/** @param {string} propiri The IRI of the property, or the string 'new' */
 		propiri,
 
+		/** @param {string} resiri The IRI of the resource class, (NOTE: only for non-standalone properties) */
+		resiri,
+
 		/** @param {string} projectid The project ID (shortname) */
 		projectid,
+
+		dialogstatus = $bindable(),
 
 		/** @param {HTMLElement} topwin The top HTML that is been used to scroll to the top */
 		topwin
 	} : {
 			propiri: string,
+			resiri?: string,
 			projectid : string,
-			topwin: HTMLElement
+			dialogstatus?: boolean,
+			topwin?: HTMLElement,
 		} = $props();
 
 	//const ncnameOrQname_pattern: RegExp = /^([A-Za-z_][\w.-]*(:[A-Za-z_][\w.-]*)?)$/;
@@ -77,8 +110,8 @@ Copyright
 
 	let authinfo: AuthInfo | null = $authInfoStore;
 	let administrator = $state<OldapUser | null>(null);
-	let property: PropertyClass | null = null;
-	let prop = $state<PropertyClass | undefined>();
+	let prop = $state<PropertyClass>();
+	let hasprop = $state<HasProperty>();
 
 	let propertyIri = $state('');
 	let prefix_is_open = $state(false);
@@ -89,11 +122,10 @@ Copyright
 	let proptype = $state<PropType>(PropType.LITERAL);
 	let datatype = $state<string|undefined>();
 	let toClass = $state<string|undefined>();
-	let name_field: LangstringField;
+	let name_field = $state<LangstringField>();
 	let name = $state<LangString | null>(null);
-	let description_field: LangstringField;
+	let description_field = $state<LangstringField>();
 	let description = $state<LangString | null>(null);
-
 
 	let all_prop_list = $state<string[]>([]);
 	let all_res_list = $state<string[]>([]);
@@ -111,6 +143,16 @@ Copyright
 	let allowedNumbers = $state<Set<string|number>>(new Set());
 	let datamodel = $state<DatamodelClass | null>(null);
 
+	let minCount = $state<string>();
+	let maxCount = $state<string>();
+	let order = $state<string>();
+
+	let add_standalone_prop = $state(false);
+
+	let confirmation_dialog: Confirmation;
+	let confirmation_title = $state('');
+	let confirmation_message = $state('');
+
 	authInfoStore.subscribe(data => {
 		authinfo = data;
 	});
@@ -121,7 +163,8 @@ Copyright
 
 	datamodelStore.subscribe(data => {
 		datamodel = data;
-	})
+		console.log('-----------=================> datamodel changed');
+	});
 
 	function scrollToTop() {
 		if (topwin) {
@@ -153,20 +196,31 @@ Copyright
 	onMount(async () => {
 		if (!authinfo) return;
 
+		// first we check if are trying to modify a standalone property from within a resource. That not allowed!
+		if (resiri && propiri !== 'new') {
+			const tmp = datamodel?.standaloneProperties.find(p => p.propertyIri.toString() === propiri);
+			if (tmp !== undefined) {
+				add_standalone_prop = true;
+			}
+		}
+
 		// filter the iri of the property from the list, because a property cannot be a subproperty of itself!
 		all_prop_list = datamodel?.standaloneProperties.filter(p => p.propertyIri.toString() !== propiri).map(p => p.propertyIri.toString()) || [];
 		all_prop_list = ['NONE', ...all_prop_list];
-		all_prefixes = [$projectStore?.projectShortName.toString() || '', 'shared', 'dc', 'dcterms', 'skos', 'schema', 'cidoc']
+		all_prefixes = [$projectStore?.projectShortName.toString() || '']
+		if (administrator?.isRoot && projectid !== 'shared') {
+			all_prefixes = [...all_prefixes, 'shared', 'dc', 'dcterms', 'skos', 'schema', 'cidoc'];
+		}
 
 		// get the list of all resource classes that can be the target of a link
-		const tmp_resources = datamodel?.resouces.filter(x => {
+		const tmp_resources = datamodel?.resources.filter(x => {
 			const gaga = x?.superclass?.map(s => s.toString()) || [];
 			return !gaga.includes('oldap:OldapListNode');
 		}) || [];
 		all_res_list = tmp_resources.map(r => r.iri.toString()) ?? [];
 
 		// get the list of hierarchical lists that are available
-		const tmp_lists = datamodel?.resouces.filter(x => {
+		const tmp_lists = datamodel?.resources.filter(x => {
 			const gaga = x?.superclass?.map(s => s.toString()) || [];
 			return gaga.includes('oldap:OldapListNode');
 		}) || [];
@@ -174,7 +228,6 @@ Copyright
 
 		if (propiri === 'new') {
 			// initialize a new property to be added to reasonable values...
-			console.log("Property.svelte: onMount (NEW)");
 
 			prefix = $projectStore?.projectShortName.toString() || '';
 			fragment = '';
@@ -186,7 +239,16 @@ Copyright
 		  const tmp = QName.createQName(propiri);
 			prefix = tmp.prefix.toString();
 			fragment = tmp.fragment.toString();
-			prop = datamodel?.standaloneProperties.find(p => p.propertyIri.toString() === propiri);
+			if (resiri) {
+				const res = datamodel?.resources.find(r => r.iri.toString() === resiri);
+				if (res) {
+					hasprop = res?.hasProperty?.find(p => p.property.propertyIri.toString() === propiri);
+					prop = hasprop?.property;
+				}
+			}
+			else {
+				prop = datamodel?.standaloneProperties.find(p => p.propertyIri.toString() === propiri);
+			}
 			subPropertyOf = prop?.subPropertyOf?.toString() || 'NONE';
 			//propertyIri = prop?.propertyIri.toString() || '';
 		}
@@ -231,29 +293,38 @@ Copyright
 				if (prop?.languageIn) {
 					allowedLanguages = Array.from(prop.languageIn).map(l => l.toString());
 				}
+				minCount = hasprop?.minCount?.toString();
+				maxCount = hasprop?.maxCount?.toString();
+				order = hasprop?.order?.toString();
 			}
 		} else {
 			const ancestorprop = datamodel?.standaloneProperties.find(p => p.propertyIri.toString() === subPropertyOf);
 			datatype = ancestorprop?.datatype;
 			toClass = ancestorprop?.toClass?.toString();
-			if (datatype !== undefined) {
-				proptype = PropType.LITERAL;
-			} else if (toClass !== undefined) {
-				//
-				// distinguish between link to other resource or link to a list
-				//
-				if (all_res_list.includes(toClass)) {
-					proptype = PropType.LINK;
-				} else if (all_lists_list.includes(toClass)) {
-					proptype = PropType.LIST;
-				}
+		}
+		if (datatype !== undefined) {
+			proptype = PropType.LITERAL;
+		} else if (toClass !== undefined) {
+			//
+			// distinguish between link to other resource or link to a list
+			//
+			if (all_res_list.includes(toClass)) {
+				proptype = PropType.LINK;
+			} else if (all_lists_list.includes(toClass)) {
+				proptype = PropType.LIST;
 			}
 		}
+
 	});
 
-	function add_property() {
-		const name = name_field.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
-		const description = description_field.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
+	const add_property = async () => {
+		confirmation_title = m.add_property();
+		confirmation_message = m.confirm_property_add({propiri: prefix + ":" + fragment});
+		const ok = await confirmation_dialog.open();
+		if (!ok) return;
+
+		const name = name_field?.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
+		const description = description_field?.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
 
 		//const inSet = allowedStrings.size > 0 ? Array.from(allowedStrings.values()) : allowedNumbers.size > 0 ? Array.from(allowedNumbers.values()) : [];
 
@@ -285,35 +356,33 @@ Copyright
 			}
 		}
 
-		let propertydata: {
-			subpropertyOf?: string,
-			class?: string,
-			datatype?: string,
-			name?: string[],
-			description?: string[],
-			languageIn?: string[],
-			uniqueLang?: boolean,
-			inSet?: string[],
-			minLength?: number,
-			maxLength?: number,
-			pattern?: string,
-			minExclusive?: number,
-			minInclusive?: number,
-			maxExclusive?: number,
-			maxInclusive?: number,
-			// transitive?: boolean, TODO: Implement later
-			// inverse?: boolean, TODO: Implement later
-			// symmetric?: boolean, TODO: Implement later
-		} = {
-			subpropertyOf: subPropertyOf.length > 0 && subPropertyOf !== 'NONE' ? subPropertyOf : undefined
+		interface AddPropertyData extends PropertyData {
+			minCount?: number, // only used when resiri is given, non-standalone property!
+			maxCount?: number, // only used when resiri is given, non-standalone property!
+			order?: number, // only used when resiri is given, non-standalone property!
+		}
+
+		let propertydata: AddPropertyData = {
+			subPropertyOf: subPropertyOf.length > 0 && subPropertyOf !== 'NONE' ? subPropertyOf : undefined
 		};
+
+		if (resiri) {
+			const minCountNum = Number(minCount);
+			propertydata.minCount = !isNaN(minCountNum) ? minCountNum : undefined;
+			const maxCountNum = Number(maxCount);
+			propertydata.maxCount = !isNaN(maxCountNum) ? maxCountNum : undefined;
+			const orderNum = Number(order);
+			propertydata.order = !isNaN(orderNum) ? orderNum : undefined;
+		}
+		propertydata.name = name?.length && (name?.length > 0) ? name : undefined;
+		propertydata.description = description?.length && (description?.length > 0) ? description : undefined;
 		if (proptype === PropType.LITERAL) {
 			propertydata.datatype = datatype;
-			propertydata.name = name.length > 0 ? name : undefined;
-			propertydata.description = description.length > 0 ? description : undefined;
 			if (string_datatypes.includes(datatype || '')) {
-				propertydata.minLength = min_length ? Number(min_length) : undefined;
-				propertydata.maxLength = min_length ? Number(max_length) : undefined;
+				const minLengthNum = Number(min_length);
+				propertydata.minLength = !isNaN(minLengthNum) ? minLengthNum : undefined;
+				const maxLengthNum = Number(max_length);
+				propertydata.maxLength = !isNaN(maxLengthNum) ? maxLengthNum : undefined;
 				propertydata.pattern = pattern.length > 0 ? pattern : undefined;
 				propertydata.inSet = inSet.length > 0 ? inSet : undefined;
 				if (datatype === 'rdf:langString') {
@@ -322,38 +391,231 @@ Copyright
 				}
 			}
 			else if (comparable_datatypes.includes(datatype || '')) {
-				propertydata.minExclusive = minExclusive;
-				propertydata.minInclusive = minInclusive;
-				propertydata.maxExclusive = maxExclusive;
-				propertydata.maxInclusive = maxInclusive;
+				const minExclusiveNum = Number(minExclusive);
+				propertydata.minExclusive = !isNaN(minExclusiveNum) ? minExclusiveNum : undefined;
+				const minInclusiveNum = Number(minInclusive);
+				propertydata.minInclusive = !isNaN(minInclusiveNum) ? minInclusiveNum : undefined;
+				const maxExclusiveNum = Number(maxExclusive);
+				propertydata.maxExclusive = !isNaN(maxExclusiveNum) ? maxExclusiveNum : undefined;
+				const maxInclusiveNum = Number(maxInclusive);
+				propertydata.maxInclusive = !isNaN(maxInclusiveNum) ? maxInclusiveNum : undefined;
 			}
 		}
 		else if (proptype === PropType.LINK) {
 			propertydata.class = toClass;
-			propertydata.name = name.length > 0 ? name : undefined;
-			propertydata.description = description.length > 0 ? description : undefined;
 		}
 		else if (proptype === PropType.LIST) {
 			propertydata.class = toClass;
-			propertydata.name = name.length > 0 ? name : undefined;
-			propertydata.description = description.length > 0 ? description : undefined;
 		}
 		propertyIri = prefix + ':' + fragment;
 		if (authinfo) {
-			const property_put = api_notget_config(authinfo, {project: projectid, property: propertyIri});
-			console.log(property_put);
-			apiClient.putAdmindatamodelProjectpropertyProperty(propertydata, property_put).then(res => {
-				console.log(res);
-				successInfoStore.set(`Property "${propertyIri}" added successfully!`);
-				refreshPropertiesListNow()
-			}).catch((error) => {
-				errorInfoStore.set(process_api_error(error as Error));
-			});
+			if (resiri) {
+				// TODO: Implement adding a property to a resource!
+				const property_put = api_notget_config(authinfo, {project: projectid, resource: resiri, property: propertyIri});
+				apiClient.putAdmindatamodelProjectResourceProperty(propertydata, property_put).then(res => {
+					successInfoStore.set('!' + m.prop_add_success({propiri: propertyIri}));
+					dialogstatus = false;
+				}).catch((error) => {
+					errorInfoStore.set(process_api_error(error as Error));
+				});
+
+				let project = $projectStore;
+				const dm_config = api_config(authinfo, { project: project?.projectShortName.toString() || '' });
+				spinnerStore.set(m.retrieve_dm());
+				apiClient.getAdmindatamodelProject(dm_config).then((jsonresult) => {
+					const datamodel = DatamodelClass.fromOldapJson(jsonresult);
+					datamodelStore.set(datamodel);
+					spinnerStore.set(null);
+				}).catch((error) => {
+					spinnerStore.set(null);
+					errorInfoStore.set(process_api_error(error as Error));
+				});
+
+			}
+			else {
+				const property_put = api_notget_config(authinfo, {project: projectid, property: propertyIri});
+				apiClient.putAdmindatamodelProjectpropertyProperty(propertydata, property_put).then(res => {
+					successInfoStore.set(m.prop_add_success({propiri: propertyIri}));
+					refreshPropertiesListNow();
+				}).catch((error) => {
+					errorInfoStore.set(process_api_error(error as Error));
+				});
+			}
 		}
 	}
 
-	function modify_property() {
+	const modify_property = async () => {
+		if (!prop) return;
+		confirmation_title = "MODIFY PROPERTY";
+		confirmation_message = "CONFIRM CHANGING PROPERTY: " + prefix + ":" + fragment + ".";
+		const ok = await confirmation_dialog.open();
+		if (!ok) return;
 
+		let propertydata: PropertyData = {};
+
+		let propertydataWithResiri: {
+			property?: PropertyData,
+			// transitive?: boolean, TODO: Implement later
+			// inverse?: Iri, TODO: Implement later
+			// symmetric?: boolean, TODO: Implement later
+			minCount?: number | null, // only used when resiri is given, non-standalone property!
+			maxCount?: number | null, // only used when resiri is given, non-standalone property!
+			order?: number | null, // only used when resiri is given, non-standalone property!
+		} = {};
+
+
+		if (subPropertyOf !== prop?.subPropertyOf?.toString() && subPropertyOf !== 'NONE') {
+			propertydata.subPropertyOf = subPropertyOf
+		}
+		const new_name = name_field?.get_value();
+		const tmp_modname = new_name?.modify_data(prop?.name || null);
+		if (tmp_modname !== undefined) {
+			propertydata.name = tmp_modname;
+		}
+		const new_description = description_field?.get_value();
+		const tmp_moddescription = new_description?.modify_data(prop?.description || null);
+		if (tmp_moddescription !== undefined) {
+			propertydata.description = tmp_moddescription;
+		}
+		if (proptype === PropType.LITERAL) {
+			if (prop.datatype !== datatype) {
+				propertydata.datatype = datatype;
+			}
+			if (string_datatypes.includes(datatype || '')) {
+				if (prop?.minLength && min_length?.length === 0) {
+					propertydata.minLength = null;
+				}
+				const min_length_number = Number(min_length);
+				if (!Number.isNaN(min_length_number) && prop.minLength !== min_length_number) {
+					propertydata.minLength = min_length_number;
+				}
+
+				if (prop?.maxLength && max_length?.length === 0) {
+					propertydata.maxLength = null;
+				}
+				const max_length_number = Number(max_length);
+				if (!Number.isNaN(max_length_number) && prop.maxLength !== max_length_number) {
+					propertydata.maxLength = max_length_number;
+				}
+			} else if (comparable_datatypes.includes(datatype || '')) {
+				if (prop?.minExclusive && min_value?.length === 0) {
+					propertydata.minExclusive = null;
+				}
+				const min_value_number = Number(min_value);
+				if (!Number.isNaN(min_value_number) && prop.minExclusive !== min_value_number) {
+					propertydata.minExclusive = min_value_number;
+				}
+
+				if (prop?.minInclusive && min_value?.length === 0) {
+					propertydata.minInclusive = null;
+				}
+				if (!Number.isNaN(min_value_number) && prop.minInclusive !== min_value_number) {
+					propertydata.minInclusive = min_value_number;
+				}
+
+				if (prop?.maxExclusive && max_value?.length === 0) {
+					propertydata.maxExclusive = null;
+				}
+				const max_value_number = Number(max_value);
+				if (!Number.isNaN(max_value_number) && prop.maxExclusive !== max_value_number) {
+					propertydata.maxExclusive = max_value_number;
+				}
+
+				if (prop?.maxInclusive && max_value?.length === 0) {
+					propertydata.maxInclusive = null;
+				}
+				if (!Number.isNaN(max_value_number) && prop.maxInclusive !== max_value_number) {
+					propertydata.maxInclusive = max_value_number;
+				}
+			}
+		} else if (proptype === PropType.LINK || proptype === PropType.LIST) {
+			if (prop.toClass !== toClass) {
+				propertydata.class = toClass;
+			}
+		}
+
+		if (resiri) {
+			if (propertydata) {
+				propertydataWithResiri.property = propertydata;
+			}
+			if (hasprop?.minCount && minCount?.length === 0) {
+				propertydataWithResiri.minCount = null;
+			}
+			const minCount_number = Number(minCount);
+			if (!isNaN(minCount_number) && hasprop?.minCount !== minCount_number) {
+				propertydataWithResiri.minCount = minCount_number;
+			}
+
+			if (hasprop?.maxCount && maxCount?.length === 0) {
+				propertydataWithResiri.maxCount = null;
+			}
+			const maxCount_number = Number(maxCount);
+			if (!isNaN(maxCount_number) && hasprop?.maxCount !== maxCount_number) {
+				propertydataWithResiri.maxCount = maxCount_number;
+			}
+
+			if (hasprop?.order && order?.length === 0) {
+				propertydataWithResiri.order = null;
+			}
+			const order_number = Number(order);
+			if (!isNaN(order_number) && hasprop?.order !== order_number) {
+				propertydataWithResiri.order = order_number;
+			}
+
+		}
+
+		console.log("Property.svelte: modify_property", propertydata);
+		propertyIri = prop.propertyIri.toString();
+		if (authinfo) {
+			if (resiri) {
+				const property_post = api_notget_config(authinfo, {
+					project: projectid,
+					resource: resiri,
+					property: propertyIri
+				});
+				spinnerStore.set("UPDATING PROPERTY IN RESOURCE");
+				apiClient.postAdmindatamodelProjectResourceProperty(propertydataWithResiri, property_post).then(() => {
+					successInfoStore.set('!' + m.prop_add_success({ propiri: propertyIri }));
+					dialogstatus = false;
+				}).then(() => {
+					// we changed a property, so we need to update the datamodel by re-reading it!
+					let project = $projectStore;
+					const dm_config = api_config(authinfo, { project: project?.projectShortName.toString() || '' });
+					return apiClient.getAdmindatamodelProject(dm_config);
+				}).then((jsonresult) => {
+					const datamodel = DatamodelClass.fromOldapJson(jsonresult);
+					datamodelStore.set(datamodel); // set the datamodelStore so the reactive mechanisms of svelte will update the UI!
+					spinnerStore.set(null);
+				}).catch((error) => {
+					errorInfoStore.set(process_api_error(error as Error));
+					spinnerStore.set(null);
+				});
+/*
+				let project = $projectStore;
+				const dm_config = api_config(authinfo, { project: project?.projectShortName.toString() || '' });
+				spinnerStore.set(m.retrieve_dm());
+				apiClient.getAdmindatamodelProject(dm_config).then((jsonresult) => {
+					const datamodel = DatamodelClass.fromOldapJson(jsonresult);
+					datamodelStore.set(datamodel);
+					spinnerStore.set(null);
+				}).catch((error) => {
+					spinnerStore.set(null);
+					errorInfoStore.set(process_api_error(error as Error));
+				});
+*/
+			} else {
+				const property_post = api_notget_config(authinfo, {
+					project: projectid,
+					property: propertyIri
+				});
+				apiClient.postAdmindatamodelProjectpropertyProperty(propertydata, property_post).then(res => {
+					successInfoStore.set(m.prop_add_success({ propiri: propertyIri }));
+					refreshPropertiesListNow();
+				}).catch((error) => {
+					errorInfoStore.set(process_api_error(error as Error));
+				});
+			}
+		}
 	}
 
 
@@ -364,7 +626,7 @@ The property IRI consists of a prefix (usually the project shortname) or a commo
 and the actual property id (which is a xs:NCName
 -->
 {#snippet prefixes()}
-	<DropdownButton bind:isOpen={prefix_is_open} buttonText={prefix} name="prefixselsel" disabled={propiri !== 'new'} class="text-xs">
+	<DropdownButton bind:isOpen={prefix_is_open} buttonText={prefix} name="prefixselsel" disabled={propiri !== 'new' || add_standalone_prop} class="text-xs">
 		<DropdownMenu bind:isOpen={prefix_is_open} position="left" name="prefixselsel" id="prefixselsel_id">
 			{#each all_prefixes as p}
 				<DropdownLinkItem bind:isOpen={prefix_is_open}
@@ -382,63 +644,75 @@ and the actual property id (which is a xs:NCName
 	<form class="max-w-128 min-w-96">
 		<LabeledDivider>{m.basic_attr()}:</LabeledDivider>
 		<Textfield type='text' label={m.prop_iri()} name="fragment" id="fragment" placeholder="property ID" required={true}
-							 bind:value={fragment} pattern={ncname_pattern} disabled={propiri !== 'new'}
+							 bind:value={fragment} pattern={ncname_pattern} disabled={propiri !== 'new' || add_standalone_prop}
 							 additional_snippet={prefixes}
 		/>
-		<DropdownField items={all_prop_list} id="allprops_id" name="allprops" label={m.subprop_of()} bind:selectedItem={subPropertyOf} />
-		<PropTypeSelector
-			label={m.property()}
-			{projectid}
-			{propiri}
-			bind:proptype={proptype}
-			bind:datatype={datatype}
-			bind:toClass={toClass}
-			{all_res_list}
-			{all_lists_list}
-			disabled={subPropertyOf !== 'NONE'} />
-		<LangstringField bind:this={name_field} label={m.name()} name="name" id="name" placeholder="name" value={name} />
-		<LangstringField bind:this={description_field} label={m.description()} name="descritpion" id="description" placeholder="description" value={description} />
-		{#if proptype === PropType.LITERAL}
-			<LabeledDivider>{m.restrictions()}:</LabeledDivider>
-			{#if string_datatypes.includes(datatype || '')}
-				<Textfield label={m.regex_pattern()} name="pattern" id="pattern" placeholder="pattern" type="text" bind:value={pattern} validate={isValidRegex}/>
-				<Textfield label={m.min_length()} name="minlength" id="minlength" placeholder="min length" type="number" bind:value={min_length} />
-				<Textfield label={m.max_length()} name="maxlength" id="maxlength" placeholder="max length" type="number" bind:value={max_length} />
-				{#if datatype === 'rdf:langString'}
-					<AllowedLangSelector
-						bind:selectedLanguages={allowedLanguages}
-						label={m.allowed_langs_sel()}
-						id="allowed-languages"
-						name="allowedLanguages"
-						placeholder={m.sel_lang()}
-						searchLabel={m.search_lang()}
-					/>
-				{:else}
+		{#if !add_standalone_prop}
+			<DropdownField items={all_prop_list} id="allprops_id" name="allprops" label={m.subprop_of()} bind:selectedItem={subPropertyOf} />
+			<PropTypeSelector
+				label={m.property()}
+				{projectid}
+				{propiri}
+				bind:proptype={proptype}
+				bind:datatype={datatype}
+				bind:toClass={toClass}
+				{all_res_list}
+				{all_lists_list}
+				disabled={subPropertyOf !== 'NONE'} />
+			<LangstringField bind:this={name_field} label={m.name()} name="name" id="name" placeholder="name" value={name} />
+			<LangstringField bind:this={description_field} label={m.description()} name="descritpion" id="description" placeholder="description" value={description} />
+			{#if proptype === PropType.LITERAL}
+				<LabeledDivider>{m.restrictions()}:</LabeledDivider>
+				{#if string_datatypes.includes(datatype || '')}
+					<Textfield label={m.regex_pattern()} name="pattern" id="pattern" placeholder="pattern" type="text" bind:value={pattern} validate={isValidRegex}/>
+					<Textfield label={m.min_length()} name="minlength" id="minlength" placeholder="min length" type="number" bind:value={min_length} />
+					<Textfield label={m.max_length()} name="maxlength" id="maxlength" placeholder="max length" type="number" bind:value={max_length} />
+					{#if datatype === 'rdf:langString'}
+						<AllowedLangSelector
+							bind:selectedLanguages={allowedLanguages}
+							label={m.allowed_langs_sel()}
+							id="allowed-languages"
+							name="allowedLanguages"
+							placeholder={m.sel_lang()}
+							searchLabel={m.search_lang()}
+						/>
+					{:else}
+						<AllowedValues
+							bind:values={allowedStrings}
+							valueType="string"
+							label={m.allowed_textvals()}
+							placeholder={m.enter_text()}
+						/>
+					{/if}
+				{/if}
+				{#if comparable_datatypes.includes(datatype || '')}
+					<Textfield label={m.min_val()} name="minValue" id="minValue" placeholder="min value" type="number" bind:value={min_value} />
+					<Checkbox label={m.inclusive()} class="text-xs" bind:checked={min_inclusive} name="min_inclusive"/>
+					<Textfield label={m.max_val()} name="maxValue" id="maxValue" placeholder="max value" type="number" bind:value={max_value} />
+					<Checkbox label={m.inclusive()} class="text-xs" bind:checked={max_inclusive} name="max_inclusive"/>
+				{/if}
+				{#if numeric_datatypes.includes(datatype || '')}
 					<AllowedValues
-						bind:values={allowedStrings}
-						valueType="string"
-						label={m.allowed_textvals()}
-						placeholder={m.enter_text()}
+						bind:values={allowedNumbers}
+						valueType="number"
+						label={m.allowed_numvals()}
+						placeholder={m.enter_num()}
 					/>
 				{/if}
 			{/if}
-			{#if comparable_datatypes.includes(datatype || '')}
-				<Textfield label={m.min_val()} name="minValue" id="minValue" placeholder="min value" type="number" bind:value={min_value} />
-				<Checkbox label={m.inclusive()} class="text-xs" bind:checked={min_inclusive} name="min_inclusive"/>
-				<Textfield label={m.max_val()} name="maxValue" id="maxValue" placeholder="max value" type="number" bind:value={max_value} />
-				<Checkbox label={m.inclusive()} class="text-xs" bind:checked={max_inclusive} name="max_inclusive"/>
-			{/if}
-			{#if numeric_datatypes.includes(datatype || '')}
-				<AllowedValues
-					bind:values={allowedNumbers}
-					valueType="number"
-					label={m.allowed_numvals()}
-					placeholder={m.enter_num()}
-				/>
-			{/if}
+		{/if}
+		{#if resiri !== undefined}
+			<LabeledDivider>"HAS PROPERTY PARAMS:</LabeledDivider>
+			<Numberfield label="minCount" bind:value={minCount} min={0.0} step={1.0} name="minCount" placeholder="undefined"/>
+			<Numberfield label="maxCount" bind:value={maxCount} min={0.0} step={1.0} name="maxCount" placeholder="undefined"/>
+			<Numberfield label="order" bind:value={order} name="order" min={0.0} step={0.1} placeholder="undefined"/>
 		{/if}
 		<div class="flex justify-center gap-4 mt-6">
-			<Button class="mx-4 my-2" onclick={goto_page('/admin')}>{m.cancel()}</Button>
+			{#if dialogstatus !== undefined}
+				<Button class="mx-4 my-2" onclick={() => {dialogstatus = false}}>{m.cancel()}</Button>
+			{:else}
+				<Button class="mx-4 my-2" onclick={goto_page('/admin')}>{m.cancel()}</Button>
+			{/if}
 			{#if propiri === 'new'}
 				<Button class="mx-4 my-2" onclick={() => add_property()}>{m.add()}</Button>
 			{:else}
@@ -448,3 +722,8 @@ and the actual property id (which is a xs:NCName
 
 	</form>
 </div>
+
+<Confirmation bind:this={confirmation_dialog} title={confirmation_title}>
+	{confirmation_message}
+</Confirmation>
+

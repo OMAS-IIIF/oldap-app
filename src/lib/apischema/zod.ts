@@ -13,31 +13,48 @@ type Property = Partial<{
      */
     projectid: string;
     subPropertyOf: Iri;
-    class: Iri;
+    /**
+     * An Iri() that describes the class of the instance on which this property must point e.g. "myproj:Book" means that the property points on book.
+     *
+     * @example "xml:Date"
+     */
+    class: Iri | null;
     /**
      * xsd_datatype if the property is represented via a literal
      *
      * @example "rdf:langString"
      */
-    datatype: string;
-    name: LangString;
-    description: LangString;
+    datatype: string | null;
     /**
+     * Human readable Name.
+     */
+    name: LangString | Partial<{
+        add: LangString;
+        del: LangString;
+    }> | null;
+    /**
+     * A description of the property.
+     */
+    description: LangString | Partial<{
+        add: LangString;
+        del: LangString;
+    }> | null;
+    languageIn: /**
      * The languages that are allowed in the property
      *
      * @example ["en","fr","it","de"]
      */
-    languageIn: Array<string>;
+    Array<string> | null;
     /**
      * Describes if each language must be present only once. This field is only applicable if the property is of datatype langstring.
      *
      * @example true
      */
     uniqueLang: boolean;
-    /**
+    inSet: /**
      * @example ["Renault","Opel","BMW","Mercedes"]
      */
-    inSet: Array<string>;
+    Array<string> | null;
     /**
      * Only applicable in xsd:string and rdf:langString. Denotes the minimal length of the string.
      */
@@ -47,7 +64,7 @@ type Property = Partial<{
     number | /**
      * @example 1.1
      */
-    number;
+    number | null;
     /**
      * Only applicable in xsd:string and rdf:langString. Denotes the maximal length of the string.
      */
@@ -57,13 +74,14 @@ type Property = Partial<{
     number | /**
      * @example 1.1
      */
-    number;
+    number | null;
     /**
      * Tells if the string must follow a certain regex pattern. Only applicable in xsd:string and rdf:langString.
-     *
+     */
+    pattern: /**
      * @example "r\"^[a-zA-Z0-9._-]+@[a-zA-Z0-9-]+(\\.[a-zA-Z0-9-]+)*\\.[a-zA-Z]{2,}$\""
      */
-    pattern: string;
+    string | null;
     /**
      * Minimal value (exclusive the value itself) for a numerical datatype of the property like xsd:date/xsd:int/xsd:float...
      */
@@ -73,7 +91,7 @@ type Property = Partial<{
     number | /**
      * @example 5
      */
-    number;
+    number | null;
     /**
      * Minimal value (inclusive the value itself) for a numerical datatype of the property like xsd:date/xsd:int/xsd:float...
      */
@@ -83,7 +101,7 @@ type Property = Partial<{
     number | /**
      * @example 5
      */
-    number;
+    number | null;
     /**
      * Maximal value (exclusive the value itself) for a numerical datatype of the property like xsd:date/xsd:int/xsd:float...
      */
@@ -93,7 +111,7 @@ type Property = Partial<{
     number | /**
      * @example 5
      */
-    number;
+    number | null;
     /**
      * Maximal value (inclusive the value itself) for a numerical datatype of the property like xsd:date/xsd:int/xsd:float...
      */
@@ -103,7 +121,7 @@ type Property = Partial<{
     number | /**
      * @example 5
      */
-    number;
+    number | null;
     lessThan: Iri;
     lessThanOrEquals: Iri;
 }>;;
@@ -163,21 +181,35 @@ type Resource = Partial<{
     }>>;
 }>;;
 
+const Error = z.object({ message: z.string(), error: z.string().optional(), details: z.object({}).partial().passthrough().optional() }).passthrough();
+const putAdminuserUserId_Body = z.object({ givenName: z.string(), familyName: z.string(), email: z.string().optional(), password: z.string().min(8), isActive: z.boolean().optional(), userIri: z.string().optional(), inProjects: z.array(z.object({ project: z.string(), permissions: z.array(z.enum(["ADMIN_OLDAP", "ADMIN_USERS", "ADMIN_PERMISSION_SETS", "ADMIN_RESOURCES", "ADMIN_MODEL", "ADMIN_CREATE"])) }).partial().passthrough()).optional(), hasPermissions: z.array(z.string()).optional() }).passthrough();
+const postAdminuserUserId_Body = z.object({ userId: z.string(), givenName: z.string(), familyName: z.string(), email: z.string(), password: z.string(), isActive: z.boolean(), inProjects: z.union([z.object({ add: z.object({ project: z.string(), permissions: z.union([z.array(z.string()), z.null()]) }).partial().passthrough(), del: z.array(z.string()) }).partial().passthrough(), z.array(z.object({ project: z.string(), permissions: z.union([z.array(z.string()), z.object({ add: z.array(z.string()), del: z.array(z.string()) }).partial().passthrough(), z.null()]) }).partial().passthrough())]), hasPermissions: z.union([z.array(z.string()), z.object({ add: z.array(z.string()), del: z.array(z.string()) }).partial().passthrough()]) }).partial().passthrough();
 const LangString = z.union([z.array(z.string()), z.string()]);
+const putAdminprojectProjectId_Body = z.object({ projectIri: z.string(), label: LangString, comment: LangString, namespaceIri: z.string(), projectStart: z.string(), projectEnd: z.string() }).partial().passthrough();
+const postAdminprojectProjectId_Body = z.object({ label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), projectStart: z.union([z.string(), z.null()]), projectEnd: z.union([z.string(), z.null()]) }).partial().passthrough();
+const putAdminpermissionsetDefinedByProjectPermissionSetId_Body = z.object({ label: LangString, comment: LangString, givesPermission: z.enum(["DATA_RESTRICTED", "DATA_VIEW", "DATA_EXTEND", "DATA_UPDATE", "DATA_DELETE", "DATA_PERMISSIONS"]) }).partial().passthrough();
+const postAdminpermissionsetDefinedByProjectPermissionSetId_Body = z.object({ label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.unknown()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), givesPermission: z.enum(["DATA_RESTRICTED", "DATA_VIEW", "DATA_EXTEND", "DATA_UPDATE", "DATA_DELETE", "DATA_PERMISSIONS"]) }).partial().passthrough();
 const Iri = z.string();
-const Property: z.ZodType<Property> = z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), projectid: z.string(), subPropertyOf: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), class: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), datatype: z.string(), name: LangString, description: LangString, languageIn: z.array(z.string()), uniqueLang: z.boolean(), inSet: z.array(z.string()), minLength: z.union([z.number(), z.number()]), maxLength: z.union([z.number(), z.number()]), pattern: z.string(), minExclusive: z.union([z.number(), z.number()]), minInclusive: z.union([z.number(), z.number()]), maxExclusive: z.union([z.number(), z.number()]), maxInclusive: z.union([z.number(), z.number()]), lessThan: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), lessThanOrEquals: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/) }).partial().passthrough();
+const Property: z.ZodType<Property> = z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), projectid: z.string(), subPropertyOf: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), class: z.union([Iri, z.null()]), datatype: z.union([z.string(), z.null()]), name: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), description: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), languageIn: z.union([z.array(z.string()), z.null()]), uniqueLang: z.boolean(), inSet: z.union([z.array(z.string()), z.null()]), minLength: z.union([z.number(), z.number(), z.null()]), maxLength: z.union([z.number(), z.number(), z.null()]), pattern: z.union([z.string(), z.null()]), minExclusive: z.union([z.number(), z.number(), z.null()]), minInclusive: z.union([z.number(), z.number(), z.null()]), maxExclusive: z.union([z.number(), z.number(), z.null()]), maxInclusive: z.union([z.number(), z.number(), z.null()]), lessThan: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), lessThanOrEquals: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/) }).partial().passthrough();
 const Resource: z.ZodType<Resource> = z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), label: LangString, comment: LangString, closed: z.boolean(), hasProperty: z.array(z.object({ property: z.union([z.object({ iri: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/) }).partial().passthrough().and(Property), Iri]), maxCount: z.number(), minCount: z.number(), order: z.number() }).partial().passthrough()) }).partial().passthrough();
-const postAdmindatamodelProjectpropertyProperty_Body = z.object({ name: LangString, description: LangString, languageIn: z.array(z.string()), uniqueLand: z.boolean(), minLength: z.union([z.number(), z.number()]), maxLength: z.union([z.number(), z.number()]), pattern: z.string(), minExclusive: z.union([z.number(), z.number()]), minInclusive: z.union([z.number(), z.number()]), maxExclusive: z.union([z.number(), z.number()]), maxInclusive: z.union([z.number(), z.number()]) }).partial().passthrough();
+const postAdmindatamodelProjectpropertyProperty_Body = z.object({ datatype: z.string(), class: z.string(), name: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), description: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), languageIn: z.union([z.array(z.string()), z.null()]), uniqueLang: z.boolean(), inSet: z.union([z.array(z.union([z.string(), z.number(), z.number()])), z.null()]), minLength: z.union([z.number(), z.number(), z.null()]), maxLength: z.union([z.number(), z.number(), z.null()]), pattern: z.union([z.string(), z.null()]), minExclusive: z.union([z.number(), z.number(), z.null()]), minInclusive: z.union([z.number(), z.number(), z.null()]), maxExclusive: z.union([z.number(), z.number(), z.null()]), maxInclusive: z.union([z.number(), z.number(), z.null()]) }).partial().passthrough();
 const postAdmindatamodelProjectResource_Body = z.object({ closed: z.boolean(), label: LangString, comment: LangString }).partial().passthrough();
-const putAdmindatamodelProjectResourceProperty_Body = Property.and(z.object({ maxCount: z.number(), minCount: z.number(), order: z.number() }).partial().passthrough());
-const postAdmindatamodelProjectResourceProperty_Body = z.object({ property: Property, maxCount: z.number(), minCount: z.number(), order: z.number() }).partial().passthrough();
+const putAdmindatamodelProjectResourceProperty_Body = Property.and(z.object({ maxCount: z.union([z.number(), z.number()]), minCount: z.union([z.number(), z.number()]), order: z.union([z.number(), z.number()]) }).partial().passthrough());
+const postAdmindatamodelProjectResourceProperty_Body = z.object({ property: Property, maxCount: z.union([z.number(), z.number(), z.null()]), minCount: z.union([z.number(), z.number(), z.null()]), order: z.union([z.number(), z.number(), z.null()]) }).partial().passthrough();
 const putAdminhlistProjectHlistid_Body = z.object({ prefLabel: LangString, definition: LangString }).partial().passthrough();
 const postAdminhlistProjectHlistid_Body = z.object({ prefLabel: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), definition: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]) }).partial().passthrough();
 const putAdminhlistProjectHlistidNodeid_Body = z.union([z.object({ prefLabel: LangString, definition: LangString.optional(), position: z.enum(["belowOf", "leftOf", "rightOf"]), refnode: z.string() }).passthrough(), z.object({ prefLabel: LangString, definition: LangString.optional(), position: z.literal("root") }).passthrough()]);
 const postAdminhlistProjectHlistidNodeidmove_Body = z.union([z.object({ leftOf: z.string() }).passthrough(), z.object({ rightOf: z.string() }).passthrough(), z.object({ belowOf: z.string() }).passthrough()]);
 
 export const schemas = {
+	Error,
+	putAdminuserUserId_Body,
+	postAdminuserUserId_Body,
 	LangString,
+	putAdminprojectProjectId_Body,
+	postAdminprojectProjectId_Body,
+	putAdminpermissionsetDefinedByProjectPermissionSetId_Body,
+	postAdminpermissionsetDefinedByProjectPermissionSetId_Body,
 	Iri,
 	Property,
 	Resource,
@@ -214,18 +246,18 @@ const endpoints = makeApi([
 		errors: [
 			{
 				status: 400,
-				description: `Several Errors that involve bad requests`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `User not found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 		]
 	},
@@ -244,8 +276,8 @@ const endpoints = makeApi([
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -266,18 +298,18 @@ const endpoints = makeApi([
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -298,18 +330,18 @@ const endpoints = makeApi([
 		errors: [
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -330,23 +362,23 @@ const endpoints = makeApi([
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -377,28 +409,28 @@ const endpoints = makeApi([
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 409,
-				description: `Resource already exists`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 409: Conflict - Resource already exists or operation conflicts with current state`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -424,23 +456,23 @@ const endpoints = makeApi([
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -472,23 +504,23 @@ const endpoints = makeApi([
 		errors: [
 			{
 				status: 400,
-				description: `Bad Request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -524,28 +556,28 @@ const endpoints = makeApi([
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 409,
-				description: `Resource already exists`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 409: Conflict - Resource already exists or operation conflicts with current state`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -576,18 +608,18 @@ const endpoints = makeApi([
 		errors: [
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -623,23 +655,23 @@ const endpoints = makeApi([
 		errors: [
 			{
 				status: 400,
-				description: `Bad Request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -653,7 +685,7 @@ const endpoints = makeApi([
 			{
 				name: "body",
 				type: "Body",
-				schema: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), projectid: z.string(), subPropertyOf: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), class: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), datatype: z.string(), name: LangString, description: LangString, languageIn: z.array(z.string()), uniqueLang: z.boolean(), inSet: z.array(z.string()), minLength: z.union([z.number(), z.number()]), maxLength: z.union([z.number(), z.number()]), pattern: z.string(), minExclusive: z.union([z.number(), z.number()]), minInclusive: z.union([z.number(), z.number()]), maxExclusive: z.union([z.number(), z.number()]), maxInclusive: z.union([z.number(), z.number()]), lessThan: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), lessThanOrEquals: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/) }).partial().passthrough()
+				schema: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), projectid: z.string(), subPropertyOf: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), class: z.union([Iri, z.null()]), datatype: z.union([z.string(), z.null()]), name: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), description: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), languageIn: z.union([z.array(z.string()), z.null()]), uniqueLang: z.boolean(), inSet: z.union([z.array(z.string()), z.null()]), minLength: z.union([z.number(), z.number(), z.null()]), maxLength: z.union([z.number(), z.number(), z.null()]), pattern: z.union([z.string(), z.null()]), minExclusive: z.union([z.number(), z.number(), z.null()]), minInclusive: z.union([z.number(), z.number(), z.null()]), maxExclusive: z.union([z.number(), z.number(), z.null()]), maxInclusive: z.union([z.number(), z.number(), z.null()]), lessThan: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), lessThanOrEquals: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/) }).partial().passthrough()
 			},
 			{
 				name: "project",
@@ -670,23 +702,23 @@ const endpoints = makeApi([
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -712,23 +744,23 @@ const endpoints = makeApi([
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -759,23 +791,23 @@ const endpoints = makeApi([
 		errors: [
 			{
 				status: 400,
-				description: `Bad Request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -806,28 +838,28 @@ const endpoints = makeApi([
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 409,
-				description: `Userid or useriri already exists`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 409: Conflict - Resource already exists or operation conflicts with current state`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -858,23 +890,23 @@ const endpoints = makeApi([
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -900,28 +932,28 @@ const endpoints = makeApi([
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 409,
-				description: `in use`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 409: Conflict - Resource already exists or operation conflicts with current state`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -947,23 +979,23 @@ const endpoints = makeApi([
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -995,18 +1027,18 @@ const endpoints = makeApi([
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Invalid data`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 		]
 	},
@@ -1052,28 +1084,28 @@ Example JSON:
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 409,
-				description: `Resource already exists`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 409: Conflict - Resource already exists or operation conflicts with current state`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -1110,28 +1142,28 @@ Example JSON:
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 409,
-				description: `Resource already exists`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 409: Conflict - Resource already exists or operation conflicts with current state`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -1146,7 +1178,7 @@ Example JSON:
 			{
 				name: "body",
 				type: "Body",
-				schema: z.object({ prefLabel: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), definition: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]) }).partial().passthrough()
+				schema: postAdminhlistProjectHlistid_Body
 			},
 			{
 				name: "project",
@@ -1168,23 +1200,23 @@ Example JSON:
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -1222,28 +1254,28 @@ When there are any number of nodes below the node one wish to move, they get mov
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 409,
-				description: `Resource already exists`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 409: Conflict - Resource already exists or operation conflicts with current state`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -1276,23 +1308,23 @@ The user must be authenticated with a Bearer token.
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Authentication or permission error`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `List not found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal server error`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -1318,23 +1350,23 @@ The user must be authenticated with a Bearer token.
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -1360,13 +1392,13 @@ The user must be authenticated with a Bearer token.
 		errors: [
 			{
 				status: 400,
-				description: `Upload failed (invalid input or format)`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Authorization or connection failure`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 		]
 	},
@@ -1380,25 +1412,25 @@ The user must be authenticated with a Bearer token.
 			{
 				name: "iri",
 				type: "Query",
-				schema: z.string().optional()
+				schema: z.string()
 			},
 		],
 		response: z.object({ hlistIri: z.string(), creator: z.string(), created: z.string(), contributor: z.string(), modified: z.string(), hlistId: z.string(), prefLabel: LangString, definition: LangString, nodeNamespaceIri: z.string(), nodeClassIri: z.string() }).partial().passthrough(),
 		errors: [
 			{
 				status: 400,
-				description: `Unspecified error`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 		]
 	},
@@ -1439,13 +1471,13 @@ The user must be authenticated with a Bearer token.
 		errors: [
 			{
 				status: 400,
-				description: `Several Errors that involve bad requests`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 		]
 	},
@@ -1459,7 +1491,7 @@ The user must be authenticated with a Bearer token.
 			{
 				name: "body",
 				type: "Body",
-				schema: z.object({ label: LangString, comment: LangString, givesPermission: z.enum(["DATA_RESTRICTED", "DATA_VIEW", "DATA_EXTEND", "DATA_UPDATE", "DATA_DELETE", "DATA_PERMISSIONS"]) }).partial().passthrough()
+				schema: putAdminpermissionsetDefinedByProjectPermissionSetId_Body
 			},
 			{
 				name: "definedByProject",
@@ -1476,23 +1508,23 @@ The user must be authenticated with a Bearer token.
 		errors: [
 			{
 				status: 400,
-				description: `Several Errors that involve bad requests`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 409,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 409: Conflict - Resource already exists or operation conflicts with current state`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -1518,28 +1550,28 @@ The user must be authenticated with a Bearer token.
 		errors: [
 			{
 				status: 400,
-				description: `Several Errors that involve bad requests`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 409,
-				description: `Conflict`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 409: Conflict - Resource already exists or operation conflicts with current state`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -1565,18 +1597,18 @@ The user must be authenticated with a Bearer token.
 		errors: [
 			{
 				status: 400,
-				description: `Several Errors that involve bad requests`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 		]
 	},
@@ -1590,7 +1622,7 @@ The user must be authenticated with a Bearer token.
 			{
 				name: "body",
 				type: "Body",
-				schema: z.object({ label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.unknown()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), givesPermission: z.enum(["DATA_RESTRICTED", "DATA_VIEW", "DATA_EXTEND", "DATA_UPDATE", "DATA_DELETE", "DATA_PERMISSIONS"]) }).partial().passthrough()
+				schema: postAdminpermissionsetDefinedByProjectPermissionSetId_Body
 			},
 			{
 				name: "definedByProject",
@@ -1607,23 +1639,23 @@ The user must be authenticated with a Bearer token.
 		errors: [
 			{
 				status: 400,
-				description: `Several Errors that involve bad requests`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -1649,18 +1681,18 @@ The user must be authenticated with a Bearer token.
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -1681,23 +1713,23 @@ The user must be authenticated with a Bearer token.
 		errors: [
 			{
 				status: 400,
-				description: `Several Errors that involve bad requests`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 409,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 409: Conflict - Resource already exists or operation conflicts with current state`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -1728,13 +1760,13 @@ The user must be authenticated with a Bearer token.
 		errors: [
 			{
 				status: 400,
-				description: `Several Errors that involve bad requests`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 		]
 	},
@@ -1748,7 +1780,7 @@ The user must be authenticated with a Bearer token.
 			{
 				name: "body",
 				type: "Body",
-				schema: z.object({ projectIri: z.string(), label: LangString, comment: LangString, namespaceIri: z.string(), projectStart: z.string(), projectEnd: z.string() }).partial().passthrough()
+				schema: putAdminprojectProjectId_Body
 			},
 			{
 				name: "projectId",
@@ -1760,23 +1792,23 @@ The user must be authenticated with a Bearer token.
 		errors: [
 			{
 				status: 400,
-				description: `Several Errors that involve bad requests`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 409,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 409: Conflict - Resource already exists or operation conflicts with current state`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -1797,23 +1829,23 @@ The user must be authenticated with a Bearer token.
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -1830,22 +1862,22 @@ The user must be authenticated with a Bearer token.
 				schema: z.string()
 			},
 		],
-		response: z.object({ projectIri: z.string(), creator: z.string(), created: z.string(), contributor: z.string(), modified: z.string(), label: LangString, comment: LangString, message: z.string(), shortName: z.string().regex(/^[a-zA-Z_][a-zA-Z0-9._-]*$/), "namespace IRI": z.string(), "project start": z.string(), "project end": z.string() }).partial().passthrough(),
+		response: z.object({ projectIri: z.string(), creator: z.string(), created: z.string(), contributor: z.string(), modified: z.string(), label: LangString, comment: LangString, message: z.string(), shortName: z.string().regex(/^[a-zA-Z_][a-zA-Z0-9._-]*$/), namespaceIri: z.string(), projectStart: z.string(), projectEnd: z.string() }).partial().passthrough(),
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 		]
 	},
@@ -1859,7 +1891,7 @@ The user must be authenticated with a Bearer token.
 			{
 				name: "body",
 				type: "Body",
-				schema: z.object({ label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), projectStart: z.string().nullable(), projectEnd: z.string().nullable() }).partial().passthrough()
+				schema: postAdminprojectProjectId_Body
 			},
 			{
 				name: "projectId",
@@ -1871,23 +1903,23 @@ The user must be authenticated with a Bearer token.
 		errors: [
 			{
 				status: 400,
-				description: `Several Errors that involve bad requests`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -1901,25 +1933,25 @@ The user must be authenticated with a Bearer token.
 			{
 				name: "iri",
 				type: "Query",
-				schema: z.string().optional()
+				schema: z.string()
 			},
 		],
-		response: z.object({ projectIri: z.string(), creator: z.string(), created: z.string(), contributor: z.string(), modified: z.string(), label: LangString, comment: LangString, message: z.string(), shortName: z.string().regex(/^[a-zA-Z_][a-zA-Z0-9._-]*$/), "namespace IRI": z.string(), "project start": z.string(), "project end": z.string() }).partial().passthrough(),
+		response: z.object({ projectIri: z.string(), creator: z.string(), created: z.string(), contributor: z.string(), modified: z.string(), label: LangString, comment: LangString, message: z.string(), shortName: z.string().regex(/^[a-zA-Z_][a-zA-Z0-9._-]*$/), namespaceIri: z.string(), projectStart: z.string(), projectEnd: z.string() }).partial().passthrough(),
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 		]
 	},
@@ -1940,18 +1972,18 @@ The user must be authenticated with a Bearer token.
 		errors: [
 			{
 				status: 400,
-				description: `Request has wrong or missing parameter`,
-				schema: z.object({ message: z.string() }).passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Project not found`,
-				schema: z.object({ message: z.string() }).passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Unknown error`,
-				schema: z.object({ message: z.string() }).passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -1977,13 +2009,13 @@ The user must be authenticated with a Bearer token.
 		errors: [
 			{
 				status: 400,
-				description: `Several Errors that involve bad requests`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 		]
 	},
@@ -1997,7 +2029,7 @@ The user must be authenticated with a Bearer token.
 			{
 				name: "body",
 				type: "Body",
-				schema: z.object({ givenName: z.string(), familyName: z.string(), email: z.string().optional(), password: z.string().min(8), isActive: z.boolean().optional(), userIri: z.string().optional(), inProjects: z.array(z.object({ project: z.string(), permissions: z.array(z.enum(["ADMIN_OLDAP", "ADMIN_USERS", "ADMIN_PERMISSION_SETS", "ADMIN_RESOURCES", "ADMIN_MODEL", "ADMIN_CREATE"])) }).partial().passthrough()).optional(), hasPermissions: z.array(z.string()).optional() }).passthrough()
+				schema: putAdminuserUserId_Body
 			},
 			{
 				name: "userId",
@@ -2009,23 +2041,23 @@ The user must be authenticated with a Bearer token.
 		errors: [
 			{
 				status: 400,
-				description: `Several Errors that involve bad requests`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Connection failed`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 409,
-				description: `Userid or useriri already exists`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 409: Conflict - Resource already exists or operation conflicts with current state`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -2046,18 +2078,18 @@ The user must be authenticated with a Bearer token.
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 		]
 	},
@@ -2074,22 +2106,22 @@ The user must be authenticated with a Bearer token.
 				schema: z.string()
 			},
 		],
-		response: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), userIri: z.string(), userId: z.string(), family_name: z.string(), given_name: z.string(), email: z.string(), is_active: z.boolean().optional(), in_projects: z.array(z.object({ project: z.string(), permissions: z.array(z.string()) }).partial().passthrough()).optional(), has_permissions: z.array(z.string()).optional() }).passthrough(),
+		response: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), userIri: z.string(), userId: z.string(), familyName: z.string(), givenName: z.string(), email: z.string(), is_active: z.boolean().optional(), in_projects: z.array(z.object({ project: z.string(), permissions: z.array(z.string()) }).partial().passthrough()).optional(), has_permissions: z.array(z.string()).optional() }).passthrough(),
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 		]
 	},
@@ -2103,7 +2135,7 @@ The user must be authenticated with a Bearer token.
 			{
 				name: "body",
 				type: "Body",
-				schema: z.object({ userId: z.string(), givenName: z.string(), familyName: z.string(), email: z.string(), password: z.string(), isActive: z.boolean(), inProjects: z.union([z.object({ add: z.object({ project: z.string(), permissions: z.union([z.array(z.string()), z.null()]) }).partial().passthrough(), del: z.array(z.string()) }).partial().passthrough(), z.array(z.object({ project: z.string(), permissions: z.union([z.array(z.string()), z.object({ add: z.array(z.string()), del: z.array(z.string()) }).partial().passthrough(), z.null()]) }).partial().passthrough())]), hasPermissions: z.union([z.array(z.string()), z.object({ add: z.array(z.string()), del: z.array(z.string()) }).partial().passthrough()]) }).partial().passthrough()
+				schema: postAdminuserUserId_Body
 			},
 			{
 				name: "userId",
@@ -2115,23 +2147,23 @@ The user must be authenticated with a Bearer token.
 		errors: [
 			{
 				status: 400,
-				description: `Several Errors that involve bad requests`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Userid not found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 			{
 				status: 500,
-				description: `Internal Server error. Should not be reachable`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -2148,22 +2180,22 @@ The user must be authenticated with a Bearer token.
 				schema: z.string()
 			},
 		],
-		response: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), userIri: z.string(), userId: z.string(), family_name: z.string(), given_name: z.string(), email: z.string(), is_active: z.boolean().optional(), in_projects: z.array(z.object({ project: z.string(), permissions: z.array(z.string()) }).partial().passthrough()).optional(), has_permissions: z.array(z.string()).optional() }).passthrough(),
+		response: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), userIri: z.string(), userId: z.string(), familyName: z.string(), givenName: z.string(), email: z.string(), is_active: z.boolean().optional(), in_projects: z.array(z.object({ project: z.string(), permissions: z.array(z.string()) }).partial().passthrough()).optional(), has_permissions: z.array(z.string()).optional() }).passthrough(),
 		errors: [
 			{
 				status: 400,
-				description: `Bad request`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 			{
 				status: 404,
-				description: `Not Found`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
 			},
 		]
 	},
@@ -2199,13 +2231,13 @@ The user must be authenticated with a Bearer token.
 		errors: [
 			{
 				status: 400,
-				description: `Several Errors that involve bad requests`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
 			},
 			{
 				status: 403,
-				description: `Unauthorized`,
-				schema: z.object({ message: z.string() }).partial().passthrough()
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
 			},
 		]
 	},

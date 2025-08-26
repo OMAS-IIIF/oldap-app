@@ -1,9 +1,7 @@
 <script lang="ts">
 
-	import { page } from '$app/state';
 	import Property from '$lib/components/oldap/Property.svelte';
-	import type { PageProps } from '../../../../../.svelte-kit/types/src/routes/admin/property/[propiri]/$types';
-	import { onMount } from 'svelte';
+	import type { PageProps } from './$types';
 	import { projectStore } from '$lib/stores/project';
 
 	let topwin = $state<HTMLElement>();

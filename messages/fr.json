@@ -142,5 +142,12 @@
     "user_iri": "Utilisateur IRI",
     "userlist_descr": "Liste de tous les utilisateurs",
     "users": "Utilisateurs",
-    "val_exists": "Cette valeur existe déjà !"
+    "val_exists": "Cette valeur existe déjà !",
+    "add_res": "Ajouter une nouvelle ressource",
+    "edit_res": "Modifier les ressources",
+    "superclasses": "Superclasses",
+    "is_closed": "Fermé",
+    "confirm_property_add": "Voulez-vous vraiment ajouter une nouvelle propriété {propiri} ?\n",
+    "prop_add_success": "Propriété \"{propiri}\" ajoutée avec succès.",
+    "retrieve_dm": "Récupération du modèle de données"
 }

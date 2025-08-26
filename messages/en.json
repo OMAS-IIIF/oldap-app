@@ -142,5 +142,12 @@
     "user_iri": "User IRI",
     "userlist_descr": "List of all the users",
     "users": "Users",
-    "val_exists": "This value already exists!"
+    "val_exists": "This value already exists!",
+    "add_res": "Add new resource",
+    "edit_res": "Edit resource",
+    "superclasses": "Superclasses",
+    "is_closed": "Closed",
+    "confirm_property_add": "Do you really want to add a new property {propiri} ?\n",
+    "prop_add_success": "Property \"{propiri}\" added successfully.",
+    "retrieve_dm": "Retrieving datamodel"
 }

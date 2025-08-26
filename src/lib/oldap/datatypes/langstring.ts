@@ -127,4 +127,8 @@ export class LangString {
 		}
 		return res;
 	}
+
+	clone(): LangString {
+		return new LangString({ ...this.#langstrs });
+	}
 }

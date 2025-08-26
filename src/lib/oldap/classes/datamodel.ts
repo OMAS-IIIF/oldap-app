@@ -11,7 +11,7 @@ export type DatamodelClassOptions = {
 	modified: Date,
 	projectid: NCName,
 	standaloneProperties: PropertyClass[],
-	resouces: ResourceClass[]
+	resources: ResourceClass[]
 }
 
 export class DatamodelClass extends OldapObject {
@@ -23,7 +23,7 @@ export class DatamodelClass extends OldapObject {
 		super(options.creator, options.created, options.contributor, options.modified);
 		this.#projectid = options.projectid;
 		this.#standaloneProperties = options.standaloneProperties;
-		this.#resouces = options.resouces;
+		this.#resouces = options.resources;
 	}
 
 	get projectid() {
@@ -34,8 +34,13 @@ export class DatamodelClass extends OldapObject {
 		return this.#standaloneProperties;
 	}
 
-	get resouces() {
+	get resources() {
 		return this.#resouces;
+	}
+
+	is_standalone_property(property: PropertyClass) {
+		const tmp = this.#standaloneProperties.filter(p => p.propertyIri.toString() === property.propertyIri.toString());
+		return tmp.length > 0;
 	}
 
 	static fromOldapJson(json: any): DatamodelClass {
@@ -57,7 +62,7 @@ export class DatamodelClass extends OldapObject {
 			modified: modified,
 			projectid: projectid,
 			standaloneProperties: standaloneProperties,
-			resouces: resources
+			resources: resources
 		});
 	}
 }

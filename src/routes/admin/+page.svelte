@@ -69,8 +69,7 @@
 			if (!selected_tab) { // if we have already a selected tab (e.g. from the adminTabState), we use this
 				selected_tab = 'projects';
 			}
-		}
-		else { // administrator is not root
+		} else { // administrator is not root
 			// select the tabs that the administrator has access to
 			in_project?.permissions.forEach((x) => {
 				switch (x) {
@@ -89,35 +88,35 @@
 				}
 			});
 		}
-			if (authinfo) {
-				const dm_config = api_config(authinfo, { project: project?.projectShortName.toString() || '' });
-				spinnerStore.set("RETRIEVING DATAMODEL");
-				apiClient.getAdmindatamodelProject(dm_config).then((jsonresult) => {
-					const datamodel = DatamodelClass.fromOldapJson(jsonresult);
-					datamodelStore.set(datamodel);
-					spinnerStore.set(null);
-				}).catch((error) => {
-					spinnerStore.set(null);
-					errorInfoStore.set(process_api_error(error as Error));
-				});
-			}
+		if (authinfo) {
+			const dm_config = api_config(authinfo, { project: project?.projectShortName.toString() || '' });
+			spinnerStore.set(m.retrieve_dm());
+			apiClient.getAdmindatamodelProject(dm_config).then((jsonresult) => {
+				const datamodel = DatamodelClass.fromOldapJson(jsonresult);
+				datamodelStore.set(datamodel);
+				spinnerStore.set(null);
+			}).catch((error) => {
+				spinnerStore.set(null);
+				errorInfoStore.set(process_api_error(error as Error));
+			});
+		}
 
-			if (!selected_tab || !(selected_tab in tabs)) {
-				// no tab selected, or the tab selected is not available for this administrator
-				if (tabs['projects']) {
-					selected_tab = 'projects';
-				} else if (tabs['users']) {
-					selected_tab = 'users';
-				} else if (tabs['lists']) {
-					selected_tab = 'lists';
-				} else if (tabs['models']) {
-					selected_tab = 'models';
-				} else if (tabs['permsets']) {
-					selected_tab = 'permsets';
-				} else {
-					selected_tab = '';
-				}
+		if (!selected_tab || !(selected_tab in tabs)) {
+			// no tab selected, or the tab selected is not available for this administrator
+			if (tabs['projects']) {
+				selected_tab = 'projects';
+			} else if (tabs['users']) {
+				selected_tab = 'users';
+			} else if (tabs['lists']) {
+				selected_tab = 'lists';
+			} else if (tabs['models']) {
+				selected_tab = 'models';
+			} else if (tabs['permsets']) {
+				selected_tab = 'permsets';
+			} else {
+				selected_tab = '';
 			}
+		}
 
 	});
 

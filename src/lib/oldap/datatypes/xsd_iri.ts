@@ -79,4 +79,16 @@ export class Iri {
 		return this.#representation;
 	}
 
+	clone(): Iri {
+		if (this.#representation === "QNAME") {
+			return new Iri(this.#iri as QName);
+		}
+		else if (this.#representation === "FULL") {
+			return new Iri(this.#iri as string);
+		}
+		else {
+			return new Iri();
+		}
+	}
+
 }

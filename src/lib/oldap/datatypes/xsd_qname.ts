@@ -54,5 +54,9 @@ export class QName {
 		}
 		return new QName(p, f);
 	}
+
+	clone(): QName {
+		return new QName(this.#prefix.clone(), this.#fragment.clone());
+	}
 }
 

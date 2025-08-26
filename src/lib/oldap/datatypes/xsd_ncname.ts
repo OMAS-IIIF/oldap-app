@@ -25,4 +25,8 @@ export class NCName {
 	get ncname(): string {
 		return this.#ncname;
 	}
+
+	clone(): NCName {
+		return new NCName(this.#ncname);
+	}
 }

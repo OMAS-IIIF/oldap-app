@@ -64,6 +64,7 @@
 	}
 </script>
 
+<svelte:window onclick={() => hide()} />
 <div role="tooltip" bind:this={enclosingEl} onmouseenter={show} onmouseleave={hide}>
 	{@render children()}
 </div>

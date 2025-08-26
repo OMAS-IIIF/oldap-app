@@ -156,3 +156,88 @@
     @apply text-sm text-oldap-fg dark:text-oldap-fg-dark mb-2
 }
 
+
+/* HTML-Tooltip Styles für bessere HTML-Formatierung innerhalb des Tooltips */
+.html-tooltip-content h1,
+.html-tooltip-content h2,
+.html-tooltip-content h3,
+.html-tooltip-content h4,
+.html-tooltip-content h5,
+.html-tooltip-content h6 {
+    @apply font-bold mb-2 leading-tight;
+}
+
+.html-tooltip-content h1 { @apply text-lg; }
+.html-tooltip-content h2 { @apply text-base; }
+.html-tooltip-content h3 { @apply text-sm; }
+.html-tooltip-content h4,
+.html-tooltip-content h5,
+.html-tooltip-content h6 { @apply text-xs; }
+
+.html-tooltip-content p {
+    @apply mb-2 last:mb-0;
+}
+
+.html-tooltip-content strong,
+.html-tooltip-content b {
+    @apply font-bold;
+}
+
+.html-tooltip-content em,
+.html-tooltip-content i {
+    @apply italic;
+}
+
+.html-tooltip-content u {
+    @apply underline;
+}
+
+.html-tooltip-content code {
+    @apply bg-white/20 px-1 py-0.5 rounded text-xs font-mono;
+}
+
+.html-tooltip-content pre {
+    @apply bg-white/10 p-2 rounded overflow-x-auto font-mono text-xs my-2;
+}
+
+.html-tooltip-content ul,
+.html-tooltip-content ol {
+    @apply my-2 pl-5;
+}
+
+.html-tooltip-content ul {
+    @apply list-disc;
+}
+
+.html-tooltip-content ol {
+    @apply list-decimal;
+}
+
+.html-tooltip-content li {
+    @apply my-1;
+}
+
+.html-tooltip-content a {
+    @apply text-blue-300 underline hover:text-blue-200 transition-colors;
+}
+
+/* Dark Mode Unterstützung */
+@media (prefers-color-scheme: dark) {
+    .html-tooltip-content a {
+        @apply text-blue-400 hover:text-blue-300;
+    }
+}
+
+/* Responsive Anpassungen */
+@media (max-width: 640px) {
+    .html-tooltip-content {
+        @apply text-xs;
+    }
+
+    .html-tooltip-content h1 { @apply text-base; }
+    .html-tooltip-content h2 { @apply text-sm; }
+    .html-tooltip-content h3,
+    .html-tooltip-content h4,
+    .html-tooltip-content h5,
+    .html-tooltip-content h6 { @apply text-xs; }
+}

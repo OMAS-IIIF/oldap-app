@@ -63,15 +63,15 @@ export class OldapUser extends OldapObject {
 		const modified = new Date(json.modified);
 		const userIri = new Iri(json.userIri);
 		const userId = new NCName(json.userId);
-		const familyName = json.family_name;
-		const givenName = json.given_name;
+		const familyName = json.familyName;
+		const givenName = json.givenName;
 		const email = json.email;
 		const is_active = json?.isActive || false;
 
 		let in_project: InProject[] | undefined = undefined;
-		if (json?.in_projects) {
-			if (Array.isArray(json.in_projects)) {
-				in_project = json.in_projects.map((item: {project: string, permissions: string[]}): InProject => {
+		if (json?.inProjects) {
+			if (Array.isArray(json.inProjects)) {
+				in_project = json.inProjects.map((item: {project: string, permissions: string[]}): InProject => {
 					const permissions = item.permissions.map((x) => (stringToAdminPermission(x)))
 					if (permissions === undefined) {
 						throw new OldapErrorInvalidValue(`${json?.in_permissions} is not a valid AdminPermission`);
@@ -83,7 +83,7 @@ export class OldapUser extends OldapObject {
 				});
 			}
 		}
-		const has_permissions: Iri[] | undefined = json?.has_permissions.map((x: string) => (new Iri(x)));
+		const has_permissions: Iri[] | undefined = json?.hasPermissions.map((x: string) => (new Iri(x)));
 
 		let isRoot = false
 		in_project?.forEach((in_project: InProject) => {
