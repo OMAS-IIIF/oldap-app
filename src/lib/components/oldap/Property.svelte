@@ -534,9 +534,13 @@ Copyright
 			}
 		}
 
+		console.log("*****::::::::>", propertydata);
 		if (resiri) {
-			if (propertydata) {
+			if (Object.keys(propertydata).length !== 0) {
 				propertydataWithResiri.property = propertydata;
+			}
+			else {
+				propertydataWithResiri.property = undefined;
 			}
 			if (hasprop?.minCount && minCount?.length === 0) {
 				propertydataWithResiri.minCount = null;
@@ -568,6 +572,7 @@ Copyright
 		propertyIri = prop.propertyIri.toString();
 		if (authinfo) {
 			if (resiri) {
+				console.log("Property.svelte: modify_property", propertydataWithResiri);
 				const property_post = api_notget_config(authinfo, {
 					project: projectid,
 					resource: resiri,
@@ -590,20 +595,8 @@ Copyright
 					errorInfoStore.set(process_api_error(error as Error));
 					spinnerStore.set(null);
 				});
-/*
-				let project = $projectStore;
-				const dm_config = api_config(authinfo, { project: project?.projectShortName.toString() || '' });
-				spinnerStore.set(m.retrieve_dm());
-				apiClient.getAdmindatamodelProject(dm_config).then((jsonresult) => {
-					const datamodel = DatamodelClass.fromOldapJson(jsonresult);
-					datamodelStore.set(datamodel);
-					spinnerStore.set(null);
-				}).catch((error) => {
-					spinnerStore.set(null);
-					errorInfoStore.set(process_api_error(error as Error));
-				});
-*/
 			} else {
+				console.log("Property.svelte: modify_property", propertydata);
 				const property_post = api_notget_config(authinfo, {
 					project: projectid,
 					property: propertyIri
