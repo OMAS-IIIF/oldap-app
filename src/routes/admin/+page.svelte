@@ -92,7 +92,9 @@
 			const dm_config = api_config(authinfo, { project: project?.projectShortName.toString() || '' });
 			spinnerStore.set(m.retrieve_dm());
 			apiClient.getAdmindatamodelProject(dm_config).then((jsonresult) => {
+				console.log("111111>", jsonresult);
 				const datamodel = DatamodelClass.fromOldapJson(jsonresult);
+				console.log("222222>", datamodel);
 				datamodelStore.set(datamodel);
 				spinnerStore.set(null);
 			}).catch((error) => {

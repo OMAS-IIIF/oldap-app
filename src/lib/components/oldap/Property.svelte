@@ -2,6 +2,10 @@
 Copyright
 
 @component
+
+This component is used to add or modify a property. This can be either a standalone property or
+in relation with a resource class.
+
 -->
 
 <script lang="ts">
@@ -15,7 +19,6 @@ Copyright
 	import Textfield from '$lib/components/basic_gui/inputs/Textfield.svelte';
 	import { datamodelStore } from '$lib/stores/datamodel';
 	import DropdownField from '$lib/components/basic_gui/inputs/DropdownField.svelte';
-	import { XsdDatatypes } from '$lib/oldap/enums/xsd_datatypes';
 	import PropTypeSelector from '$lib/components/oldap/PropTypeSelector.svelte';
 	import LabeledDivider from '$lib/components/basic_gui/inputs/LabeledDivider.svelte';
 	import Checkbox from '$lib/components/basic_gui/checkbox/Checkbox.svelte';
@@ -27,7 +30,7 @@ Copyright
 	import LangstringField from '$lib/components/basic_gui/inputs/LangstringField.svelte';
 	import { LangString } from '$lib/oldap/datatypes/langstring';
 	import { getLanguageShortname } from '$lib/oldap/enums/language';
-	import { PropType, propTypeFromString } from '$lib/oldap/enums/proptypes';
+	import { PropType } from '$lib/oldap/enums/proptypes';
 	import DropdownButton from '$lib/components/basic_gui/dropdown/DropdownButton.svelte';
 	import DropdownMenu from '$lib/components/basic_gui/dropdown/DropdownMenu.svelte';
 	import DropdownLinkItem from '$lib/components/basic_gui/dropdown/DropdownLinkItem.svelte';
@@ -43,8 +46,8 @@ Copyright
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
 	import Numberfield from '$lib/components/basic_gui/inputs/Numberfield.svelte';
 	import type { HasProperty } from '$lib/oldap/classes/resource';
-	import { OldapError } from '$lib/oldap/errors/OldapError';
 	import { spinnerStore } from '$lib/stores/spinner';
+	import LangtextareaField from '$lib/components/basic_gui/inputs/LangtextareaField.svelte';
 
 	interface PropertyData {
 		subPropertyOf?: string,
@@ -79,7 +82,7 @@ Copyright
 
 		dialogstatus = $bindable(),
 
-		/** @param {HTMLElement} topwin The top HTML that is been used to scroll to the top */
+		/** @param {HTMLElement} topwin The top HTML that is used to scroll to the top */
 		topwin
 	} : {
 			propiri: string,
@@ -163,7 +166,6 @@ Copyright
 
 	datamodelStore.subscribe(data => {
 		datamodel = data;
-		console.log('-----------=================> datamodel changed');
 	});
 
 	function scrollToTop() {
@@ -212,17 +214,28 @@ Copyright
 			all_prefixes = [...all_prefixes, 'shared', 'dc', 'dcterms', 'skos', 'schema', 'cidoc'];
 		}
 
-		// get the list of all resource classes that can be the target of a link
+		// get the list of all resource classes that can be the target of a link. These are Resources
+		// that are not list nodes! A list node always has the super-class 'oldap:OldapListNode'
 		const tmp_resources = datamodel?.resources.filter(x => {
-			const gaga = x?.superclass?.map(s => s.toString()) || [];
-			return !gaga.includes('oldap:OldapListNode');
+			if (x.superclass) {
+				const gaga = [...x.superclass].map(s => s.toString()) || [];
+				return !gaga.includes('oldap:OldapListNode');
+			}
+			else {
+				return true;
+			}
 		}) || [];
 		all_res_list = tmp_resources.map(r => r.iri.toString()) ?? [];
 
 		// get the list of hierarchical lists that are available
 		const tmp_lists = datamodel?.resources.filter(x => {
-			const gaga = x?.superclass?.map(s => s.toString()) || [];
-			return gaga.includes('oldap:OldapListNode');
+			if (x.superclass) {
+				const gaga = [...x.superclass].map(s => s.toString()) || [];
+				return gaga.includes('oldap:OldapListNode');
+			}
+			else {
+				return false;
+			}
 		}) || [];
 		all_lists_list = tmp_lists.map(r => r.iri.toString()) ?? [];
 
@@ -257,7 +270,7 @@ Copyright
 	});
 
 	/**
-	 * This callback is fired on initialization and if the subPropertyOf changes...
+	 * This callback is fired on initialization, and if the subPropertyOf changes...
 	 */
 	$effect(() => {
 		//
@@ -292,6 +305,9 @@ Copyright
 				}
 				if (prop?.languageIn) {
 					allowedLanguages = Array.from(prop.languageIn).map(l => l.toString());
+				}
+				if (prop?.inSet) {
+					allowedStrings = new Set(Array.from(prop.inSet, x => x.toString()));
 				}
 				minCount = hasprop?.minCount?.toString();
 				maxCount = hasprop?.maxCount?.toString();
@@ -412,29 +428,26 @@ Copyright
 			if (resiri) {
 				// TODO: Implement adding a property to a resource!
 				const property_put = api_notget_config(authinfo, {project: projectid, resource: resiri, property: propertyIri});
-				apiClient.putAdmindatamodelProjectResourceProperty(propertydata, property_put).then(res => {
+				spinnerStore.set("ADDING NEW PROPERTY TO RESOURCE " + resiri + " ...");
+				apiClient.putAdmindatamodelProjectResourceProperty(propertydata, property_put).then(() => {
+					// we changed a property, so we need to update the datamodel by re-reading it!
+					let project = $projectStore;
+					const dm_config = api_config(authinfo as AuthInfo, { project: project?.projectShortName.toString() || '' });
+					return apiClient.getAdmindatamodelProject(dm_config);
+				}).then((jsonresult) => {
+					const datamodel = DatamodelClass.fromOldapJson(jsonresult);
+					datamodelStore.set(datamodel); // set the datamodelStore so the reactive mechanisms of svelte will update the UI!
+					spinnerStore.set(null);
 					successInfoStore.set('!' + m.prop_add_success({propiri: propertyIri}));
 					dialogstatus = false;
 				}).catch((error) => {
 					errorInfoStore.set(process_api_error(error as Error));
-				});
-
-				let project = $projectStore;
-				const dm_config = api_config(authinfo, { project: project?.projectShortName.toString() || '' });
-				spinnerStore.set(m.retrieve_dm());
-				apiClient.getAdmindatamodelProject(dm_config).then((jsonresult) => {
-					const datamodel = DatamodelClass.fromOldapJson(jsonresult);
-					datamodelStore.set(datamodel);
 					spinnerStore.set(null);
-				}).catch((error) => {
-					spinnerStore.set(null);
-					errorInfoStore.set(process_api_error(error as Error));
 				});
-
 			}
 			else {
 				const property_put = api_notget_config(authinfo, {project: projectid, property: propertyIri});
-				apiClient.putAdmindatamodelProjectpropertyProperty(propertydata, property_put).then(res => {
+				apiClient.putAdmindatamodelProjectpropertyProperty(propertydata, property_put).then(() => {
 					successInfoStore.set(m.prop_add_success({propiri: propertyIri}));
 					refreshPropertiesListNow();
 				}).catch((error) => {
@@ -445,9 +458,11 @@ Copyright
 	}
 
 	const modify_property = async () => {
+		console.log("modify_property (1)");
 		if (!prop) return;
-		confirmation_title = "MODIFY PROPERTY";
-		confirmation_message = "CONFIRM CHANGING PROPERTY: " + prefix + ":" + fragment + ".";
+		console.log("modify_property (2)");
+		confirmation_title = m.mod_property();
+		confirmation_message = m.confirm_prop_mod({property: prefix + ":" + fragment});
 		const ok = await confirmation_dialog.open();
 		if (!ok) return;
 
@@ -534,7 +549,6 @@ Copyright
 			}
 		}
 
-		console.log("*****::::::::>", propertydata);
 		if (resiri) {
 			if (Object.keys(propertydata).length !== 0) {
 				propertydataWithResiri.property = propertydata;
@@ -568,24 +582,22 @@ Copyright
 
 		}
 
-		console.log("Property.svelte: modify_property", propertydata);
 		propertyIri = prop.propertyIri.toString();
 		if (authinfo) {
 			if (resiri) {
-				console.log("Property.svelte: modify_property", propertydataWithResiri);
 				const property_post = api_notget_config(authinfo, {
 					project: projectid,
 					resource: resiri,
 					property: propertyIri
 				});
-				spinnerStore.set("UPDATING PROPERTY IN RESOURCE");
+				spinnerStore.set(m.adding_prop_spinner({resiri: resiri}));
 				apiClient.postAdmindatamodelProjectResourceProperty(propertydataWithResiri, property_post).then(() => {
 					successInfoStore.set('!' + m.prop_add_success({ propiri: propertyIri }));
 					dialogstatus = false;
 				}).then(() => {
 					// we changed a property, so we need to update the datamodel by re-reading it!
 					let project = $projectStore;
-					const dm_config = api_config(authinfo, { project: project?.projectShortName.toString() || '' });
+					const dm_config = api_config(authinfo as AuthInfo, { project: project?.projectShortName.toString() || '' });
 					return apiClient.getAdmindatamodelProject(dm_config);
 				}).then((jsonresult) => {
 					const datamodel = DatamodelClass.fromOldapJson(jsonresult);
@@ -596,12 +608,11 @@ Copyright
 					spinnerStore.set(null);
 				});
 			} else {
-				console.log("Property.svelte: modify_property", propertydata);
 				const property_post = api_notget_config(authinfo, {
 					project: projectid,
 					property: propertyIri
 				});
-				apiClient.postAdmindatamodelProjectpropertyProperty(propertydata, property_post).then(res => {
+				apiClient.postAdmindatamodelProjectpropertyProperty(propertydata, property_post).then(() => {
 					successInfoStore.set(m.prop_add_success({ propiri: propertyIri }));
 					refreshPropertiesListNow();
 				}).catch((error) => {
@@ -634,7 +645,7 @@ and the actual property id (which is a xs:NCName
 
 <div>
 	<div>{propiri === 'new' ?  m.add_prop() : m.edit_prop()} <span class="italic">{propiri}</span> </div>
-	<form class="max-w-128 min-w-96">
+	<form class="max-w-128 min-w-64">
 		<LabeledDivider>{m.basic_attr()}:</LabeledDivider>
 		<Textfield type='text' label={m.prop_iri()} name="fragment" id="fragment" placeholder="property ID" required={true}
 							 bind:value={fragment} pattern={ncname_pattern} disabled={propiri !== 'new' || add_standalone_prop}
@@ -653,7 +664,7 @@ and the actual property id (which is a xs:NCName
 				{all_lists_list}
 				disabled={subPropertyOf !== 'NONE'} />
 			<LangstringField bind:this={name_field} label={m.name()} name="name" id="name" placeholder="name" value={name} />
-			<LangstringField bind:this={description_field} label={m.description()} name="descritpion" id="description" placeholder="description" value={description} />
+			<LangtextareaField bind:this={description_field} label={m.description()} name="description" id="description" placeholder="description" value={description} />
 			{#if proptype === PropType.LITERAL}
 				<LabeledDivider>{m.restrictions()}:</LabeledDivider>
 				{#if string_datatypes.includes(datatype || '')}
@@ -706,7 +717,7 @@ and the actual property id (which is a xs:NCName
 			{:else}
 				<Button class="mx-4 my-2" onclick={goto_page('/admin')}>{m.cancel()}</Button>
 			{/if}
-			{#if propiri === 'new'}
+			{#if propiri === 'new' || prop === undefined} <!-- prop === undefined: We're starting from the resource page -->
 				<Button class="mx-4 my-2" onclick={() => add_property()}>{m.add()}</Button>
 			{:else}
 				<Button class="mx-4 my-2" onclick={() => modify_property()}>{m.modify()}</Button>

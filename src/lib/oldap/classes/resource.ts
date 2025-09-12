@@ -18,7 +18,7 @@ export type ResourceClassOptions = {
 	modified: Date,
 	projectid: NCName,
 	iri: Iri,
-	superclass?: Iri[],
+	superclass?: Set<Iri>,
 	label?: LangString,
 	comment?: LangString,
 	closed?: boolean,
@@ -28,7 +28,7 @@ export type ResourceClassOptions = {
 export class ResourceClass extends OldapObject {
 	#projectid: NCName;
 	#iri: Iri;
-	#superclass?: Iri[];
+	#superclass?: Set<Iri>;
 	label?: LangString;
 	comment?: LangString;
 	closed?: boolean;
@@ -64,7 +64,8 @@ export class ResourceClass extends OldapObject {
 		const modified = new Date(json.modified);
 		const projectid = new NCName(json.projectid);
 		const iri = new Iri(json.iri);
-		const superclass = json.superclass?.map(x => new Iri(x)) //new Iri(json.superclass);
+		const superclass = new Set<Iri>(json.superclass?.map((x: string) => new Iri(x)))
+		//const superclass = json.superclass?.map(x => new Iri(x)) //new Iri(json.superclass);
 		const label = LangString.fromJson(json.label);
 		const comment = LangString.fromJson(json.comment);
 		const closed = json.closed;
@@ -118,7 +119,7 @@ export class ResourceClass extends OldapObject {
 			modified: new Date(this.modified.getTime()),
 			projectid: this.projectid.clone(),
 			iri: this.iri.clone(),
-			superclass: this.superclass?.map(x => x.clone()),
+			superclass: this.superclass ? new Set<Iri>([...this.superclass]?.map(x => x.clone())) : undefined,
 			label: this.label?.clone(),
 			comment: this.comment?.clone(),
 			closed: this.closed,

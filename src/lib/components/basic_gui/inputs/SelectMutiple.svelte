@@ -122,6 +122,7 @@
 			buttonText={selectablesDict[buttonvalue]}
 			name="resselsel"
 			id="resselsel_id"
+			{disabled}
 		>
 			<DropdownMenu bind:isOpen={dpm_is_open} position="left" name="resselsel" id="resselsel_id">
 				{#each selectableKeysArray as val (val)}

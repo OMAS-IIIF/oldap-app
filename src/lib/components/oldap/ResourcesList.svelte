@@ -45,10 +45,9 @@
 	});
 
 	$effect(() => {
-		//const _ = $refreshPropertiesList;
 		// get the list of all resource classes that can be the target of a link
 		const tmp_res = datamodel?.resources.filter(x => {
-			const gaga = x?.superclass?.map(s => s.toString()) || [];
+			const gaga = x?.superclass ? [...x.superclass].map(s => s.toString()) : [];
 			return !gaga.includes('oldap:OldapListNode');
 		}) || [];
 
@@ -80,8 +79,8 @@
 	</div>
 {/snippet}
 
-<Table height={table_height} title="RESOURCES"
-			 description="THE RESOURCES OF THE PROJECT"
+<Table height={table_height} title={m.resources()}
+			 description={m.resources_desc()}
 			 action_elements={actions}>
 	<TableHeader>
 		{#each headers as header}

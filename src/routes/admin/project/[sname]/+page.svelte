@@ -125,8 +125,11 @@
 			projectEnd: projectEnd?.toString()
 		};
 		const project_put = api_notget_config(authinfo, {projectId: sname});
-		apiClient.putAdminprojectProjectId(projectdata, project_put).then((res) => {
-			successInfoStore.set(`Project "${res.projectId}" added successfully!`);
+		apiClient.putAdminprojectProjectId(projectdata, project_put).then(() => {
+			const empty_dm = api_notget_config(authinfo, {project: sname});
+			return apiClient.putAdmindatamodelProject(undefined, empty_dm);
+		}).then(() => {
+			successInfoStore.set(`Project ${sname} added successfully!`);
 		}).catch((error) => {
 			errorInfoStore.set(process_api_error(error as Error));
 		});
