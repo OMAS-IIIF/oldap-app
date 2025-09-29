@@ -1,6 +1,12 @@
-.PHONY: docker-build bump-patch-level
+.PHONY: init-multiarch docker-build bump-patch-level bump-minor-level \
+bump-major-level docker-build docker-push docker-run
 
 VERSION=$(shell node -p "require('./package.json').version")
+
+init-multiarch:
+	docker buildx create --use
+	docker buildx create --name multiarch --use
+	docker buildx inspect --bootstrap
 
 bump-patch-level:
 	npm version patch
@@ -18,9 +24,17 @@ bump-major-level:
 	npm version major
 	git push
 
-
-
 docker-build:
-	docker build -t lrosenth/oldap-app .
+	docker buildx build \
+		--platform linux/amd64,linux/arm64 \
+		-t lrosenth/oldap-app:$(VERSION) \
+		-t lrosenth/oldap-app:latest \
+		--push .
+
 
 docker-push:
+	docker push lrosenth/oldap-app:$(VERSION)
+	docker push lrosenth/oldap-app:latest
+
+docker-run:
+	docker run --rm -it -e API_URL=https://localhost:8000 -p 3000:3000 lrosenth/oldap-app:$(VERSION)
