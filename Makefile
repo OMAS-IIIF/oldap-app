@@ -1,10 +1,23 @@
-.PHONY: docker-build
+.PHONY: docker-build bump-patch-level
 
-VERSION=$(node -p "require('./package.json').version")
+VERSION=$(shell node -p "require('./package.json').version")
 
-patch-level:
+bump-patch-level:
 	npm version patch
-	git push origin tag ${VERSION}
+	git push
+
+bump-patch-level:
+	npm version patch
+	git push origin --tag
+
+bump-minor-level:
+	npm version minor
+	git push
+
+bump-major-level:
+	npm version major
+	git push
+
 
 
 docker-build:
