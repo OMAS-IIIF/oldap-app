@@ -338,6 +338,8 @@
 		apiClient.putAdminuserUserId(userdata, user_put).then((res) => {
 			successInfoStore.set(`User "${res.userId}" added successfully!`);
 		}).catch((error) => {
+			console.log(userdata);
+			console.log(error);
 			errorInfoStore.set(process_api_error(error as Error));
 		});
 	}

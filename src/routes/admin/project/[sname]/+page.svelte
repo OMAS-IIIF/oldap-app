@@ -23,6 +23,7 @@
 	import { languageTag } from '$lib/paraglide/runtime';
 	import { goto_page } from '$lib/helpers/goto_page';
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import { refreshProjectsListNow } from '$lib/stores/refresh_projectslist.svelte';
 
 
 	let { data }: PageProps = $props();
@@ -130,6 +131,7 @@
 			return apiClient.putAdmindatamodelProject(undefined, empty_dm);
 		}).then(() => {
 			successInfoStore.set(`Project ${sname} added successfully!`);
+			refreshProjectsListNow();
 		}).catch((error) => {
 			errorInfoStore.set(process_api_error(error as Error));
 		});

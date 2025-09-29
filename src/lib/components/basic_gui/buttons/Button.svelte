@@ -15,7 +15,7 @@
 <button type="button"
 				onclick={onclick || undefined}
 				{id}
-				disabled={disabled}
+				{disabled}
 				class="{round ? 'oldap-button-round' : 'oldap-button'} {userClass} {disabled ? 'opacity-30 cursor-not-allowed' : ''}"
 				aria-expanded={ariaExpanded || undefined}
 				aria-haspopup={ariaHaspopup || undefined}>
