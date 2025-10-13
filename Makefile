@@ -1,7 +1,10 @@
 .PHONY: init-multiarch docker-build bump-patch-level bump-minor-level \
 bump-major-level docker-build docker-push docker-run
 
-VERSION=$(shell node -p "require('./package.json').version")
+VERSION=v$(shell node -p "require('./package.json').version")
+
+show-version:
+	echo "VERSION=$(VERSION)"
 
 init-multiarch:
 	docker buildx create --use

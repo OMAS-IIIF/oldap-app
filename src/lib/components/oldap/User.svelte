@@ -17,7 +17,7 @@
 	import { goto } from '$app/navigation';
 	import { authInfoStore } from '$lib/stores/authinfo';
 
-	let { user = $bindable() } = $props();
+	let { user = $bindable() } : {user: OldapUser | null} = $props();
 
 	let avatarIsOpen = $state(false);
 	let initials: string | undefined = $state(undefined);
@@ -80,7 +80,7 @@
 
 </script>
 
-{#if user}
+{#if user && user.userId.toString() !== 'unknown'}
 	<DropdownAvatar bind:isOpen={avatarIsOpen} {initials} {src} name="avatar">
 		<DropdownMenu bind:isOpen={avatarIsOpen} position="right" name="avatar" id="avatar-id" grouping={true}>
 			<div role="none">
