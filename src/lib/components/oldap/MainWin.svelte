@@ -39,7 +39,7 @@ userStore.subscribe(stored_user => {
 		<LeftHeader>
 			<button onclick={goto_page("/")} class="cursor-pointer"><img src="/images/oldap-logo.svg" class="me-3 h-6 sm:h-12" alt="OLDAP Logo" /></button>
 			<button onclick={goto_page("/about")} class="hover:underline cursor-pointer">{m.about()}</button>
-			{#if user}
+			{#if user && user.userId.toString() !== 'unknown'}
 				<button onclick={goto_page("/admin")} class="hover:underline cursor-pointer">{m.admin()}</button>
 			{/if}
 		</LeftHeader>

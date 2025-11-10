@@ -16,6 +16,7 @@
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { goto } from '$app/navigation';
 	import { authInfoStore } from '$lib/stores/authinfo';
+	import { loginUnknownUser } from '$lib/helpers/login_unknown_user';
 
 	let { user = $bindable() } : {user: OldapUser | null} = $props();
 
@@ -65,13 +66,14 @@
 			});
 	};
 
-	let do_logout = () => {
+	let do_logout = async () => {
 		user = null;
 		initials = undefined;
 		src = undefined;
 		userStore.set(null);
 		authInfoStore.set(null);
 		goto('/');
+		await loginUnknownUser()
 	}
 
 	let test = (event: Event) => {

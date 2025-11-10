@@ -11,9 +11,6 @@ init-multiarch:
 	docker buildx create --name multiarch --use
 	docker buildx inspect --bootstrap
 
-bump-patch-level:
-	npm version patch
-	git push
 
 bump-patch-level:
 	npm version patch
@@ -21,11 +18,11 @@ bump-patch-level:
 
 bump-minor-level:
 	npm version minor
-	git push
+	git push  origin --tag
 
 bump-major-level:
 	npm version major
-	git push
+	git push  origin --tag
 
 docker-build:
 	docker buildx build \
