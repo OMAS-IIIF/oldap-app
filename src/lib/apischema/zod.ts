@@ -3,6 +3,45 @@ import { z } from "zod";
 
 
 
+type ExternalOntology = Partial<{
+    creator: string;
+    created: string;
+    contributor: string;
+    modified: string;
+    /**
+     * Prefix to be used for the external ontology
+     */
+    prefix: string;
+    /**
+     * Namespace of the ontology
+     */
+    namespaceIri: string;
+    /**
+     * Human readable label.
+     */
+    label: LangString | Partial<{
+        add: LangString;
+        del: LangString;
+    }> | null;
+    /**
+     * A description of the property.
+     */
+    comment: LangString | Partial<{
+        add: LangString;
+        del: LangString;
+    }> | null;
+}>;;
+type LangString = /**
+ * List of strings, each with an optional language tag (e.g., ["Lastname@en", "Nachname@de"])
+ *
+ * @example ["Eine Buchseite@de","A page of a book@en"]
+ */
+Array<string> | /**
+ * Single string with optional language tag (e.g., "Lastname@en").
+ *
+ * @example "A page of a book@en"
+ */
+string | null;;
 type Property = Partial<{
     creator: string;
     created: string;
@@ -133,20 +172,9 @@ type Iri = /**
  * IRI in the format 'project:object', where 'project' is the project name and 'object' is the object name.
  *
  * @example "myproj:pageOf"
- * @pattern ^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$
+ * @pattern ^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$
  */
 string;;
-type LangString = /**
- * List of strings, each with an optional language tag (e.g., ["Lastname@en", "Nachname@de"])
- *
- * @example ["Eine Buchseite@de","A page of a book@en"]
- */
-Array<string> | /**
- * Single string with optional language tag (e.g., "Lastname@en").
- *
- * @example "A page of a book@en"
- */
-string | null;;
 type Resource = Partial<{
     creator: string;
     created: string;
@@ -194,9 +222,10 @@ const putAdminprojectProjectId_Body = z.object({ projectIri: z.string(), label: 
 const postAdminprojectProjectId_Body = z.object({ label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), projectStart: z.union([z.string(), z.null()]), projectEnd: z.union([z.string(), z.null()]) }).partial().passthrough();
 const putAdminpermissionsetDefinedByProjectPermissionSetId_Body = z.object({ label: LangString, comment: LangString, givesPermission: z.enum(["DATA_RESTRICTED", "DATA_VIEW", "DATA_EXTEND", "DATA_UPDATE", "DATA_DELETE", "DATA_PERMISSIONS"]) }).partial().passthrough();
 const postAdminpermissionsetDefinedByProjectPermissionSetId_Body = z.object({ label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.unknown()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), givesPermission: z.enum(["DATA_RESTRICTED", "DATA_VIEW", "DATA_EXTEND", "DATA_UPDATE", "DATA_DELETE", "DATA_PERMISSIONS"]) }).partial().passthrough();
+const ExternalOntology: z.ZodType<ExternalOntology> = z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), prefix: z.string(), namespaceIri: z.string(), label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]) }).partial();
 const Iri = z.string();
-const Property: z.ZodType<Property> = z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), projectid: z.string(), iri: z.string(), subPropertyOf: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), class: z.union([Iri, z.null()]), datatype: z.union([z.string(), z.null()]), name: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), description: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), languageIn: z.union([z.array(z.string()), z.null()]), uniqueLang: z.boolean(), inSet: z.union([z.array(z.string()), z.null()]), minLength: z.union([z.number(), z.number(), z.null()]), maxLength: z.union([z.number(), z.number(), z.null()]), pattern: z.union([z.string(), z.null()]), minExclusive: z.union([z.number(), z.number(), z.null()]), minInclusive: z.union([z.number(), z.number(), z.null()]), maxExclusive: z.union([z.number(), z.number(), z.null()]), maxInclusive: z.union([z.number(), z.number(), z.null()]), lessThan: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/), lessThanOrEquals: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/) }).partial();
-const Resource: z.ZodType<Resource> = z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), label: LangString, superclass: z.union([z.array(z.string()), z.string()]), comment: LangString, closed: z.boolean(), hasProperty: z.array(z.object({ property: z.union([z.object({ iri: Iri.regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/) }).partial().passthrough().and(Property), Iri]), maxCount: z.number(), minCount: z.number(), order: z.number() }).partial().passthrough()) }).partial().passthrough();
+const Property: z.ZodType<Property> = z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), projectid: z.string(), iri: z.string(), subPropertyOf: Iri.regex(/^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$/), class: z.union([Iri, z.null()]), datatype: z.union([z.string(), z.null()]), name: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), description: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), languageIn: z.union([z.array(z.string()), z.null()]), uniqueLang: z.boolean(), inSet: z.union([z.array(z.string()), z.null()]), minLength: z.union([z.number(), z.number(), z.null()]), maxLength: z.union([z.number(), z.number(), z.null()]), pattern: z.union([z.string(), z.null()]), minExclusive: z.union([z.number(), z.number(), z.null()]), minInclusive: z.union([z.number(), z.number(), z.null()]), maxExclusive: z.union([z.number(), z.number(), z.null()]), maxInclusive: z.union([z.number(), z.number(), z.null()]), lessThan: Iri.regex(/^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$/), lessThanOrEquals: Iri.regex(/^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$/) }).partial();
+const Resource: z.ZodType<Resource> = z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), label: LangString, superclass: z.union([z.array(z.string()), z.string()]), comment: LangString, closed: z.boolean(), hasProperty: z.array(z.object({ property: z.union([z.object({ iri: Iri.regex(/^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$/) }).partial().passthrough().and(Property), Iri]), maxCount: z.number(), minCount: z.number(), order: z.number() }).partial().passthrough()) }).partial().passthrough();
 const postAdmindatamodelProjectpropertyProperty_Body = z.object({ datatype: z.string(), class: z.string(), name: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), description: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), languageIn: z.union([z.array(z.string()), z.null()]), uniqueLang: z.boolean(), inSet: z.union([z.array(z.union([z.string(), z.number(), z.number()])), z.null()]), minLength: z.union([z.number(), z.number(), z.null()]), maxLength: z.union([z.number(), z.number(), z.null()]), pattern: z.union([z.string(), z.null()]), minExclusive: z.union([z.number(), z.number(), z.null()]), minInclusive: z.union([z.number(), z.number(), z.null()]), maxExclusive: z.union([z.number(), z.number(), z.null()]), maxInclusive: z.union([z.number(), z.number(), z.null()]) }).partial();
 const postAdmindatamodelProjectResource_Body = z.object({ closed: z.boolean(), superclass: z.union([z.array(z.string()), z.object({ add: z.array(z.string()), del: z.array(z.string()) }).partial().passthrough(), z.null()]), label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]) }).partial().passthrough();
 const putAdmindatamodelProjectResourceProperty_Body = Property.and(z.object({ maxCount: z.union([z.number(), z.number()]), minCount: z.union([z.number(), z.number()]), order: z.union([z.number(), z.number()]) }).partial());
@@ -215,6 +244,7 @@ export const schemas = {
 	postAdminprojectProjectId_Body,
 	putAdminpermissionsetDefinedByProjectPermissionSetId_Body,
 	postAdminpermissionsetDefinedByProjectPermissionSetId_Body,
+	ExternalOntology,
 	Iri,
 	Property,
 	Resource,
@@ -331,7 +361,7 @@ const endpoints = makeApi([
 				schema: z.string()
 			},
 		],
-		response: z.object({ project: z.string(), standaloneProperties: z.array(Property), resources: z.array(Resource) }).partial().passthrough(),
+		response: z.object({ project: z.string(), externalOntologies: z.array(ExternalOntology), standaloneProperties: z.array(Property), resources: z.array(Resource) }).partial().passthrough(),
 		errors: [
 			{
 				status: 403,
@@ -407,7 +437,7 @@ const endpoints = makeApi([
 			{
 				name: "resource",
 				type: "Path",
-				schema: z.string().regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/)
+				schema: z.string().regex(/^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$/)
 			},
 		],
 		response: z.object({ message: z.string() }).partial().passthrough(),
@@ -454,7 +484,7 @@ const endpoints = makeApi([
 			{
 				name: "resource",
 				type: "Path",
-				schema: z.string().regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/)
+				schema: z.string().regex(/^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$/)
 			},
 		],
 		response: z.object({ message: z.string() }).partial().passthrough(),
@@ -502,7 +532,7 @@ const endpoints = makeApi([
 			{
 				name: "resource",
 				type: "Path",
-				schema: z.string().regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/)
+				schema: z.string().regex(/^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$/)
 			},
 		],
 		response: z.object({ message: z.string() }).partial().passthrough(),
@@ -549,12 +579,12 @@ const endpoints = makeApi([
 			{
 				name: "resource",
 				type: "Path",
-				schema: z.string().regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/)
+				schema: z.string().regex(/^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$/)
 			},
 			{
 				name: "property",
 				type: "Path",
-				schema: z.string().regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/)
+				schema: z.string().regex(/^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$/)
 			},
 		],
 		response: z.object({ message: z.string() }).partial().passthrough(),
@@ -601,12 +631,12 @@ const endpoints = makeApi([
 			{
 				name: "resource",
 				type: "Path",
-				schema: z.string().regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/)
+				schema: z.string().regex(/^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$/)
 			},
 			{
 				name: "property",
 				type: "Path",
-				schema: z.string().regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/)
+				schema: z.string().regex(/^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$/)
 			},
 		],
 		response: z.object({ message: z.string() }).partial().passthrough(),
@@ -648,12 +678,106 @@ const endpoints = makeApi([
 			{
 				name: "resource",
 				type: "Path",
-				schema: z.string().regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/)
+				schema: z.string().regex(/^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$/)
 			},
 			{
 				name: "property",
 				type: "Path",
-				schema: z.string().regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/)
+				schema: z.string().regex(/^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$/)
+			},
+		],
+		response: z.object({ message: z.string() }).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
+			},
+			{
+				status: 403,
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
+			},
+			{
+				status: 404,
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
+			},
+			{
+				status: 500,
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
+			},
+		]
+	},
+	{
+		method: "put",
+		path: "/admin/datamodel/:project/extonto/:prefix",
+		alias: "putAdmindatamodelProjectextontoPrefix",
+		description: `Add an external ontology reference to the data model. The external ontology reference is defined by a prefx and the namespace Iri. If it&#x27;s declared in the datamode, definitions from this ontology may be used withing the data model.`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "body",
+				type: "Body",
+				schema: ExternalOntology
+			},
+			{
+				name: "project",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "prefix",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.object({ message: z.string() }).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
+			},
+			{
+				status: 403,
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
+			},
+			{
+				status: 404,
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
+			},
+			{
+				status: 409,
+				description: `Error 409: Conflict - Resource already exists or operation conflicts with current state`,
+				schema: Error
+			},
+			{
+				status: 500,
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
+			},
+		]
+	},
+	{
+		method: "delete",
+		path: "/admin/datamodel/:project/extonto/:prefix",
+		alias: "deleteAdmindatamodelProjectextontoPrefix",
+		description: `Viewfunction that deletes an external ontology reference inside the project&#x27;s datamodel`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "project",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "prefix",
+				type: "Path",
+				schema: z.string()
 			},
 		],
 		response: z.object({ message: z.string() }).partial().passthrough(),
@@ -700,7 +824,7 @@ const endpoints = makeApi([
 			{
 				name: "property",
 				type: "Path",
-				schema: z.string().regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/)
+				schema: z.string().regex(/^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$/)
 			},
 		],
 		response: z.object({ message: z.string() }).partial().passthrough(),
@@ -742,7 +866,7 @@ const endpoints = makeApi([
 			{
 				name: "property",
 				type: "Path",
-				schema: z.string().regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/)
+				schema: z.string().regex(/^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$/)
 			},
 		],
 		response: z.object({ message: z.string() }).partial().passthrough(),
@@ -789,7 +913,7 @@ const endpoints = makeApi([
 			{
 				name: "property",
 				type: "Path",
-				schema: z.string().regex(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/)
+				schema: z.string().regex(/^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$/)
 			},
 		],
 		response: z.object({ message: z.string() }).partial().passthrough(),

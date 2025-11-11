@@ -3,6 +3,7 @@ import { Iri } from '$lib/oldap/datatypes/xsd_iri';
 import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
 import { PropertyClass } from '$lib/oldap/classes/property';
 import { ResourceClass } from '$lib/oldap/classes/resource';
+import type { ExternalOntology } from '$lib/oldap/classes/extonto';
 
 export type DatamodelClassOptions = {
 	creator: Iri,
@@ -10,24 +11,31 @@ export type DatamodelClassOptions = {
 	contributor: Iri,
 	modified: Date,
 	projectid: NCName,
+	externalOntologies: ExternalOntology[],
 	standaloneProperties: PropertyClass[],
 	resources: ResourceClass[]
 }
 
 export class DatamodelClass extends OldapObject {
 	#projectid: NCName;
+	#externalOntologies: ExternalOntology[];
 	#standaloneProperties: PropertyClass[];
 	#resouces: ResourceClass[];
 
 	constructor(options: DatamodelClassOptions) {
 		super(options.creator, options.created, options.contributor, options.modified);
 		this.#projectid = options.projectid;
+		this.#externalOntologies = options.externalOntologies;
 		this.#standaloneProperties = options.standaloneProperties;
 		this.#resouces = options.resources;
 	}
 
 	get projectid() {
 		return this.#projectid;
+	}
+
+	get externalOntologies() {
+		return this.#externalOntologies;
 	}
 
 	get standaloneProperties() {
@@ -51,6 +59,9 @@ export class DatamodelClass extends OldapObject {
 		const projectid = new NCName(json.project);
 		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 		// @ts-expect-error
+		const externalOntologies = json.externalOntologies.map(ext => ExternalOntology.fromOldapJson(ext));
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-expect-error
 		const standaloneProperties = json.standaloneProperties.map(prop => PropertyClass.fromOldapJson(prop));
 		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 		// @ts-expect-error
@@ -61,6 +72,7 @@ export class DatamodelClass extends OldapObject {
 			contributor: contributor,
 			modified: modified,
 			projectid: projectid,
+			externalOntologies: externalOntologies,
 			standaloneProperties: standaloneProperties,
 			resources: resources
 		});
