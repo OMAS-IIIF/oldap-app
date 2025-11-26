@@ -27,6 +27,7 @@
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import { datamodelStore } from '$lib/stores/datamodel';
 	import ResourcesList from '$lib/components/oldap/ResourcesList.svelte';
+	import ExternalOntologies from '$lib/components/oldap/ExternalOntologies.svelte';
 
 	let tabs: TabsType = $state({}); // info about the tabs: key and (lang-dependent) name
 	let administrator: OldapUser | null = $state($userStore);  // the admin user...
@@ -161,6 +162,7 @@
 {#if selected_tab === 'models'}
 	<div class="grid grid-cols-2 gap-4 h-full">
 		<div class="min-w-0">
+			<ExternalOntologies {table_height} {project} />
 			<PropsList {table_height} {project} />
 		</div>
 		<div class="min-w-0">

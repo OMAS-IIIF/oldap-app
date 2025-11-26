@@ -33,6 +33,7 @@ export class ExternalOntology extends OldapObject {
 	}
 
 	static fromOldapJson(json: any): ExternalOntology {
+		console.log("EXTERNALONTO::", json);
 		const creator = new Iri(json.creator);
 		const created = new Date(json.created);
 		const contributor = new Iri(json.contributor);

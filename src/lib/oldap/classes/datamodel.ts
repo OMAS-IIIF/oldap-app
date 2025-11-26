@@ -3,7 +3,7 @@ import { Iri } from '$lib/oldap/datatypes/xsd_iri';
 import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
 import { PropertyClass } from '$lib/oldap/classes/property';
 import { ResourceClass } from '$lib/oldap/classes/resource';
-import type { ExternalOntology } from '$lib/oldap/classes/extonto';
+import { ExternalOntology } from '$lib/oldap/classes/extonto';
 
 export type DatamodelClassOptions = {
 	creator: Iri,
