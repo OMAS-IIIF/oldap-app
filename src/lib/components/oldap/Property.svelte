@@ -211,8 +211,11 @@ in relation with a resource class.
 		all_prop_list = ['NONE', ...all_prop_list];
 		all_prefixes = [$projectStore?.projectShortName.toString() || '']
 		if (administrator?.isRoot && projectid !== 'shared') {
-			all_prefixes = [...all_prefixes, 'shared', 'dc', 'dcterms', 'skos', 'schema', 'cidoc'];
+			all_prefixes = [...all_prefixes, 'shared'];
 		}
+		let extontos: string[] = []
+		datamodel?.externalOntologies.forEach(x => extontos.push(x.prefix.toString()));
+		all_prefixes = [...all_prefixes, extontos];
 
 		// get the list of all resource classes that can be the target of a link. These are Resources
 		// that are not list nodes! A list node always has the super-class 'oldap:OldapListNode'

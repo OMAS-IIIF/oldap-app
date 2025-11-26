@@ -14,7 +14,7 @@
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
 	import { authInfoStore } from '$lib/stores/authinfo';
 	import type { OldapProject } from '$lib/oldap/classes/project';
-	import { api_config } from '$lib/helpers/api_config';
+	import { api_config, api_notget_config } from '$lib/helpers/api_config';
 	import { apiClient } from '$lib/shared/apiClient';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
@@ -28,11 +28,14 @@
 	import { onMount } from 'svelte';
 	import { refreshPropertiesList } from '$lib/stores/refresh_propertieslist.svelte';
 	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
+	import { projectStore } from '$lib/stores/project';
 
 	let { table_height, project = null }: {
 		table_height: number,
 		project: OldapProject | null,
 	} = $props();
+
+	let authinfo = $state<AuthInfo | null>($authInfoStore);
 
 	let prop_list = $state<string[]>([]);
 	let properties = $state<Record<string, PropertyClass>>({});
@@ -44,7 +47,7 @@
 
 	let confirmation_dialog: Confirmation;
 	let confirmation_title = $state('');
-	let confirmation_for_sname = $state('');
+	let confirmation_for_prop = $state('');
 
 	datamodelStore.subscribe(dm => {
 		datamodel = dm;
@@ -62,6 +65,26 @@
 			properties = tmp_properties;
 		}
 	});
+
+	const delete_standalone = async (propIri: string) => {
+		confirmation_for_prop = propIri;
+		confirmation_title = "DELETE STANDALONE PROPERTY";
+		const ok = await confirmation_dialog.open();
+
+		if (ok && authinfo) {
+			const prop_delete = api_notget_config(authinfo, {
+				project: project?.projectShortName.toString() || '',
+				property: propIri
+			})
+			apiClient.deleteAdmindatamodelProjectpropertyProperty(undefined, prop_delete).then(() => {
+				delete properties[propIri];
+				prop_list = prop_list.filter((id) => id !== propIri);
+			}).catch((err) => {
+				errorInfoStore.set(process_api_error(err as Error));
+			});
+		}
+	}
+
 
 	let headers: string[] = $state([
 		m.project(),
@@ -102,7 +125,7 @@
 										disabled={properties[propiri]?.projectId.toString() === 'shared' && project?.projectShortName.toString() !== 'shared'}>
 							<Pencil size="16" strokeWidth="1" />
 						</Button>
-						<Button round={true} onclick={() => {}} disabled={properties[propiri]?.projectId.toString() === 'shared' && project?.projectShortName.toString() !== 'shared'}>
+						<Button round={true} onclick={() => delete_standalone(propiri)} disabled={properties[propiri]?.projectId.toString() === 'shared' && project?.projectShortName.toString() !== 'shared'}>
 							<Trash2 size="16" strokeWidth="1" />
 						</Button>
 					</div>
@@ -111,3 +134,7 @@
 		{/each}
 	</TableBody>
 </Table>
+
+<Confirmation bind:this={confirmation_dialog} title={confirmation_title}>
+	CONFIRM PROPERTY DELETION OF {confirmation_for_prop}
+</Confirmation>

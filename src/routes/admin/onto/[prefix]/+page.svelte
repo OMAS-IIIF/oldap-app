@@ -31,7 +31,7 @@
 	let { data } : PageProps = $props();
 
 	const ncname_pattern: RegExp = /^[A-Za-z_][A-Za-z0-9._-]*$/;
-	const namespace_pattern: RegExp = /^https?:\/\/[^\s<>"]+[/#]$/;
+	const namespace_pattern: RegExp = /^(https?|ftp|file|urn):[A-Za-z0-9._~:/?#@!$&'()*+,;=%-]+[#/]$/;
 
 	let authinfo: AuthInfo | null = $authInfoStore;
 	let administrator = $state<OldapUser | null>(null);
