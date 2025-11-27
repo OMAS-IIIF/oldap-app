@@ -81,17 +81,16 @@
 		confirmation_title = "DELETE EXTONTO";
 		const ok = await confirmation_dialog.open();
 
-/*
 		if (ok && authinfo) {
-			const extonto_delete = api_notget_config(authinfo, { prefix: sname })
-			apiClient.deleteAdmindatamodel(undefined, project_delete).then(() => {
-				delete projects[sname];
-				project_list = project_list.filter((id) => id !== sname);
+			const extonto_delete = api_notget_config(authinfo, { prefix: prefix })
+			apiClient.deleteAdmindatamodelProjectextontoPrefix(undefined, extonto_delete).then(() => {
+				delete ontologies[prefix];
+				onto_list = onto_list.filter((id) => id !== prefix);
 			}).catch((err) => {
 				errorInfoStore.set(process_api_error(err as Error));
 			});
 		}
-*/
+
 	}
 
 
