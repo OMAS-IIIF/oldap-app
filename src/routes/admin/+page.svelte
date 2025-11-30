@@ -19,7 +19,7 @@
 	import PropsList from '$lib/components/oldap/PropsList.svelte';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { authInfoStore } from '$lib/stores/authinfo';
-	import { api_config } from '$lib/helpers/api_config';
+	import { api_config, api_get_config } from '$lib/helpers/api_config';
 	import { spinnerStore } from '$lib/stores/spinner';
 	import { apiClient } from '$lib/shared/apiClient';
 	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
@@ -90,12 +90,10 @@
 			});
 		}
 		if (authinfo) {
-			const dm_config = api_config(authinfo, { project: project?.projectShortName.toString() || '' });
+			const dm_config = api_config(authinfo, { project: project?.projectShortName?.toString() || '' });
 			spinnerStore.set(m.retrieve_dm());
 			apiClient.getAdmindatamodelProject(dm_config).then((jsonresult) => {
-				console.log("111111>", jsonresult);
 				const datamodel = DatamodelClass.fromOldapJson(jsonresult);
-				console.log("222222>", datamodel);
 				datamodelStore.set(datamodel);
 				spinnerStore.set(null);
 			}).catch((error) => {
@@ -148,13 +146,13 @@
 
 <Tabs tabs={tabs} bind:selected={selected_tab} bind:height={tabs_height}></Tabs>
 {#if selected_tab === 'projects'}
-	<ProjectsList table_height={table_height} />
+	<ProjectsList {table_height} />
 {/if}
 {#if selected_tab === 'users'}
-	<UsersList table_height={table_height} {administrator} {project}/>
+	<UsersList {table_height} {administrator} {project}/>
 {/if}
 {#if selected_tab === 'lists'}
-	<HlistsList table_height={table_height} {project} bind:hlistIsOpen={hlistIsOpen} />
+	<HlistsList {table_height} {project} bind:hlistIsOpen={hlistIsOpen} />
 	<DialogWin title={m.new_hlist_title()} bind:isopen={hlistIsOpen}>
 		<HList bind:isopen={hlistIsOpen} />
 	</DialogWin>
@@ -162,8 +160,8 @@
 {#if selected_tab === 'models'}
 	<div class="grid grid-cols-2 gap-4 h-full">
 		<div class="min-w-0">
-			<ExternalOntologies {table_height} {project} />
-			<PropsList {table_height} {project} />
+			<ExternalOntologies table_height={table_height/2} {project} />
+			<PropsList table_height={table_height/2} {project} />
 		</div>
 		<div class="min-w-0">
 			<ResourcesList {table_height} {project} />

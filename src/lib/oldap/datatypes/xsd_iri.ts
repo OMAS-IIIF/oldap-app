@@ -75,6 +75,16 @@ export class Iri {
 		return this.#iri;
 	}
 
+	get prefix(): NCName | undefined {
+		if (this.#representation === "QNAME") {
+			const tmp = this.#iri as QName;
+			return tmp.prefix;
+		}
+		else {
+			return undefined;
+		}
+	}
+
 	get representation() {
 		return this.#representation;
 	}

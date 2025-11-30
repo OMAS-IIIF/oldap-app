@@ -14,21 +14,18 @@
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
 	import { authInfoStore } from '$lib/stores/authinfo';
 	import type { OldapProject } from '$lib/oldap/classes/project';
-	import { api_config, api_notget_config } from '$lib/helpers/api_config';
+	import { api_notget_config } from '$lib/helpers/api_config';
 	import { apiClient } from '$lib/shared/apiClient';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
-	import { spinnerStore } from '$lib/stores/spinner';
 	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
 	import { PropertyClass } from '$lib/oldap/classes/property';
-	import { Download, Pencil, Plus, Trash2 } from '@lucide/svelte';
+	import { Pencil, Plus, Trash2 } from '@lucide/svelte';
 	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
 	import { datamodelStore } from '$lib/stores/datamodel';
-	import { on } from 'svelte/events';
-	import { onMount } from 'svelte';
-	import { refreshPropertiesList } from '$lib/stores/refresh_propertieslist.svelte';
+	import { refreshPropertiesList, refreshPropertiesListNow } from '$lib/stores/refresh_propertieslist.svelte';
 	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
-	import { projectStore } from '$lib/stores/project';
+	import { datamodelSharedStore } from '$lib/stores/datamodel_shared';
 
 	let { table_height, project = null }: {
 		table_height: number,
@@ -57,18 +54,23 @@
 		const _ = $refreshPropertiesList;
 		let tmp_list = [];
 		let tmp_properties: Record<string, PropertyClass> = {};
-		//const datamodel = $datamodelStore;
 		for (const property of (datamodel?.standaloneProperties || [])) {
 			tmp_properties[property.propertyIri.toString()] = property;
 			tmp_list.push(property.propertyIri.toString() || '');
-			prop_list = tmp_list
-			properties = tmp_properties;
 		}
+		if ((datamodel?.projectid.toString() !== 'shared') && (datamodel?.projectid.toString() !== 'oldap')) {
+			for (const property of ($datamodelSharedStore?.standaloneProperties || [])) {
+				tmp_properties[property.propertyIri.toString()] = property;
+				tmp_list.push(property.propertyIri.toString() || '');
+			}
+		}
+		prop_list = tmp_list
+		properties = tmp_properties;
 	});
 
 	const delete_standalone = async (propIri: string) => {
 		confirmation_for_prop = propIri;
-		confirmation_title = "DELETE STANDALONE PROPERTY";
+		confirmation_title = m.delete_standalone_property();
 		const ok = await confirmation_dialog.open();
 
 		if (ok && authinfo) {
@@ -84,7 +86,6 @@
 			});
 		}
 	}
-
 
 	let headers: string[] = $state([
 		m.project(),
@@ -136,5 +137,5 @@
 </Table>
 
 <Confirmation bind:this={confirmation_dialog} title={confirmation_title}>
-	CONFIRM PROPERTY DELETION OF {confirmation_for_prop}
+	{m.delete_standalone_confirm({propiri: confirmation_for_prop})}
 </Confirmation>

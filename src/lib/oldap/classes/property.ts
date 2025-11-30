@@ -4,10 +4,35 @@ import { xsdDatatypeFromString, XsdDatatypes } from '$lib/oldap/enums/xsd_dataty
 import { LangString } from '$lib/oldap/datatypes/langstring';
 import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
+import { DataPermission } from '$lib/oldap/enums/data_permissions';
+
+export enum OwlPropertyType {
+	OwlDataProperty = 'owl:DatatypeProperty',
+	OwlObjectProperty = 'owl:ObjectProperty',
+	StatementProperty = 'rdf:Property',
+	TransitiveProperty = 'owl:TransitiveProperty',
+	SymmetricProperty = 'owl:SymmetricProperty',
+	ReflexiveProperty = 'owl:ReflexiveProperty',
+	IrreflexiveProperty = 'owl:IrreflexiveProperty',
+	FunctionalProperty = 'owl:FunctionalProperty',
+	InverseFunctionalProperty = 'owl:InverseFunctionalProperty',
+}
+
+export function stringToOwlPropertyType(value: string): OwlPropertyType | undefined {
+	return Object.entries(DataPermission).find(([_, v]) => v === value)?.[1] as OwlPropertyType | undefined;
+}
+
+export function owlPropertyTypeAsString(value: OwlPropertyType) {
+	const name = Object.keys(OwlPropertyType).find(
+		key => OwlPropertyType[key as keyof typeof OwlPropertyType] === value
+	);
+	return name;
+}
 
 export type PropertyClassOptions = {
 	projectId: NCName;
 	propertyIri: Iri;
+	ptype: Set<OwlPropertyType>;
 	creator: Iri,
 	created: Date,
 	contributor: Iri,
@@ -29,11 +54,14 @@ export type PropertyClassOptions = {
 	maxInclusive?: number;
 	lessThan?: Iri;
 	lessThanOrEquals?: Iri;
+	inverseOf?: Iri;
+	equivalentProperty?: Iri;
 }
 
 export class PropertyClass extends OldapObject {
 	#projectId: NCName;
 	#propertyIri: Iri;
+	ptype: Set<OwlPropertyType>;
 	subPropertyOf?: Iri;
 	toClass?: Iri;
 	datatype?: XsdDatatypes;
@@ -51,15 +79,20 @@ export class PropertyClass extends OldapObject {
 	maxInclusive?: number;
 	lessThan?: Iri;
 	lessThanOrEquals?: Iri;
+	inverseOf?: Iri;
+	equivalentProperty?: Iri;
+
 
 	constructor({
-								creator, created, contributor, modified, projectId, propertyIri, subPropertyOf, toClass, datatype,
+								creator, created, contributor, modified, projectId, propertyIri, ptype, subPropertyOf, toClass, datatype,
 								name, description, languageIn, uniqueLang, inSet, minLength, maxLength, pattern,
-								minExclusive, minInclusive, maxExclusive, maxInclusive, lessThan, lessThanOrEquals
+								minExclusive, minInclusive, maxExclusive, maxInclusive, lessThan, lessThanOrEquals,
+								inverseOf, equivalentProperty
 							}: PropertyClassOptions) {
 		super(creator, created, contributor, modified);
 		this.#projectId = projectId;
 		this.#propertyIri = propertyIri;
+		this.ptype = ptype;
 		this.subPropertyOf = subPropertyOf;
 		this.toClass = toClass;
 		this.datatype = datatype;
@@ -77,6 +110,8 @@ export class PropertyClass extends OldapObject {
 		this.maxInclusive = maxInclusive;
 		this.lessThan = lessThan;
 		this.lessThanOrEquals = lessThanOrEquals;
+		this.inverseOf = inverseOf;
+		this.equivalentProperty = equivalentProperty;
 	}
 
 	get projectId() {
@@ -95,6 +130,7 @@ export class PropertyClass extends OldapObject {
 			modified: new Date(this.modified.getTime()),
 			projectId: this.projectId.clone(),
 			propertyIri: this.propertyIri.clone(),
+			ptype: this.ptype,
 			subPropertyOf: this.subPropertyOf?.clone(),
 			toClass: this.toClass?.clone(),
 			datatype: this.datatype,
@@ -111,7 +147,9 @@ export class PropertyClass extends OldapObject {
 			maxExclusive: this.maxExclusive,
 			maxInclusive: this.maxInclusive,
 			lessThan: this.lessThan?.clone(),
-			lessThanOrEquals: this.lessThanOrEquals?.clone()
+			lessThanOrEquals: this.lessThanOrEquals?.clone(),
+			inverseOf: this.inverseOf?.clone(),
+			equivalentProperty: this.equivalentProperty?.clone(),
 		})
 	}
 
@@ -122,6 +160,7 @@ export class PropertyClass extends OldapObject {
 		const modified = new Date(json.modified);
 		const projectId = new NCName(json.projectid);
 		const propertyIri = new Iri(json.iri);
+		const ptype = new Set<OwlPropertyType>(json?.ptype?.map((x) => stringToOwlPropertyType(x))); // TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		const subPropertyOf: Iri = new Iri(json?.subPropertyOf);
 		const toClass = new Iri(json?.toClass);
 		const datatype = xsdDatatypeFromString(json?.datatype);
@@ -139,6 +178,8 @@ export class PropertyClass extends OldapObject {
 		const maxInclusive = json?.maxInclusive;
 		const lessThan = new Iri(json?.lessThan);
 		const lessThanOrEquals = new Iri(json?.lessThanOrEquals);
+		const inverseOf = new Iri(json?.inverseOf);
+		const equivalentProperty = json?.equivalentProperty;
 
 		return new PropertyClass({
 			creator: creator,
@@ -147,6 +188,7 @@ export class PropertyClass extends OldapObject {
 			modified: modified,
 			projectId: projectId,
 			propertyIri: propertyIri,
+			ptype: ptype, // TODO: !!!!!!!!!!!!!!!!!!!!!!!!!!
 			subPropertyOf: subPropertyOf,
 			toClass: toClass,
 			datatype: datatype,
@@ -163,7 +205,9 @@ export class PropertyClass extends OldapObject {
 			maxExclusive: maxExclusive,
 			maxInclusive: maxInclusive,
 			lessThan: lessThan,
-			lessThanOrEquals: lessThanOrEquals
+			lessThanOrEquals: lessThanOrEquals,
+			inverseOf: inverseOf,
+			equivalentProperty: equivalentProperty,
 		});
 
 	}

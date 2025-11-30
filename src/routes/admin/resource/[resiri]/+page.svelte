@@ -46,6 +46,8 @@
 	import { successInfoStore } from '$lib/stores/successinfo';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
+	import { refreshResourcesListNow } from '$lib/stores/refresh_resourceslist.svelte';
+	import { datamodelSharedStore } from '$lib/stores/datamodel_shared';
 
 	let { data } : PageProps = $props();
 
@@ -108,17 +110,28 @@
 	});
 
 	onMount(async () => {
-		// get the list of all resource classes that can be the target of a link
+		//
+		// get the list of all resource classes that can be a superclass of the resource we are editing
+		//
 		const tmp_resources = datamodel?.resources.filter(x => {
 			const gaga = x?.superclass ? [...x.superclass].map(s => s.toString()) : [];
 			return !gaga.includes('oldap:OldapListNode');
 		}) || [];
-		all_res_set = new Set(tmp_resources.filter(r => r.iri.toString() !== data.resiri).map(r => {return {key: r.iri.toString(), label: r.label?.get(langobj)}}));
+		const shared_resources = $datamodelSharedStore?.resources.filter(x => {
+			const gaga = x?.superclass ? [...x.superclass].map(s => s.toString()) : [];
+			return !gaga.includes('oldap:OldapListNode');
+		}) || [];
+		const tmp_resources_all = [...tmp_resources, ...shared_resources];
+		all_res_set = new Set(tmp_resources_all.filter(r => r.iri.toString() !== data.resiri).map(r => {return {key: r.iri.toString(), label: r.label?.get(langobj)}}));
 
+		//
+		// get all prefixes that can be used for resource IRIs. This is the prefix of the project
+		// and the prefixes of the external ontologies
+		//
 		all_prefixes = [$projectStore?.projectShortName.toString() || '']
-		if (administrator?.isRoot && projectid !== 'shared') {
-			all_prefixes = [...all_prefixes, 'shared', 'dc', 'dcterms', 'skos', 'schema', 'cidoc'];
-		}
+		let extontos: string[] = []
+		datamodel?.externalOntologies.forEach(x => extontos.push(x.prefix.toString()));
+		all_prefixes = [...all_prefixes, ...extontos];
 
 		if (data.resiri !== 'new') {
 			// we are editing an existing resource
@@ -207,6 +220,7 @@
 		if (authinfo) {
 			const resource_put = api_notget_config(authinfo, {project: projectid, resource: resourceIri});
 			apiClient.putAdmindatamodelProjectResource(resourcedata, resource_put).then(() => {
+				refreshResourcesListNow();
 				successInfoStore.set(m.add_res_success({resiri: resourceIri}));
 			}).catch((error) => {
 				errorInfoStore.set(process_api_error(error as Error));
@@ -243,6 +257,7 @@
 		if (authinfo) {
 			const resource_post = api_notget_config(authinfo, {project: projectid, resource: resourceIri});
 			apiClient.postAdmindatamodelProjectResource(resourcedata, resource_post).then(() => {
+				refreshResourcesListNow();
 				successInfoStore.set(m.mod_res_success({resiri: resourceIri}));
 			}).catch((error) => {
 				errorInfoStore.set(process_api_error(error as Error));

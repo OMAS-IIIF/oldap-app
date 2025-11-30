@@ -15,7 +15,7 @@ in relation with a resource class.
 	import { authInfoStore } from '$lib/stores/authinfo';
 	import { userStore } from '$lib/stores/user';
 	import { onMount, tick } from 'svelte';
-	import { PropertyClass } from '$lib/oldap/classes/property';
+	import { OwlPropertyType, PropertyClass } from '$lib/oldap/classes/property';
 	import Textfield from '$lib/components/basic_gui/inputs/Textfield.svelte';
 	import { datamodelStore } from '$lib/stores/datamodel';
 	import DropdownField from '$lib/components/basic_gui/inputs/DropdownField.svelte';
@@ -48,6 +48,7 @@ in relation with a resource class.
 	import type { HasProperty } from '$lib/oldap/classes/resource';
 	import { spinnerStore } from '$lib/stores/spinner';
 	import LangtextareaField from '$lib/components/basic_gui/inputs/LangtextareaField.svelte';
+	import { datamodelSharedStore } from '$lib/stores/datamodel_shared';
 
 	interface PropertyData {
 		subPropertyOf?: string,
@@ -65,8 +66,16 @@ in relation with a resource class.
 		minInclusive?: number | null,
 		maxExclusive?: number | null,
 		maxInclusive?: number | null,
+		inverseOf?: string,
+		equivalentProperty?: string,
+		statementProperty?: boolean,
+		transitiveProperty?: boolean,
+		symmetricProperty?: boolean,
+		reflexiveProperty?: boolean,
+		irreflexiveProperty?: boolean,
+		functionalProperty?: boolean,
+		inverseFunctionalProperty?: boolean,
 		// transitive?: boolean, TODO: Implement later
-		// inverse?: boolean, TODO: Implement later
 		// symmetric?: boolean, TODO: Implement later
 	}
 
@@ -112,7 +121,6 @@ in relation with a resource class.
 
 
 	let authinfo: AuthInfo | null = $authInfoStore;
-	let administrator = $state<OldapUser | null>(null);
 	let prop = $state<PropertyClass>();
 	let hasprop = $state<HasProperty>();
 
@@ -141,6 +149,16 @@ in relation with a resource class.
 	let min_inclusive = $state<boolean>(false);
 	let max_value = $state<string | undefined>(undefined);
 	let max_inclusive = $state<boolean>(false);
+	let inverseOf = $state('');
+	let equivalentProperty = $state<string>('');
+	let statementProperty = $state<boolean>(false);
+	let transitiveProperty = $state<boolean>(false);
+	let symmetricProperty = $state<boolean>(false);
+	let reflexiveProperty = $state<boolean>(false);
+	let irreflexiveProperty = $state<boolean>(false);
+	let functionalProperty = $state<boolean>(false);
+	let inverseFunctionalProperty = $state<boolean>(false);
+
 	let allowedLanguages = $state<string[]>([]);
 	let allowedStrings = $state<Set<string|number>>(new Set());
 	let allowedNumbers = $state<Set<string|number>>(new Set());
@@ -208,11 +226,13 @@ in relation with a resource class.
 
 		// filter the iri of the property from the list, because a property cannot be a subproperty of itself!
 		all_prop_list = datamodel?.standaloneProperties.filter(p => p.propertyIri.toString() !== propiri).map(p => p.propertyIri.toString()) || [];
-		all_prop_list = ['NONE', ...all_prop_list];
+		const shared_prop_list = $datamodelSharedStore?.standaloneProperties.filter(p => p.propertyIri.toString() !== propiri).map(p => p.propertyIri.toString()) || [];
+		all_prop_list = ['NONE', ...shared_prop_list, ...all_prop_list];
+
 		all_prefixes = [$projectStore?.projectShortName.toString() || '']
-		if (administrator?.isRoot && projectid !== 'shared') {
-			all_prefixes = [...all_prefixes, 'shared'];
-		}
+		// if (administrator?.isRoot && projectid !== 'shared') {
+		// 	all_prefixes = [...all_prefixes, 'shared'];
+		// }
 		let extontos: string[] = []
 		datamodel?.externalOntologies.forEach(x => extontos.push(x.prefix.toString()));
 		all_prefixes = [...all_prefixes, ...extontos];
@@ -247,9 +267,18 @@ in relation with a resource class.
 
 			prefix = $projectStore?.projectShortName.toString() || '';
 			fragment = '';
-			subPropertyOf = 'NONE'
+			subPropertyOf = 'NONE';
 			datatype = 'xsd:string';
 			toClass = undefined;
+			inverseOf = 'NONE';
+			equivalentProperty = 'NONE';
+			statementProperty = false;
+			transitiveProperty = false;
+			symmetricProperty = false;
+			reflexiveProperty = false;
+			irreflexiveProperty = false;
+			functionalProperty = false;
+			inverseFunctionalProperty = false;
 		}
 		else {
 		  const tmp = QName.createQName(propiri);
@@ -266,7 +295,16 @@ in relation with a resource class.
 				prop = datamodel?.standaloneProperties.find(p => p.propertyIri.toString() === propiri);
 			}
 			subPropertyOf = prop?.subPropertyOf?.toString() || 'NONE';
-			//propertyIri = prop?.propertyIri.toString() || '';
+			inverseOf = prop?.inverseOf?.toString() || 'NONE';
+			equivalentProperty = prop?.equivalentProperty?.toString() || 'NONE';
+			statementProperty = OwlPropertyType.StatementProperty in (prop?.ptype || new Set());
+			transitiveProperty = OwlPropertyType.TransitiveProperty in (prop?.ptype || new Set());
+			symmetricProperty = OwlPropertyType.SymmetricProperty in (prop?.ptype || new Set());
+			reflexiveProperty = OwlPropertyType.ReflexiveProperty in (prop?.ptype || new Set());
+			irreflexiveProperty = OwlPropertyType.IrreflexiveProperty in (prop?.ptype || new Set());
+			functionalProperty = OwlPropertyType.FunctionalProperty in (prop?.ptype || new Set());
+			inverseFunctionalProperty = OwlPropertyType.InverseFunctionalProperty in (prop?.ptype || new Set());
+
 		}
 		await tick();
 		scrollToTop();
@@ -431,7 +469,7 @@ in relation with a resource class.
 			if (resiri) {
 				// TODO: Implement adding a property to a resource!
 				const property_put = api_notget_config(authinfo, {project: projectid, resource: resiri, property: propertyIri});
-				spinnerStore.set("ADDING NEW PROPERTY TO RESOURCE " + resiri + " ...");
+				spinnerStore.set(m.res_add_property({resiri: resiri}));
 				apiClient.putAdmindatamodelProjectResourceProperty(propertydata, property_put).then(() => {
 					// we changed a property, so we need to update the datamodel by re-reading it!
 					let project = $projectStore;
@@ -461,9 +499,7 @@ in relation with a resource class.
 	}
 
 	const modify_property = async () => {
-		console.log("modify_property (1)");
 		if (!prop) return;
-		console.log("modify_property (2)");
 		confirmation_title = m.mod_property();
 		confirmation_message = m.confirm_prop_mod({property: prefix + ":" + fragment});
 		const ok = await confirmation_dialog.open();
@@ -473,9 +509,6 @@ in relation with a resource class.
 
 		let propertydataWithResiri: {
 			property?: PropertyData,
-			// transitive?: boolean, TODO: Implement later
-			// inverse?: Iri, TODO: Implement later
-			// symmetric?: boolean, TODO: Implement later
 			minCount?: number | null, // only used when resiri is given, non-standalone property!
 			maxCount?: number | null, // only used when resiri is given, non-standalone property!
 			order?: number | null, // only used when resiri is given, non-standalone property!
@@ -709,11 +742,21 @@ and the actual property id (which is a xs:NCName
 			{/if}
 		{/if}
 		{#if resiri !== undefined}
-			<LabeledDivider>"HAS PROPERTY PARAMS:</LabeledDivider>
+			<LabeledDivider>HAS PROPERTY PARAMS:</LabeledDivider>
 			<Numberfield label="minCount" bind:value={minCount} min={0.0} step={1.0} name="minCount" placeholder="undefined"/>
 			<Numberfield label="maxCount" bind:value={maxCount} min={0.0} step={1.0} name="maxCount" placeholder="undefined"/>
 			<Numberfield label="order" bind:value={order} name="order" min={0.0} step={0.1} placeholder="undefined"/>
 		{/if}
+		<LabeledDivider>OWL STUFF</LabeledDivider>
+		<DropdownField items={all_prop_list} id="allprops_id2" name="allprops" label="INVERSE OF" bind:selectedItem={inverseOf} />
+		<DropdownField items={all_prop_list} id="allprops_id3" name="allprops" label="EQUIVALEND_PROPERTY" bind:selectedItem={equivalentProperty} />
+		<Checkbox label="Statement property" position="right" bind:checked={statementProperty} name="statementProperty"/>
+		<Checkbox label="Transitive property" position="right" bind:checked={transitiveProperty} name="transitiveProperty"/>
+		<Checkbox label="Symmetric property" position="right" bind:checked={symmetricProperty} name="symmetricProperty"/>
+		<Checkbox label="Reflexive property" position="right" bind:checked={reflexiveProperty} name="reflexiveProperty"/>
+		<Checkbox label="Irreflexive property" position="right" bind:checked={irreflexiveProperty} name="irreflexiveProperty"/>
+		<Checkbox label="Functional property" position="right" bind:checked={functionalProperty} name="functionalProperty"/>
+		<Checkbox label="Inverse functional property" position="right" bind:checked={inverseFunctionalProperty} name="inverseFunctionalProperty"/>
 		<div class="flex justify-center gap-4 mt-6">
 			{#if dialogstatus !== undefined}
 				<Button class="mx-4 my-2" onclick={() => {dialogstatus = false}}>{m.cancel()}</Button>

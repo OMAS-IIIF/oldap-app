@@ -82,7 +82,10 @@
 		const ok = await confirmation_dialog.open();
 
 		if (ok && authinfo) {
-			const extonto_delete = api_notget_config(authinfo, { prefix: prefix })
+			const extonto_delete = api_notget_config(authinfo, {
+				project: project?.projectShortName.toString() || '',
+				prefix: prefix
+			})
 			apiClient.deleteAdmindatamodelProjectextontoPrefix(undefined, extonto_delete).then(() => {
 				delete ontologies[prefix];
 				onto_list = onto_list.filter((id) => id !== prefix);
@@ -131,7 +134,7 @@
 										onclick={goto_page(`/admin/onto/${encodeURIComponent(prefix)}`, {projectid: project?.projectIri.toString() || ''})}>
 							<Pencil size="16" strokeWidth="1" />
 						</Button>
-						<Button round={true} onclick={delete_extonto(prefix)}>
+						<Button round={true} onclick={() => delete_extonto(prefix)}>
 							<Trash2 size="16" strokeWidth="1" />
 						</Button>
 					</div>

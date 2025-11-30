@@ -16,11 +16,17 @@
 	import { authInfoStore } from '$lib/stores/authinfo';
 	import { refreshProjectsList } from '$lib/stores/refresh_projectslist.svelte';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
+	import { refreshResourcesListNow } from '$lib/stores/refresh_resourceslist.svelte';
+	import { refreshPropertiesList, refreshPropertiesListNow } from '$lib/stores/refresh_propertieslist.svelte';
+	import { spinnerStore } from '$lib/stores/spinner';
+	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
+	import { datamodelStore } from '$lib/stores/datamodel';
 
 	let projectsIsOpen = $state(false);
 	let current_project_id = $state<string | null>(null);
 	let lang = $state(languageTag());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
+	import * as m from '$lib/paraglide/messages';
 
 	let projects: Record<string, OldapProject> = $state<Record<string, OldapProject>>({});
 
@@ -106,6 +112,19 @@
 	const set_current_project = (project_id: string): void => {
 		current_project_id = project_id;
 		projectStore.set(projects[project_id]);
+		const dm_config = api_config(authinfo || new AuthInfo('', ''), { project:  project_id});
+		spinnerStore.set(m.retrieve_dm());
+		apiClient.getAdmindatamodelProject(dm_config).then((jsonresult) => {
+			const datamodel = DatamodelClass.fromOldapJson(jsonresult);
+			datamodelStore.set(datamodel);
+			spinnerStore.set(null);
+		}).catch((error) => {
+			spinnerStore.set(null);
+			errorInfoStore.set(process_api_error(error as Error));
+		});
+
+		refreshResourcesListNow();
+		refreshPropertiesListNow()
 	}
 
 </script>
