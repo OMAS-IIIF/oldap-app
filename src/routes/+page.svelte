@@ -1,9 +1,16 @@
 <script lang="ts">
-
-import Window from '$lib/components/basic_gui/windowing/Window.svelte';
 import WindowManager from '$lib/components/basic_gui/windowing/WindowManager.svelte';
+
+import type { PageData } from './$types';
+
+let {
+	data
+}: {
+	data: PageData;
+} = $props();
+
 </script>
 
-<h1 class="text-3xl font-bold underline">
-	<WindowManager />
-</h1>
+<div class="h-full min-h-0">
+	<WindowManager config={data.config}/>
+</div>

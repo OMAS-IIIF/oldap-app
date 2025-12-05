@@ -5,7 +5,7 @@
 	import MainWin from '$lib/components/oldap/MainWin.svelte';
 	import { userStore } from '$lib/stores/user';
 	import { authInfoStore } from '$lib/stores/authinfo';
-	import { onMount } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 	import { loginUnknownUser } from '$lib/helpers/login_unknown_user';
 	import { spinnerStore } from '$lib/stores/spinner';
 	import * as m from '$lib/paraglide/messages';
@@ -18,15 +18,22 @@
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { datamodelOldapStore } from '$lib/stores/datamodel_oldap';
 	import { datamodelSharedStore } from '$lib/stores/datamodel_shared';
+	import type { PageData } from './$types';
 
-	let { children } = $props();
+	let {
+		children,
+		data
+	}: {
+		children: Snippet,
+		data: PageData
+	} = $props();
 
 	onMount(async () => {
 		// Automatisches Login für unbekannten Benutzer beim Anwendungsstart
 		if (!$userStore && !$authInfoStore) {
 			await loginUnknownUser();
 		}
-
+		console.log(data.config);
 	});
 
 	authInfoStore.subscribe((authinfo: AuthInfo | null) => {

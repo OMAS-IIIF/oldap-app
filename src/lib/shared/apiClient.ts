@@ -1,5 +1,6 @@
 import { createApiClient } from '$lib/apischema/zod';
 import { dev } from '$app/environment';
+import { getConfig } from '$lib/config';
 
 export const apiUrl = dev ? import.meta.env.VITE_API_DEV_URL : import.meta.env.VITE_API_PROD_URL;
 
@@ -10,6 +11,7 @@ type ApiClient = ReturnType<typeof createApiClient>;
 
 let clientPromise: Promise<ApiClient> | null = null;
 
+/*
 async function getClient(): Promise<ApiClient> {
 	if (!clientPromise) {
 		clientPromise = fetch('/config.json')
@@ -18,6 +20,14 @@ async function getClient(): Promise<ApiClient> {
 				return res.json();
 			})
 			.then((config) => createApiClient(config.apiUrl));
+	}
+	return clientPromise;
+}
+*/
+
+async function getClient(): Promise<ApiClient> {
+	if (!clientPromise) {
+		clientPromise = getConfig().then((config) => createApiClient(config.apiUrl));
 	}
 	return clientPromise;
 }

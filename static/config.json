@@ -1,3 +1,5 @@
 {
-  "apiUrl": "http://localhost:8000"
+	"apiUrl": "http://localhost:8000",
+	"iiifUrl": "http://localhost:8182/iiif/",
+	"uploadUrl": "http://localhost:8080/upload"
 }

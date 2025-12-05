@@ -9,11 +9,15 @@ API_URL="${1:-${API_URL:-http://localhost:8000}}"
 # Debug logging
 echo "[entrypoint] Starting oldap-app..."
 echo "[entrypoint] Using API_URL=${API_URL}"
+echo "[entrypoint] Using IIIF_URL=${IIIF_URL}"
+echo "[entrypoint] Using $UPLOAD_URL=${$UPLOAD_URL}"
 
 # Write runtime config.json (the frontend will fetch this at /config.json)
 cat > /app/build/client/config.json <<EOF
 {
   "apiUrl": "$API_URL"
+  "iiifUrl": "$IIIF_URL"
+  "uploadUrl": $UPLOAD_URL"
 }
 EOF
 
