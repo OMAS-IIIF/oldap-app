@@ -77,7 +77,7 @@
 						permset_projs[permsetid] = new URLSearchParams({ projectid: permset.definedByProject.toString() || 'XXX' });
 
 						const config_permset_in_use = api_config(authinfo as AuthInfo, {
-							definedByProject: permset.definedByProject.toString(),
+							definedByProject: encodeURIComponent(permset.definedByProject.toString()),
 							permissionSetId: permsetid
 						});
 						apiClient.getAdminpermissionsetDefinedByProjectPermissionSetIdin_use(config_permset_in_use).then((result2) => {
@@ -104,9 +104,10 @@
 			return;
 		}
 		const config_permset_delete = api_config(authinfo as AuthInfo, {
-			definedByProject: permsets[permset_id].definedByProject.toString(),
+			definedByProject: encodeURIComponent(permsets[permset_id].definedByProject.toString()),
 			permissionSetId: permset_id
 		});
+		console.log(config_permset_delete);
 		apiClient.deleteAdminpermissionsetDefinedByProjectPermissionSetId(undefined, config_permset_delete).then((res) => {
 			console.log(res);
 			refreshPermsetsListNow();

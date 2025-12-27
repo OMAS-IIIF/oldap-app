@@ -3,10 +3,19 @@
   -->
 
 <script lang="ts">
+	import { languageTag } from '$lib/paraglide/runtime';
 	import { authInfoStore } from '$lib/stores/authinfo';
 	import { projectStore } from '$lib/stores/project';
 	import RadioButton from '$lib/components/basic_gui/buttons/RadioButton.svelte';
-	
+	import { onMount } from 'svelte';
+	import { AuthInfo } from '$lib/oldap/classes/authinfo';
+	import { OldapPermissionSet } from '$lib/oldap/classes/permissionset';
+	import { errorInfoStore } from '$lib/stores/errorinfo';
+	import { process_api_error } from '$lib/helpers/process_api_error';
+	import SelectMutiple from '$lib/components/basic_gui/inputs/SelectMutiple.svelte';
+	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
+	import { fetchPermissionSetsForProject } from '$lib/helpers/get_permissions';
+
 	type SuccessHandler = (result: unknown) => void;
   type ErrorHandler = (error: unknown) => void;
 
@@ -28,12 +37,53 @@
     placeholderUrl?: string;
   } = $props();
 
+	let lang = $state(languageTag());
+	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
+
   let file: File | null = $state(null);
   let previewUrl: string | null = $state(null);
   let dragging = $state(false);
   let uploading = $state(false);
   let statusMsg: string | null = $state(null);
 	let targetfileformat = $state<string>('TIFF');
+	let authinfo = $state<AuthInfo | null>($authInfoStore);
+
+	let permsets = $state<Record<string, OldapPermissionSet>>({});
+	let permset_list = $state<string[]>([]);
+	let permset_selectables = $state<Set<{key: string, label?: string}> | undefined>();
+	let permsets_selected = $state<Set<string>>(new Set());
+
+
+	authInfoStore.subscribe(data => {
+		authinfo = data;
+	});
+
+	onMount(() => {
+		// get all permission sets...
+		if (!authinfo || !$projectStore?.projectIri) return;
+
+		const projectIri = $projectStore.projectIri.toString();
+		const projectShortName = $projectStore.projectShortName.toString();
+
+		(async () => {
+			try {
+				const permsets1 = await fetchPermissionSetsForProject(authinfo, projectIri, projectShortName);
+				const permsets2 = await fetchPermissionSetsForProject(authinfo, 'oldap:SystemProject', 'SystemProject');
+				permsets = {...permsets1, ...permsets2};
+				permset_list = Object.keys(permsets).sort((a, b) => a.localeCompare(b));
+
+				permset_selectables = new Set(
+					permset_list.map((psid) => ({
+						key: psid,
+						label: permsets[psid]?.label?.get(langobj)
+					}))
+				);
+			} catch (err) {
+				errorInfoStore.set(process_api_error(err as Error));
+			}
+			console.log(permset_selectables);
+		})();
+	});
 
   $effect(() => {
     // cleanup preview when file changes
@@ -90,7 +140,11 @@
     try {
       const form = new FormData();
 			form.append('projectId', $projectStore?.projectShortName.toString() || '')
-			form.append('target_format', targetfileformat);
+			form.append('targetFormat', targetfileformat);
+			const ps = [...permsets_selected].map(x => permsets[x].permissionSetIri.toString());
+			permsets_selected.forEach(x => {
+				form.append('permissionSets', permsets[x].permissionSetIri.toString())
+			});
       form.append(fieldName, file);
       // Add Authorization: Bearer <token> header when available from authInfoStore
       const token = $authInfoStore?.token as string | undefined;
@@ -160,6 +214,9 @@
 		<RadioButton name="targetfileformat" id="tff1" value="TIFF" bind:selected={targetfileformat}>TIFF</RadioButton>
 		<RadioButton name="targetfileformat" id="tff2" value="J2K" bind:selected={targetfileformat}>J2K</RadioButton>
 		<RadioButton name="targetfileformat" id="tff3" value="JPEG" bind:selected={targetfileformat}>JPEG</RadioButton>
+	</div>
+	<div>
+		<SelectMutiple label="Permission sets" selectables={permset_selectables} bind:values={permsets_selected} />
 	</div>
 
   <!-- Controls -->

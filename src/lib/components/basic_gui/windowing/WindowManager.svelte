@@ -64,7 +64,7 @@
 				x: 80 + counter * 12,
 				y: 80 + counter * 10,
 				width: 420,
-				height: 280,
+				height: 600,
 				kind: 'upload',
 				note: `upload #${counter}`
 			}

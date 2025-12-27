@@ -27,6 +27,7 @@
 	let lang = $state(languageTag());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
 	import * as m from '$lib/paraglide/messages';
+	import { read_projects } from '$lib/helpers/read_projects';
 
 	let projects: Record<string, OldapProject> = $state<Record<string, OldapProject>>({});
 
@@ -50,6 +51,7 @@
 		});
 	});
 
+	/*
 	const read_projects = async (user?: OldapUser | null, authinfo?: AuthInfo | null) => {
 		if (!user || !authinfo) {
 			return {}
@@ -90,6 +92,7 @@
 		}
 		return projs;
 	}
+	*/
 
 	userStore.subscribe(async (user: OldapUser | null) => {
 		if (user && authinfo) {

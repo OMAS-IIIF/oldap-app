@@ -1,7 +1,6 @@
 import { Iri } from '$lib/oldap/datatypes/xsd_iri';
 import { OldapObject } from '$lib/oldap/classes/object';
 import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
-import { QName } from '$lib/oldap/datatypes/xsd_qname';
 import { AdminPermission, stringToAdminPermission } from '$lib/oldap/enums/admin_permissions';
 import { OldapErrorInvalidValue } from '$lib/oldap/errors/OldapErrorInvalidValue';
 

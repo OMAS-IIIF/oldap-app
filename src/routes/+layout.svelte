@@ -7,7 +7,6 @@
 	import { authInfoStore } from '$lib/stores/authinfo';
 	import { onMount, type Snippet } from 'svelte';
 	import { loginUnknownUser } from '$lib/helpers/login_unknown_user';
-	import { spinnerStore } from '$lib/stores/spinner';
 	import * as m from '$lib/paraglide/messages';
 	import { api_config } from '$lib/helpers/api_config';
 	import { apiClient } from '$lib/shared/apiClient';

@@ -178,9 +178,9 @@ in relation with a resource class.
 		authinfo = data;
 	});
 
-	userStore.subscribe((admin) => {
-		administrator = admin;
-	});
+	// userStore.subscribe((admin) => {
+	// 	administrator = admin;
+	// });
 
 	datamodelStore.subscribe(data => {
 		datamodel = data;
@@ -233,6 +233,7 @@ in relation with a resource class.
 		// if (administrator?.isRoot && projectid !== 'shared') {
 		// 	all_prefixes = [...all_prefixes, 'shared'];
 		// }
+		all_prefixes = [...all_prefixes, 'skos', 'schema', 'dcterms']
 		let extontos: string[] = []
 		datamodel?.externalOntologies.forEach(x => extontos.push(x.prefix.toString()));
 		all_prefixes = [...all_prefixes, ...extontos];
@@ -295,6 +296,8 @@ in relation with a resource class.
 				prop = datamodel?.standaloneProperties.find(p => p.propertyIri.toString() === propiri);
 			}
 			subPropertyOf = prop?.subPropertyOf?.toString() || 'NONE';
+			datatype = prop?.datatype;
+			toClass = prop?.toClass?.toString();
 			inverseOf = prop?.inverseOf?.toString() || 'NONE';
 			equivalentProperty = prop?.equivalentProperty?.toString() || 'NONE';
 			statementProperty = OwlPropertyType.StatementProperty in (prop?.ptype || new Set());
@@ -304,7 +307,6 @@ in relation with a resource class.
 			irreflexiveProperty = OwlPropertyType.IrreflexiveProperty in (prop?.ptype || new Set());
 			functionalProperty = OwlPropertyType.FunctionalProperty in (prop?.ptype || new Set());
 			inverseFunctionalProperty = OwlPropertyType.InverseFunctionalProperty in (prop?.ptype || new Set());
-
 		}
 		await tick();
 		scrollToTop();

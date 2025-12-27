@@ -129,6 +129,7 @@
 		// and the prefixes of the external ontologies
 		//
 		all_prefixes = [$projectStore?.projectShortName.toString() || '']
+		all_prefixes = [...all_prefixes, 'skos', 'schema', 'dcterms']
 		let extontos: string[] = []
 		datamodel?.externalOntologies.forEach(x => extontos.push(x.prefix.toString()));
 		all_prefixes = [...all_prefixes, ...extontos];

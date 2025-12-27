@@ -1,4 +1,3 @@
-import { persistentWritable } from '$lib/stores/persistantWritableStore';
 import { writable } from 'svelte/store';
 import type { AuthInfo } from '$lib/oldap/classes/authinfo';
 

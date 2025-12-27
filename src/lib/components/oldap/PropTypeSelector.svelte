@@ -84,8 +84,6 @@
 
 	let hlists = $state<Record<string, OldapList>>({});
 
-	console.log("ALL_LISTS_LIST: " + all_lists_list);
-
 	onMount(() => {
 		console.log("LANGUAGEOBJECT: " + langobj);
 		datatypeOptions = Object.values(XsdDatatypes);
@@ -198,12 +196,14 @@
 		>
 			<DropdownMenu bind:isOpen={list_is_open} position="left" name="listlink">
 				{#each all_lists_list as list}
-					<DropdownLinkItem bind:isOpen={list_is_open}
-														value={hlists[list].nodeClassIri.toString()}
-														onclick={(val) => {toClass = val}}
-														selected={hlists[list].nodeClassIri.toString() === toClass}>
-						{hlists[list]?.prefLabel?.get(langobj) || hlists[list]?.oldapListId || list}
-					</DropdownLinkItem>
+					{#if hlists[list]}
+						<DropdownLinkItem bind:isOpen={list_is_open}
+															value={hlists[list].nodeClassIri.toString()}
+															onclick={(val) => {toClass = val}}
+															selected={hlists[list].nodeClassIri.toString() === toClass}>
+							{hlists[list]?.prefLabel?.get(langobj) || hlists[list]?.oldapListId || list}
+						</DropdownLinkItem>
+					{/if}
 				{/each}
 			</DropdownMenu>
 		</DropdownButton>

@@ -28,6 +28,6 @@ export function getConfig(fetchFn: typeof fetch): Promise<AppConfig> {
 }
 
 export async function getConfigValue<T = unknown>(key: string): Promise<T | undefined> {
-	const config = await getConfig();
+	const config = await getConfig(fetch);
 	return config[key] as T | undefined;
 }

@@ -25,6 +25,7 @@
 	import { OldapProject } from '$lib/oldap/classes/project';
 	import { getProjectsOfUser } from '$lib/helpers/get_projects_of_user';
 	import { page } from '$app/state';
+	import { projectStore } from '$lib/stores/project';
 
 	type DataPermissionShort =
 		| 'DATA_RESTRICTED'
@@ -43,6 +44,7 @@
 	let administrator = $state<OldapUser | null>(null);
 
 	let all_projects: Record<string, OldapProject> = {};
+	let current_project = $state<OldapProject | null>(null);
 	let allProjectsIds = $state<string[]>([]);
 	let selectedProjectId = $state<string>('');
 
@@ -71,6 +73,10 @@
 	userStore.subscribe((admin) => {
 		administrator = admin;
 	});
+
+	projectStore.subscribe((project) => {
+		current_project = project;
+	})
 
 	function scrollToTop() {
 		if (topwin) {
@@ -112,7 +118,8 @@
 			});
 		}
 		else {
-			selectedProjectId = Object.values(all_projects)[0].projectShortName.toString();
+			//selectedProjectId = Object.values(all_projects)[0].projectShortName.toString();
+			selectedProjectId = current_project?.projectShortName.toString() || Object.values(all_projects)[0].projectShortName.toString();
 		}
 		await tick();
 		scrollToTop();
