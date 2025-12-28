@@ -220,7 +220,10 @@
 	});
 
 	$effect(() => {
-		process_permissions().catch(error => {
+		const _ = userId;
+		process_permissions().then((res) => {
+			console.log("====> user_permsets: ", $state.snapshot(user_permsets))
+		}).catch(error => {
 			errorInfoStore.set(process_api_error(error as Error));
 		});
 	});
