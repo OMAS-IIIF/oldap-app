@@ -1,5 +1,6 @@
 import type { PageLoad } from './$types';
 
+// @ts-ignore
 export const load: PageLoad = ({url, params}) => {
-	return {permsetid: params.permsetid};
+	return {roleid: params.roleid};
 };

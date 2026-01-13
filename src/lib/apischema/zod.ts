@@ -3,6 +3,25 @@ import { z } from "zod";
 
 
 
+type HasRoleMap = /**
+ * Mapping from QName role to data permission
+ */
+{};;
+type DataPermission = /**
+ * @enum DATA_RESTRICTED, DATA_VIEW, DATA_EXTEND, DATA_UPDATE, DATA_DELETE, DATA_PERMISSIONS
+ */
+"DATA_RESTRICTED" | "DATA_VIEW" | "DATA_EXTEND" | "DATA_UPDATE" | "DATA_DELETE" | "DATA_PERMISSIONS" | null;;
+type user_get_body_200 = Partial<{
+    userIri: string;
+    userId: string;
+    familyName: string;
+    givenName: string;
+    in_projects: Array<Partial<{
+        project: string;
+        permissions: Array<string>;
+    }>>;
+    hasRole: HasRoleMap;
+}>;;
 type ExternalOntology = Partial<{
     creator: string;
     created: string;
@@ -237,13 +256,15 @@ type Resource = Partial<{
 }>;;
 
 const Error = z.object({ message: z.string(), error: z.string().optional(), details: z.object({}).partial().passthrough().optional() }).passthrough();
-const putAdminuserUserId_Body = z.object({ givenName: z.string(), familyName: z.string(), email: z.string().optional(), password: z.string().min(8), isActive: z.boolean().optional(), userIri: z.string().optional(), inProjects: z.array(z.object({ project: z.string(), permissions: z.array(z.enum(["ADMIN_OLDAP", "ADMIN_USERS", "ADMIN_PERMISSION_SETS", "ADMIN_RESOURCES", "ADMIN_MODEL", "ADMIN_CREATE", "ADMIN_LISTS"])) }).partial().passthrough()).optional(), hasPermissions: z.array(z.string()).optional() }).passthrough();
-const postAdminuserUserId_Body = z.object({ userId: z.string(), givenName: z.string(), familyName: z.string(), email: z.string(), password: z.string(), isActive: z.boolean(), inProjects: z.union([z.object({ add: z.object({ project: z.string(), permissions: z.union([z.array(z.string()), z.null()]) }).partial().passthrough(), del: z.array(z.string()) }).partial().passthrough(), z.array(z.object({ project: z.string(), permissions: z.union([z.array(z.string()), z.object({ add: z.array(z.string()), del: z.array(z.string()) }).partial().passthrough(), z.null()]) }).partial().passthrough())]), hasPermissions: z.union([z.array(z.string()), z.object({ add: z.array(z.string()), del: z.array(z.string()) }).partial().passthrough()]) }).partial().passthrough();
+const DataPermission = z.enum(["DATA_RESTRICTED", "DATA_VIEW", "DATA_EXTEND", "DATA_UPDATE", "DATA_DELETE", "DATA_PERMISSIONS"]);
+const HasRoleMap: z.ZodType<HasRoleMap> = z.record(DataPermission);
+const putAdminuserUserId_Body = z.object({ givenName: z.string(), familyName: z.string(), email: z.string().optional(), password: z.string().min(8), isActive: z.boolean().optional(), userIri: z.string().optional(), inProjects: z.array(z.object({ project: z.string(), permissions: z.array(z.enum(["ADMIN_OLDAP", "ADMIN_USERS", "ADMIN_PERMISSION_SETS", "ADMIN_RESOURCES", "ADMIN_MODEL", "ADMIN_CREATE", "ADMIN_LISTS"])) }).partial().passthrough()).optional(), hasRole: HasRoleMap.optional() }).passthrough();
+const postAdminuserUserId_Body = z.object({ userId: z.string(), givenName: z.string(), familyName: z.string(), email: z.string(), password: z.string(), isActive: z.boolean(), inProjects: z.union([z.object({ add: z.object({ project: z.string(), permissions: z.union([z.array(z.string()), z.null()]) }).partial().passthrough(), del: z.array(z.string()) }).partial().passthrough(), z.array(z.object({ project: z.string(), permissions: z.union([z.array(z.string()), z.object({ add: z.array(z.string()), del: z.array(z.string()) }).partial().passthrough(), z.null()]) }).partial().passthrough())]), hasRole: z.union([HasRoleMap, z.object({ add: HasRoleMap, del: HasRoleMap }).partial().passthrough(), z.null()]) }).partial().passthrough();
 const LangString = z.union([z.array(z.string()), z.string(), z.null()]);
 const putAdminprojectProjectId_Body = z.object({ projectIri: z.string(), label: LangString, comment: LangString, namespaceIri: z.string(), projectStart: z.string(), projectEnd: z.string() }).partial().passthrough();
 const postAdminprojectProjectId_Body = z.object({ label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), projectStart: z.union([z.string(), z.null()]), projectEnd: z.union([z.string(), z.null()]) }).partial().passthrough();
-const putAdminpermissionsetDefinedByProjectPermissionSetId_Body = z.object({ label: LangString, comment: LangString, givesPermission: z.enum(["DATA_RESTRICTED", "DATA_VIEW", "DATA_EXTEND", "DATA_UPDATE", "DATA_DELETE", "DATA_PERMISSIONS"]) }).partial().passthrough();
-const postAdminpermissionsetDefinedByProjectPermissionSetId_Body = z.object({ label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.unknown()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), givesPermission: z.enum(["DATA_RESTRICTED", "DATA_VIEW", "DATA_EXTEND", "DATA_UPDATE", "DATA_DELETE", "DATA_PERMISSIONS"]) }).partial().passthrough();
+const putAdminroleDefinedByProjectRoleId_Body = z.object({ label: LangString, comment: LangString }).partial().passthrough();
+const postAdminroleDefinedByProjectRoleId_Body = z.object({ label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.unknown()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]) }).partial().passthrough();
 const ExternalOntology: z.ZodType<ExternalOntology> = z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), prefix: z.string(), namespaceIri: z.string(), label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]) }).partial();
 const OwlPropertyType = z.array(z.enum(["StatementProperty", "TransitiveProperty", "SymmetricProperty", "ReflexiveProperty", "IrreflexiveProperty", "FunctionalProperty", "InverseFunctionalProperty"]));
 const Iri = z.string();
@@ -261,13 +282,15 @@ const postAdminhlistProjectHlistidNodeidmove_Body = z.union([z.object({ leftOf: 
 
 export const schemas = {
 	Error,
+	DataPermission,
+	HasRoleMap,
 	putAdminuserUserId_Body,
 	postAdminuserUserId_Body,
 	LangString,
 	putAdminprojectProjectId_Body,
 	postAdminprojectProjectId_Body,
-	putAdminpermissionsetDefinedByProjectPermissionSetId_Body,
-	postAdminpermissionsetDefinedByProjectPermissionSetId_Body,
+	putAdminroleDefinedByProjectRoleId_Body,
+	postAdminroleDefinedByProjectRoleId_Body,
 	ExternalOntology,
 	OwlPropertyType,
 	Iri,
@@ -713,6 +736,43 @@ const endpoints = makeApi([
 			},
 		],
 		response: z.object({ message: z.string() }).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
+			},
+			{
+				status: 403,
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
+			},
+			{
+				status: 404,
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
+			},
+			{
+				status: 500,
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
+			},
+		]
+	},
+	{
+		method: "get",
+		path: "/admin/datamodel/:project/downlad",
+		alias: "getAdmindatamodelProjectdownlad",
+		description: `Export the datamode as trig file`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "project",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.void(),
 		errors: [
 			{
 				status: 400,
@@ -1398,7 +1458,7 @@ Example JSON:
 				schema: z.string()
 			},
 		],
-		response: z.object({ message: z.string() }).partial().passthrough(),
+		response: z.object({ message: z.unknown() }).partial().passthrough(),
 		errors: [
 			{
 				status: 400,
@@ -1685,295 +1745,6 @@ The user must be authenticated with a Bearer token.
 	},
 	{
 		method: "put",
-		path: "/admin/permissionset/:definedByProject/:permissionSetId",
-		alias: "putAdminpermissionsetDefinedByProjectPermissionSetId",
-		description: `Creates a new permissionset in the database`,
-		requestFormat: "json",
-		parameters: [
-			{
-				name: "body",
-				type: "Body",
-				schema: putAdminpermissionsetDefinedByProjectPermissionSetId_Body
-			},
-			{
-				name: "definedByProject",
-				type: "Path",
-				schema: z.string()
-			},
-			{
-				name: "permissionSetId",
-				type: "Path",
-				schema: z.string()
-			},
-		],
-		response: z.object({ message: z.string() }).partial().passthrough(),
-		errors: [
-			{
-				status: 400,
-				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
-				schema: Error
-			},
-			{
-				status: 403,
-				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
-				schema: Error
-			},
-			{
-				status: 409,
-				description: `Error 409: Conflict - Resource already exists or operation conflicts with current state`,
-				schema: Error
-			},
-			{
-				status: 500,
-				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
-				schema: Error
-			},
-		]
-	},
-	{
-		method: "delete",
-		path: "/admin/permissionset/:definedByProject/:permissionSetId",
-		alias: "deleteAdminpermissionsetDefinedByProjectPermissionSetId",
-		description: `The user that has the rights (given by his token) deletes a permissionset`,
-		requestFormat: "json",
-		parameters: [
-			{
-				name: "definedByProject",
-				type: "Path",
-				schema: z.string()
-			},
-			{
-				name: "permissionSetId",
-				type: "Path",
-				schema: z.string()
-			},
-		],
-		response: z.object({ message: z.string() }).partial().passthrough(),
-		errors: [
-			{
-				status: 400,
-				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
-				schema: Error
-			},
-			{
-				status: 403,
-				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
-				schema: Error
-			},
-			{
-				status: 404,
-				description: `Error 404: Not Found - Requested resource does not exist`,
-				schema: Error
-			},
-			{
-				status: 409,
-				description: `Error 409: Conflict - Resource already exists or operation conflicts with current state`,
-				schema: Error
-			},
-			{
-				status: 500,
-				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
-				schema: Error
-			},
-		]
-	},
-	{
-		method: "get",
-		path: "/admin/permissionset/:definedByProject/:permissionSetId",
-		alias: "getAdminpermissionsetDefinedByProjectPermissionSetId",
-		description: `The user that has the rights (given by his token) gets Information about a permissionset`,
-		requestFormat: "json",
-		parameters: [
-			{
-				name: "definedByProject",
-				type: "Path",
-				schema: z.string()
-			},
-			{
-				name: "permissionSetId",
-				type: "Path",
-				schema: z.string()
-			},
-		],
-		response: z.object({ permissionSetIri: z.string(), creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), permissionSetId: z.string(), label: LangString, comment: LangString, givesPermission: z.string(), definedByProject: z.string() }).partial().passthrough(),
-		errors: [
-			{
-				status: 400,
-				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
-				schema: Error
-			},
-			{
-				status: 403,
-				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
-				schema: Error
-			},
-			{
-				status: 404,
-				description: `Error 404: Not Found - Requested resource does not exist`,
-				schema: Error
-			},
-		]
-	},
-	{
-		method: "post",
-		path: "/admin/permissionset/:definedByProject/:permissionSetId",
-		alias: "postAdminpermissionsetDefinedByProjectPermissionSetId",
-		description: `The user that has the rights (given by his token) modifies a permissionset`,
-		requestFormat: "json",
-		parameters: [
-			{
-				name: "body",
-				type: "Body",
-				schema: postAdminpermissionsetDefinedByProjectPermissionSetId_Body
-			},
-			{
-				name: "definedByProject",
-				type: "Path",
-				schema: z.string()
-			},
-			{
-				name: "permissionSetId",
-				type: "Path",
-				schema: z.string()
-			},
-		],
-		response: z.object({ message: z.string() }).partial().passthrough(),
-		errors: [
-			{
-				status: 400,
-				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
-				schema: Error
-			},
-			{
-				status: 403,
-				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
-				schema: Error
-			},
-			{
-				status: 404,
-				description: `Error 404: Not Found - Requested resource does not exist`,
-				schema: Error
-			},
-			{
-				status: 500,
-				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
-				schema: Error
-			},
-		]
-	},
-	{
-		method: "get",
-		path: "/admin/permissionset/:definedByProject/:permissionSetId/in_use",
-		alias: "getAdminpermissionsetDefinedByProjectPermissionSetIdin_use",
-		description: `Viewfunction to check if a hierarchical list is in use. It is in use, if any property in the datamodel references the list.`,
-		requestFormat: "json",
-		parameters: [
-			{
-				name: "definedByProject",
-				type: "Path",
-				schema: z.string()
-			},
-			{
-				name: "permissionSetId",
-				type: "Path",
-				schema: z.string()
-			},
-		],
-		response: z.object({ in_use: z.boolean() }).partial().passthrough(),
-		errors: [
-			{
-				status: 400,
-				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
-				schema: Error
-			},
-			{
-				status: 404,
-				description: `Error 404: Not Found - Requested resource does not exist`,
-				schema: Error
-			},
-			{
-				status: 500,
-				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
-				schema: Error
-			},
-		]
-	},
-	{
-		method: "get",
-		path: "/admin/permissionset/get",
-		alias: "getAdminpermissionsetget",
-		description: `Get complete permission set data by iri`,
-		requestFormat: "json",
-		parameters: [
-			{
-				name: "iri",
-				type: "Query",
-				schema: z.string()
-			},
-		],
-		response: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), permissionSetIri: z.string(), permissionSetId: z.string(), label: LangString, comment: LangString, givesPermission: z.string(), definedByProject: z.string() }).partial().passthrough(),
-		errors: [
-			{
-				status: 400,
-				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
-				schema: Error
-			},
-			{
-				status: 403,
-				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
-				schema: Error
-			},
-			{
-				status: 409,
-				description: `Error 409: Conflict - Resource already exists or operation conflicts with current state`,
-				schema: Error
-			},
-			{
-				status: 500,
-				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
-				schema: Error
-			},
-		]
-	},
-	{
-		method: "get",
-		path: "/admin/permissionset/search",
-		alias: "getAdminpermissionsetsearch",
-		description: `The user that has the rights (given by his token) searches for given parameters in permissionsets`,
-		requestFormat: "json",
-		parameters: [
-			{
-				name: "label",
-				type: "Query",
-				schema: z.string().optional()
-			},
-			{
-				name: "definedByProject",
-				type: "Query",
-				schema: z.string().optional()
-			},
-			{
-				name: "givesPermission",
-				type: "Query",
-				schema: z.string().optional()
-			},
-		],
-		response: z.array(z.string()),
-		errors: [
-			{
-				status: 400,
-				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
-				schema: Error
-			},
-			{
-				status: 403,
-				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
-				schema: Error
-			},
-		]
-	},
-	{
-		method: "put",
 		path: "/admin/project/:projectId",
 		alias: "putAdminprojectProjectId",
 		description: `Creates a new project in the database`,
@@ -2223,6 +1994,290 @@ The user must be authenticated with a Bearer token.
 	},
 	{
 		method: "put",
+		path: "/admin/role/:definedByProject/:roleId",
+		alias: "putAdminroleDefinedByProjectRoleId",
+		description: `Creates a new permissionset in the database`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "body",
+				type: "Body",
+				schema: putAdminroleDefinedByProjectRoleId_Body
+			},
+			{
+				name: "definedByProject",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "roleId",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.object({ message: z.string() }).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
+			},
+			{
+				status: 403,
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
+			},
+			{
+				status: 409,
+				description: `Error 409: Conflict - Resource already exists or operation conflicts with current state`,
+				schema: Error
+			},
+			{
+				status: 500,
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
+			},
+		]
+	},
+	{
+		method: "delete",
+		path: "/admin/role/:definedByProject/:roleId",
+		alias: "deleteAdminroleDefinedByProjectRoleId",
+		description: `The user that has the rights (given by his token) deletes a permissionset`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "definedByProject",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "roleId",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.object({ message: z.string() }).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
+			},
+			{
+				status: 403,
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
+			},
+			{
+				status: 404,
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
+			},
+			{
+				status: 409,
+				description: `Error 409: Conflict - Resource already exists or operation conflicts with current state`,
+				schema: Error
+			},
+			{
+				status: 500,
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
+			},
+		]
+	},
+	{
+		method: "get",
+		path: "/admin/role/:definedByProject/:roleId",
+		alias: "getAdminroleDefinedByProjectRoleId",
+		description: `The user that has the rights (given by his token) gets Information about a role`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "definedByProject",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "roleId",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.object({ roleIri: z.string(), creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), roleId: z.string(), label: LangString, comment: LangString, definedByProject: z.string() }).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
+			},
+			{
+				status: 403,
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
+			},
+			{
+				status: 404,
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
+			},
+		]
+	},
+	{
+		method: "post",
+		path: "/admin/role/:definedByProject/:roleId",
+		alias: "postAdminroleDefinedByProjectRoleId",
+		description: `The user that has the rights (given by his token) modifies a permissionset`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "body",
+				type: "Body",
+				schema: postAdminroleDefinedByProjectRoleId_Body
+			},
+			{
+				name: "definedByProject",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "roleId",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.object({ message: z.string() }).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
+			},
+			{
+				status: 403,
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
+			},
+			{
+				status: 404,
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
+			},
+			{
+				status: 500,
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
+			},
+		]
+	},
+	{
+		method: "get",
+		path: "/admin/role/:definedByProject/:roleId/in_use",
+		alias: "getAdminroleDefinedByProjectRoleIdin_use",
+		description: `Viewfunction to check if a hierarchical list is in use. It is in use, if any property in the datamodel references the list.`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "definedByProject",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "roleId",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.object({ in_use: z.boolean() }).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
+			},
+			{
+				status: 404,
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
+			},
+			{
+				status: 500,
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
+			},
+		]
+	},
+	{
+		method: "get",
+		path: "/admin/role/get",
+		alias: "getAdminroleget",
+		description: `Get complete role data by iri`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "iri",
+				type: "Query",
+				schema: z.string()
+			},
+		],
+		response: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), roleIri: z.string(), roleId: z.string(), label: LangString, comment: LangString, definedByProject: z.string() }).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
+			},
+			{
+				status: 403,
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
+			},
+			{
+				status: 409,
+				description: `Error 409: Conflict - Resource already exists or operation conflicts with current state`,
+				schema: Error
+			},
+			{
+				status: 500,
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
+			},
+		]
+	},
+	{
+		method: "get",
+		path: "/admin/role/search",
+		alias: "getAdminrolesearch",
+		description: `The user that has the rights (given by his token) searches for given parameters in role`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "label",
+				type: "Query",
+				schema: z.string().optional()
+			},
+			{
+				name: "definedByProject",
+				type: "Query",
+				schema: z.string().optional()
+			},
+		],
+		response: z.array(z.string()),
+		errors: [
+			{
+				status: 400,
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
+			},
+			{
+				status: 403,
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
+			},
+		]
+	},
+	{
+		method: "put",
 		path: "/admin/user/:userId",
 		alias: "putAdminuserUserId",
 		description: `Create a new user with the given data`,
@@ -2308,7 +2363,7 @@ The user must be authenticated with a Bearer token.
 				schema: z.string()
 			},
 		],
-		response: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), userIri: z.string(), userId: z.string(), familyName: z.string(), givenName: z.string(), email: z.string(), is_active: z.boolean().optional(), in_projects: z.array(z.object({ project: z.string(), permissions: z.array(z.string()) }).partial().passthrough()).optional(), has_permissions: z.array(z.string()).optional() }).passthrough(),
+		response: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), userIri: z.string(), userId: z.string(), familyName: z.string(), givenName: z.string(), email: z.string(), is_active: z.boolean().optional(), in_projects: z.array(z.object({ project: z.string(), permissions: z.array(z.string()) }).partial().passthrough()).optional(), hasRole: HasRoleMap.optional() }).passthrough(),
 		errors: [
 			{
 				status: 400,
@@ -2382,7 +2437,7 @@ The user must be authenticated with a Bearer token.
 				schema: z.string()
 			},
 		],
-		response: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), userIri: z.string(), userId: z.string(), familyName: z.string(), givenName: z.string(), email: z.string(), is_active: z.boolean().optional(), in_projects: z.array(z.object({ project: z.string(), permissions: z.array(z.string()) }).partial().passthrough()).optional(), has_permissions: z.array(z.string()).optional() }).passthrough(),
+		response: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), userIri: z.string(), userId: z.string(), familyName: z.string(), givenName: z.string(), email: z.string(), is_active: z.boolean().optional(), in_projects: z.array(z.object({ project: z.string(), permissions: z.array(z.string()) }).partial().passthrough()).optional(), hasRole: HasRoleMap.optional() }).passthrough(),
 		errors: [
 			{
 				status: 400,
@@ -2477,6 +2532,11 @@ The user must be authenticated with a Bearer token.
 				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
 				schema: Error
 			},
+			{
+				status: 500,
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
+			},
 		]
 	},
 	{
@@ -2525,7 +2585,8 @@ The user must be authenticated with a Bearer token.
 			},
 			{
 				status: 500,
-				schema: z.void()
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
 			},
 		]
 	},
@@ -2568,6 +2629,16 @@ The user must be authenticated with a Bearer token.
 				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
 				schema: Error
 			},
+			{
+				status: 404,
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
+			},
+			{
+				status: 500,
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
+			},
 		]
 	},
 	{
@@ -2587,7 +2658,101 @@ The user must be authenticated with a Bearer token.
 				schema: z.string()
 			},
 		],
-		response: z.void(),
+		response: z.object({}).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
+			},
+			{
+				status: 403,
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
+			},
+			{
+				status: 404,
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
+			},
+			{
+				status: 500,
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
+			},
+		]
+	},
+	{
+		method: "get",
+		path: "/data/mediaobject/id/:id",
+		alias: "getDatamediaobjectidId",
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "id",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.object({ iri: z.string(), graph: z.unknown(), permval: z.unknown(), "oldap:createdBy": z.unknown(), "oldap:creationDate": z.unknown(), "oldap:lastModifiedBy": z.unknown(), "oldap:lastModificationDate": z.unknown(), "shared:imageId": z.unknown(), "shared:originalName": z.unknown(), "dcterms:type": z.unknown(), description: z.unknown(), "shared:originalMimeType": z.string(), "shared:serverUrl": z.string(), "shared:path": z.string(), "shared:protocol": z.enum(["iiif", "http", "custom"]) }).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
+			},
+			{
+				status: 403,
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
+			},
+			{
+				status: 404,
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
+			},
+			{
+				status: 500,
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
+			},
+		]
+	},
+	{
+		method: "get",
+		path: "/data/mediaobject/iri/:iri",
+		alias: "getDatamediaobjectiriIri",
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "iri",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.object({ "oldap:createdBy": z.string(), "oldap:creationDate": z.string().datetime({ offset: true }), "oldap:lastModifiedBy": z.string(), "oldap:lastModificationDate": z.string().datetime({ offset: true }), "shared:imageId": z.string(), "shared:originalName": z.string(), "dcterms:type": z.enum(["dcmitype:Collection", "dcmitype:Dataset", "dcmitype:StillImage", "dcmitype:Image", "dcmitype:MovingImage", "dcmitype:Sound", "dcmitype:Text"]), "shared:originalMimeType": z.string(), "shared:serverUrl": z.string(), "shared:path": z.string(), "shared:protocol": z.enum(["iiif", "http", "custom"]) }).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
+			},
+			{
+				status: 403,
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
+			},
+			{
+				status: 404,
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
+			},
+			{
+				status: 500,
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
+			},
+		]
 	},
 	{
 		method: "get",
@@ -2598,32 +2763,37 @@ The user must be authenticated with a Bearer token.
 			{
 				name: "project",
 				type: "Path",
-				schema: z.unknown()
+				schema: z.string()
 			},
 			{
 				name: "resClass",
 				type: "Query",
-				schema: z.unknown()
+				schema: z.string()
+			},
+			{
+				name: "includeProperties",
+				type: "Query",
+				schema: z.array(z.string().regex(/^([A-Za-z_][A-Za-z0-9._-]*:)?[A-Za-z_][A-Za-z0-9._-]*$/)).optional()
 			},
 			{
 				name: "countOnly",
 				type: "Query",
-				schema: z.unknown().optional()
+				schema: z.boolean().optional()
 			},
 			{
 				name: "sortBy",
 				type: "Query",
-				schema: z.unknown().optional()
+				schema: z.enum(["PROPVAL", "CREATED", "LASTMOD"]).optional()
 			},
 			{
 				name: "limit",
 				type: "Query",
-				schema: z.unknown().optional()
+				schema: z.number().int().optional()
 			},
 			{
 				name: "offset",
 				type: "Query",
-				schema: z.unknown().optional()
+				schema: z.number().int().optional()
 			},
 		],
 		response: z.record(z.object({}).partial().passthrough()),
@@ -2643,48 +2813,54 @@ The user must be authenticated with a Bearer token.
 				description: `Error 404: Not Found - Requested resource does not exist`,
 				schema: Error
 			},
+			{
+				status: 500,
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
+			},
 		]
 	},
 	{
 		method: "get",
 		path: "/data/textsearch/:project",
 		alias: "getDatatextsearchProject",
+		description: `Get all hlist data from the hlist iri`,
 		requestFormat: "json",
 		parameters: [
 			{
 				name: "project",
 				type: "Path",
-				schema: z.unknown()
+				schema: z.string()
 			},
 			{
 				name: "searchString",
 				type: "Query",
-				schema: z.unknown().optional()
+				schema: z.string().optional()
 			},
 			{
 				name: "resClass",
 				type: "Query",
-				schema: z.unknown().optional()
+				schema: z.string().optional()
 			},
 			{
 				name: "countOnly",
 				type: "Query",
-				schema: z.unknown().optional()
+				schema: z.boolean().optional()
 			},
 			{
 				name: "sortBy",
 				type: "Query",
-				schema: z.unknown().optional()
+				schema: z.enum(["PROPVAL", "CREATED", "LASTMOD"]).optional()
 			},
 			{
 				name: "limit",
 				type: "Query",
-				schema: z.unknown().optional()
+				schema: z.number().int().optional()
 			},
 			{
 				name: "offset",
 				type: "Query",
-				schema: z.unknown().optional()
+				schema: z.number().int().optional()
 			},
 		],
 		response: z.record(z.object({}).partial().passthrough()),

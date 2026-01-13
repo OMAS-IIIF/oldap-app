@@ -5,11 +5,10 @@ import { DataPermission, stringToDataPermission } from '$lib/oldap/enums/data_pe
 import { LangString } from '$lib/oldap/datatypes/langstring';
 import { OldapErrorInconsistency } from '$lib/oldap/errors/OldapErrorInconsistency';
 
-export class OldapPermissionSet extends OldapObject {
-	readonly #permissionSetIri: Iri;
-	readonly #permissionSetId: NCName;
+export class OldapRole extends OldapObject {
+	readonly #roleIri: Iri;
+	readonly #roleId: NCName;
 	readonly #definedByProject: Iri;
-	givesPermission: DataPermission;
 	label?: LangString;
 	comment?: LangString;
 	projectShortName?: string; // for internal use, is not given by RESTFul API (oldaplib/oldap-api)
@@ -19,55 +18,50 @@ export class OldapPermissionSet extends OldapObject {
 							created: Date,
 							contributor: Iri,
 							modified: Date,
-							permissionSetIri: Iri,
-							permissionSetId: NCName,
+							roleIri: Iri,
+							roleId: NCName,
 							definedByProject: Iri,
-							givesPermission: DataPermission,
 							label?: LangString,
 							comment?: LangString) {
 		super(creator, created, contributor, modified);
-		this.#permissionSetIri = permissionSetIri;
-		this.#permissionSetId = permissionSetId;
+		this.#roleIri = roleIri;
+		this.#roleId = roleId;
 		this.#definedByProject = definedByProject;
-		this.givesPermission = givesPermission;
 		this.label = label;
 		this.comment = comment;
 	}
 
-	get permissionSetIri() {
-		return this.#permissionSetIri;
+	get roleIri() {
+		return this.#roleIri;
 	}
 
-	get permissionSetIriAsString() {
-		return this.#permissionSetIri.toLocaleString();
+	get roleIriAsString() {
+		return this.#roleIri.toLocaleString();
 	}
 
-	get permissionSetId() {
-		return this.#permissionSetId;
+	get roleId() {
+		return this.#roleId;
 	}
 
 	get definedByProject() {
 		return this.#definedByProject;
 	}
 
-	static fromOldapJson(json: any): OldapPermissionSet {
+	static fromOldapJson(json: any): OldapRole {
+		console.log("ROLE::", json);
 		const creator = new Iri(json.creator);
 		const created = new Date(json.created);
 		const contributor = new Iri(json.contributor);
 		const modified = new Date(json.modified);
-		const permissionSetIri = new Iri(json.permissionSetIri);
-		const permissionSetId = new NCName(json.permissionSetId);
+		const roleIri = new Iri(json.roleIri);
+		const roleId = new NCName(json.roleId);
 		const definedByProject = new Iri(json.definedByProject);
-		const givesPermission = stringToDataPermission(json.givesPermission);
-		//const label = jsonToLangString(json?.label);
 		const label = LangString.fromJson(json?.label);
-		//const comment = jsonToLangString(json?.comment);
 		const comment = LangString.fromJson(json?.comment);
 
-		if (!givesPermission) {
-			throw new OldapErrorInconsistency("No permission in permission set.");
-		}
-		return new OldapPermissionSet(creator, created, contributor, modified, permissionSetIri,
-			permissionSetId, definedByProject, givesPermission, label, comment);
+		console.log("...........roleIri:", roleIri.toString())
+
+		return new OldapRole(creator, created, contributor, modified, roleIri,
+			roleId, definedByProject, label, comment);
 	}
 }

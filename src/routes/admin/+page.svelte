@@ -15,7 +15,7 @@
 	import HlistsList from '$lib/components/oldap/HlistsList.svelte';
 	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
 	import HList from '$lib/components/oldap/HList.svelte';
-	import PermsetsList from '$lib/components/oldap/PermsetsList.svelte';
+	import RolesList from '$lib/components/oldap/RolesList.svelte';
 	import PropsList from '$lib/components/oldap/PropsList.svelte';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { authInfoStore } from '$lib/stores/authinfo';
@@ -65,7 +65,7 @@
 				users: m.users(),
 				lists: m.lists(),
 				models: m.datamodel(),
-				permsets: m.permsets()
+				roles: m.roles()
 			};
 			if (!selected_tab) { // if we have already a selected tab (e.g. from the adminTabState), we use this
 				selected_tab = 'projects';
@@ -84,7 +84,7 @@
 						tabs['models'] = m.datamodel();
 						break;
 					case AdminPermission.ADMIN_PERMISSION_SETS:
-						tabs['permsets'] = m.permsets();
+						tabs['roles'] = m.roles();
 						break;
 				}
 			});
@@ -112,8 +112,8 @@
 				selected_tab = 'lists';
 			} else if (tabs['models']) {
 				selected_tab = 'models';
-			} else if (tabs['permsets']) {
-				selected_tab = 'permsets';
+			} else if (tabs['roles']) {
+				selected_tab = 'roles';
 			} else {
 				selected_tab = '';
 			}
@@ -168,7 +168,7 @@
 		</div>
 	</div>
 {/if}
-{#if selected_tab === 'permsets'}
-	<PermsetsList table_height={table_height} {administrator} {project} />
+{#if selected_tab === 'roles'}
+	<RolesList table_height={table_height} {administrator} {project} />
 {/if}
 

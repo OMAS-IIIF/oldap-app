@@ -6,9 +6,9 @@
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { authInfoStore } from '$lib/stores/authinfo';
-	import { OldapPermissionSet } from '$lib/oldap/classes/permissionset';
+	import { OldapRole } from '$lib/oldap/classes/role';
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
-	import { refreshPermsetsList, refreshPermsetsListNow } from '$lib/stores/refresh_permsetslist.svelte';
+	import { refreshRolesList, refreshRolesListNow } from '$lib/stores/refresh_roleslist.svelte.js';
 	import { api_config, api_get_config } from '$lib/helpers/api_config';
 	import { apiClient } from '$lib/shared/apiClient';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
@@ -24,7 +24,6 @@
 	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
 	import TableHeader from '$lib/components/basic_gui/table/TableHeader.svelte';
 	import TableBody from '$lib/components/basic_gui/table/TableBody.svelte';
-	import { dataPermissionAsString } from '$lib/oldap/enums/data_permissions';
 	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
 
 	let { table_height, administrator = null, project = null }: {
@@ -37,17 +36,17 @@
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
 
 	let authinfo = $state<AuthInfo | null>($authInfoStore);
-	let permsets = $state<Record<string, OldapPermissionSet>>({});
-	let permset_list = $state<string[]>([]);
-	let permset_in_use = $state<Record<string, boolean>>({});
-	let permset_projs = $state<Record<string, URLSearchParams>>({});
-	let show_all_permsets = $state(false);
+	let roles = $state<Record<string, OldapRole>>({});
+	let role_list = $state<string[]>([]);
+	let role_in_use = $state<Record<string, boolean>>({});
+	let role_projs = $state<Record<string, URLSearchParams>>({});
+	let show_all_roles = $state(false);
 
 	let confirmation_dialog: Confirmation;
 	let confirmation_title = $state('');
 	let confirmation_text = $state('');
 
-	const params = new URLSearchParams({ tab: 'permissions' });
+	const params = new URLSearchParams({ tab: 'roles' });
 
 	authInfoStore.subscribe(data => {
 		authinfo = data;
@@ -55,38 +54,38 @@
 
 	$effect(() => {
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const _ = $refreshPermsetsList;
-		permset_list = [];
+		const _ = $refreshRolesList;
+		role_list = [];
 		if (authinfo) {
-			let permsetsearch = api_get_config(authinfo);
-			if (!show_all_permsets) {
-				permsetsearch = { ...permsetsearch, queries: { definedByProject: project?.projectIri?.toString() } };
+			let rolesearch = api_get_config(authinfo);
+			if (!show_all_roles) {
+				rolesearch = { ...rolesearch, queries: { definedByProject: project?.projectIri?.toString() } };
 			}
-			apiClient.getAdminpermissionsetsearch(permsetsearch).then((psdata) => {
-				permsets = {} as Record<string, OldapPermissionSet>;
+			apiClient.getAdminrolesearch(rolesearch).then((psdata) => {
+				roles = {} as Record<string, OldapRole>;
 				const promises = psdata.map(hl => {
 					const config_plistdata = api_get_config(authinfo as AuthInfo, { iri: hl });
-					return apiClient.getAdminpermissionsetget(config_plistdata);
+					return apiClient.getAdminroleget(config_plistdata);
 				});
 				Promise.all(promises).then((results) => {
-					results.forEach((permsetdata) => {
-						const permset = OldapPermissionSet.fromOldapJson(permsetdata);
-						const permsetid = permset.permissionSetId.toString();
-						permsets[permsetid] = permset;
-						permset_list.push(permsetid);
-						permset_projs[permsetid] = new URLSearchParams({ projectid: permset.definedByProject.toString() || 'XXX' });
+					results.forEach((roledata) => {
+						console.log("----->", roledata)
+						const role = OldapRole.fromOldapJson(roledata);
+						console.log("****>", role);
+						const roleid = role.roleId.toString();
+						roles[roleid] = role;
+						role_list.push(roleid);
+						role_projs[roleid] = new URLSearchParams({ projectid: role.definedByProject.toString() || 'XXX' });
 
-						const config_permset_in_use = api_config(authinfo as AuthInfo, {
-							definedByProject: encodeURIComponent(permset.definedByProject.toString()),
-							permissionSetId: permsetid
+						const config_role_in_use = api_config(authinfo as AuthInfo, {
+							definedByProject: encodeURIComponent(role.definedByProject.toString()),
+							roleId: roleid
 						});
-						apiClient.getAdminpermissionsetDefinedByProjectPermissionSetIdin_use(config_permset_in_use).then((result2) => {
-							permset_in_use[permsetid] = result2['in_use'] === undefined ? false : result2['in_use'];
+						apiClient.getAdminroleDefinedByProjectRoleIdin_use(config_role_in_use).then((result2) => {
+							role_in_use[roleid] = result2['in_use'] === undefined ? false : result2['in_use'];
 						});
-
-
 					});
-					permset_list = permset_list.sort((a, b) => a.localeCompare(b));
+					role_list = role_list.sort((a, b) => a.localeCompare(b));
 				}).catch((err) => {
 					errorInfoStore.set(process_api_error(err as Error));
 				});
@@ -96,32 +95,31 @@
 		}
 	});
 
-	const delete_permset = async (permset_id: string) => {
-		confirmation_title = m.delete_permset();
-		confirmation_text = m.delete_permset_2({permsetid: permset_id});
+	const delete_role = async (role_id: string) => {
+		confirmation_title = m.delete_role();
+		confirmation_text = m.delete_role_2({roleid: role_id});
 		const ok = await confirmation_dialog.open();
 		if (!ok) {
 			return;
 		}
-		const config_permset_delete = api_config(authinfo as AuthInfo, {
-			definedByProject: encodeURIComponent(permsets[permset_id].definedByProject.toString()),
-			permissionSetId: permset_id
+		const config_role_delete = api_config(authinfo as AuthInfo, {
+			definedByProject: encodeURIComponent(roles[role_id].definedByProject.toString()),
+			permissionSetId: role_id
 		});
-		console.log(config_permset_delete);
-		apiClient.deleteAdminpermissionsetDefinedByProjectPermissionSetId(undefined, config_permset_delete).then((res) => {
+		console.log(config_role_delete);
+		apiClient.deleteAdminroleDefinedByProjectRoleId(undefined, config_role_delete).then((res) => {
 			console.log(res);
-			refreshPermsetsListNow();
+			refreshRolesListNow();
 		}).catch((error) => {
 			errorInfoStore.set(process_api_error(error as Error));
 		});
 	};
 
 	let headers: string[] = $state([
-		m.permset_iri(),
-		m.permset_id(),
+		m.role_iri(),
+		m.role_id(),
 		m.label(),
 		m.project(),
-		m.permission(),
 		m.action()]);
 
 </script>
@@ -129,11 +127,11 @@
 {#snippet actions()}
 	<div class="flex flex-row items-center justify-end gap-4">
 		{#if administrator?.isRoot}
-			<span><Checkbox label={m.show_all_permsets()} position="left" bind:checked={show_all_permsets} /></span>
+			<span><Checkbox label={m.show_all_roles()} position="left" bind:checked={show_all_roles} /></span>
 		{/if}
 		<!--<span><Button class="text-xs" onclick={goto_page("/admin/permset")}>ADD PERMSET</Button></span>-->
-		<Tooltip text={m.add_permset()}>
-			<Button round={true} class="text-xs" onclick={goto_page("/admin/permset")}>
+		<Tooltip text={m.add_role()}>
+			<Button round={true} class="text-xs" onclick={goto_page("/admin/role")}>
 				<Plus size="16" strokeWidth="1" />
 			</Button>
 		</Tooltip>
@@ -141,8 +139,8 @@
 	</div>
 {/snippet}
 
-<Table height={table_height} title={m.permsets_title()}
-			 description={m.permsets_descr()}
+<Table height={table_height} title={m.roles_title()}
+			 description={m.roles_descr()}
 			 action_elements={actions}>
 	<TableHeader>
 		{#each headers as header}
@@ -150,19 +148,18 @@
 		{/each}
 	</TableHeader>
 	<TableBody>
-		{#each permset_list as permset_id}
+		{#each role_list as role_id}
 			<TableRow>
-				<TableItem>{permsets[permset_id].permissionSetIriAsString}</TableItem>
-				<TableItem>{permset_id}</TableItem>
-				<TableItem>{permsets[permset_id].label?.get(langobj)}</TableItem>
-				<TableItem>{permsets[permset_id].definedByProject.toString()}</TableItem>
-				<TableItem>{dataPermissionAsString(permsets[permset_id].givesPermission)}</TableItem>
+				<TableItem>{roles[role_id].roleIriAsString}</TableItem>
+				<TableItem>{role_id}</TableItem>
+				<TableItem>{roles[role_id].label?.get(langobj)}</TableItem>
+				<TableItem>{roles[role_id].definedByProject.toString()}</TableItem>
 				<TableItem>
 					<div class="flex flex-row items-center justify-left gap-2">
-						<Button round={true} onclick={goto_page(`/admin/permset/${permset_id}?${permset_projs[permset_id]}`)}>
+						<Button round={true} onclick={goto_page(`/admin/role/${role_id}?${role_projs[role_id]}`)}>
 							<Pencil size="16" strokeWidth="1" />
 						</Button>
-						<Button round={true} onclick={() => delete_permset(permset_id)}  disabled={permset_in_use[permset_id]}>
+						<Button round={true} onclick={() => delete_role(role_id)}  disabled={role_in_use[role_id]}>
 							<Trash2  size="16" strokeWidth="1" />
 						</Button>
 					</div>

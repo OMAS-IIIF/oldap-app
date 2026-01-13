@@ -40,9 +40,10 @@
 		title: string;
 		x: number; y: number;
 		width: number; height: number;
-		kind: 'explorer' | 'notes' | 'dynamic' | 'upload';
+		kind: 'explorer' | 'notes' | 'dynamic' | 'upload' | 'image';
 		// optional payload for "dynamic"
 		note?: string;
+    iri?: string;
 	};
 
 	let counter = 0;
@@ -71,6 +72,25 @@
 		];
 		activeId = id;
 	}
+
+  function openImageWindow(data: any) {
+      const id = `win-${++counter}`;
+      wins = [
+          ...wins,
+          {
+              id,
+              title: data['shared:originalName'],
+              x: 80 + counter * 12,
+              y: 80 + counter * 10,
+              width: 800,
+              height: 800,
+              kind: 'image',
+              note: `image #${counter}`,
+              iri: data['shared:serverUrl'] + data['shared:imageId'] + '/full/!800,800/0/default.jpg?token=' + data['token']
+          }
+      ];
+      activeId = id;
+  }
 
 	function closeWindow(id: string) {
 		wins = wins.filter(w => w.id !== id);
@@ -138,7 +158,11 @@
                         </div>
                     {:else if w.kind === 'upload'}
                         <div class="p-3">
-                            <ImageUpload uploadUrl={config.uploadUrl} />
+                            <ImageUpload uploadUrl={config.uploadUrl} onSuccess={openImageWindow}/>
+                        </div>
+                    {:else if w.kind === 'image'}
+                        <div class="p-3">
+                            <img src={w.iri} />
                         </div>
                     {:else} <!-- dynamic -->
                         <div class="p-3">

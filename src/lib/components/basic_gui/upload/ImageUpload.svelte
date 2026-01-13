@@ -9,12 +9,14 @@
 	import RadioButton from '$lib/components/basic_gui/buttons/RadioButton.svelte';
 	import { onMount } from 'svelte';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { OldapPermissionSet } from '$lib/oldap/classes/permissionset';
+	import { OldapRole } from '$lib/oldap/classes/role';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import SelectMutiple from '$lib/components/basic_gui/inputs/SelectMutiple.svelte';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
-	import { fetchPermissionSetsForProject } from '$lib/helpers/get_permissions';
+	import { fetchRolesForProject } from '$lib/helpers/get_roles';
+	import { apiClient } from '$lib/shared/apiClient';
+	import { api_config } from '$lib/helpers/api_config';
 
 	type SuccessHandler = (result: unknown) => void;
   type ErrorHandler = (error: unknown) => void;
@@ -48,10 +50,10 @@
 	let targetfileformat = $state<string>('TIFF');
 	let authinfo = $state<AuthInfo | null>($authInfoStore);
 
-	let permsets = $state<Record<string, OldapPermissionSet>>({});
-	let permset_list = $state<string[]>([]);
-	let permset_selectables = $state<Set<{key: string, label?: string}> | undefined>();
-	let permsets_selected = $state<Set<string>>(new Set());
+	let roles = $state<Record<string, OldapRole>>({});
+	let role_list = $state<string[]>([]);
+	let role_selectables = $state<Set<{key: string, label?: string}> | undefined>();
+	let roles_selected = $state<Set<string>>(new Set());
 
 
 	authInfoStore.subscribe(data => {
@@ -67,21 +69,21 @@
 
 		(async () => {
 			try {
-				const permsets1 = await fetchPermissionSetsForProject(authinfo, projectIri, projectShortName);
-				const permsets2 = await fetchPermissionSetsForProject(authinfo, 'oldap:SystemProject', 'SystemProject');
-				permsets = {...permsets1, ...permsets2};
-				permset_list = Object.keys(permsets).sort((a, b) => a.localeCompare(b));
+				const roles1 = await fetchRolesForProject(authinfo, projectIri, projectShortName);
+				const roles2 = await fetchRolesForProject(authinfo, 'oldap:SystemProject', 'SystemProject');
+				roles = {...roles1, ...roles2};
+				role_list = Object.keys(roles).sort((a, b) => a.localeCompare(b));
 
-				permset_selectables = new Set(
-					permset_list.map((psid) => ({
+				role_selectables = new Set(
+					role_list.map((psid) => ({
 						key: psid,
-						label: permsets[psid]?.label?.get(langobj)
+						label: roles[psid]?.label?.get(langobj)
 					}))
 				);
 			} catch (err) {
 				errorInfoStore.set(process_api_error(err as Error));
 			}
-			console.log(permset_selectables);
+			console.log(role_selectables);
 		})();
 	});
 
@@ -140,10 +142,11 @@
     try {
       const form = new FormData();
 			form.append('projectId', $projectStore?.projectShortName.toString() || '')
+			form.append('dcterms:type', 'dcmitype:StillImage');
 			form.append('targetFormat', targetfileformat);
-			const ps = [...permsets_selected].map(x => permsets[x].permissionSetIri.toString());
-			permsets_selected.forEach(x => {
-				form.append('permissionSets', permsets[x].permissionSetIri.toString())
+			const ps = [...roles_selected].map(x => roles[x].roleIri.toString());
+			roles_selected.forEach(x => {
+				form.append('attachedTorole', roles[x].roleIri.toString())
 			});
       form.append(fieldName, file);
       // Add Authorization: Bearer <token> header when available from authInfoStore
@@ -159,7 +162,16 @@
       const result = ct.includes('application/json') ? await res.json() : await res.text();
       if (!res.ok) throw new Error(typeof result === 'string' ? result : JSON.stringify(result));
       statusMsg = 'Upload complete.';
-      onSuccess?.(result);
+			console.log(result);
+
+			const config_mediaobj = api_config(authinfo || new AuthInfo('', ''), {
+				iri: result.iri.toString(),
+			});
+			console.log("======> ", config_mediaobj)
+			apiClient.getDatamediaobjectiriIri(config_mediaobj).then(res => {
+				console.log(res);
+				onSuccess?.(res);
+			});
     } catch (err) {
       statusMsg = (err as Error)?.message ?? 'Upload failed.';
       onError?.(err);
@@ -216,7 +228,7 @@
 		<RadioButton name="targetfileformat" id="tff3" value="JPEG" bind:selected={targetfileformat}>JPEG</RadioButton>
 	</div>
 	<div>
-		<SelectMutiple label="Permission sets" selectables={permset_selectables} bind:values={permsets_selected} />
+		<SelectMutiple label="Roles" selectables={role_selectables} bind:values={roles_selected} />
 	</div>
 
   <!-- Controls -->

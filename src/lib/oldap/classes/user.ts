@@ -3,11 +3,27 @@ import { OldapObject } from '$lib/oldap/classes/object';
 import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
 import { AdminPermission, stringToAdminPermission } from '$lib/oldap/enums/admin_permissions';
 import { OldapErrorInvalidValue } from '$lib/oldap/errors/OldapErrorInvalidValue';
+import { type DataPermission, stringToDataPermission } from '$lib/oldap/enums/data_permissions';
 
 
 export interface InProject {
 	project: Iri;
 	permissions: AdminPermission[]
+}
+
+export interface Role {
+	[roleId: string]: DataPermission | null;
+}
+
+export function jsonToRole(json: any): Role {
+	const role: Role = {};
+
+	for (const [roleId, dperm] of Object.entries(json)) {
+		const tmp = stringToDataPermission(dperm as string)
+		role[roleId] = tmp ? tmp : null;
+	}
+
+	return role;
 }
 
 export class OldapUser extends OldapObject {
@@ -18,7 +34,7 @@ export class OldapUser extends OldapObject {
 	givenName: string;
 	email: string;
 	inProject?: InProject[];
-	hasPermissions?: Iri[];
+	hasRole?: Role;
 	isRoot: boolean;
 	avatarSrc?: string;
 
@@ -33,7 +49,7 @@ export class OldapUser extends OldapObject {
 							email: string,
 							isActive: boolean,
 							inProject?: InProject[],
-							hasPermissions?: Iri[],
+							hasRole?: Role,
 							isRoot: boolean = false) {
 		super(creator, created, contributor, modified);
 		this.#userIri = userIri;
@@ -43,7 +59,7 @@ export class OldapUser extends OldapObject {
 		this.email = email;
 		this.isActive = isActive;
 		this.inProject = inProject;
-		this.hasPermissions = hasPermissions;
+		this.hasRole = hasRole;
 		this.isRoot = isRoot;
 	}
 
@@ -82,8 +98,7 @@ export class OldapUser extends OldapObject {
 				});
 			}
 		}
-		const has_permissions: Iri[] | undefined = json?.hasPermissions.map((x: string) => (new Iri(x)));
-
+		const hasRole = jsonToRole(json?.hasRole);
 		let isRoot = false
 		in_project?.forEach((in_project: InProject) => {
 			if ((in_project.project.toString() === 'oldap:SystemProject') && in_project.permissions.includes(AdminPermission.ADMIN_OLDAP)) {
@@ -103,7 +118,7 @@ export class OldapUser extends OldapObject {
 			email,
 			is_active,
 			in_project,
-			has_permissions,
+			hasRole,
 			isRoot);
 	}
 }

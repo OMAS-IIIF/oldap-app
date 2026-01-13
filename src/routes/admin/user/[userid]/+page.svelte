@@ -25,7 +25,7 @@
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import Checkbox from '$lib/components/basic_gui/checkbox/Checkbox.svelte';
-	import { OldapPermissionSet } from '$lib/oldap/classes/permissionset';
+	import { OldapRole } from '$lib/oldap/classes/role';
 	import { languageTag } from '$lib/paraglide/runtime';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import { dataPermissionAsString } from '$lib/oldap/enums/data_permissions';
@@ -70,7 +70,7 @@
 	let email = $state('');
 	let isActive = $state(false);
 	let inProject = $state<CheckedState>({});
-	let permissionSets = $state<OldapPermissionSet[]>([]);
+	let roles = $state<OldapRole[]>([]);
 	let user_permsets = $state<Record<string, boolean>>({});
 	let topwin = $state<HTMLElement>();
 
@@ -110,7 +110,7 @@
 		}
 		const promises2 = tmp.map(async (in_project) => { // get data permission set iris for all projects the user is in
 			const permset_config = api_get_config(authinfo as AuthInfo, {definedByProject: in_project.iri});
-			const jsondata = await apiClient.getAdminpermissionsetsearch(permset_config);
+			const jsondata = await apiClient.getAdminrolesearch(permset_config);
 			return jsondata;
 		});
 		let permset_iris: string[] = [];
@@ -123,18 +123,18 @@
 		}
 		const promises3 = permset_iris.map(async ps_iri => { // get the complete permission set data for all permission sets
 			const dataperm_config = api_get_config(authinfo as AuthInfo, {iri: ps_iri});
-			return await apiClient.getAdminpermissionsetget(dataperm_config);
+			return await apiClient.getAdminroleget(dataperm_config);
 		});
 		try {
 			const results3 = await Promise.all(promises3);
 
 			let gaga = user?.hasPermissions?.map(item => item.toString()) || [];
 
-			permissionSets = results3.map(jsonobj => {
-				let tmp = OldapPermissionSet.fromOldapJson(jsonobj);
+			roles = results3.map(jsonobj => {
+				let tmp = OldapRole.fromOldapJson(jsonobj);
 				tmp.projectShortName = all_projects[tmp.definedByProject.toString()]?.projectShortName.toString();
-				if (tmp?.permissionSetIri) {
-					user_permsets[tmp.permissionSetIriAsString] = gaga.includes(tmp.permissionSetIriAsString);
+				if (tmp?.roleIri) {
+					user_permsets[tmp.roleIriAsString] = gaga.includes(tmp.roleIriAsString);
 				}
 				return tmp;
 			});
@@ -623,9 +623,9 @@
 		</Table>
 
 		<div class="text-sm ">Data Permissions</div>
-		{#each permissionSets as pset}
+		{#each roles as pset}
 			{@const txt = `${pset?.label ? pset?.label.get(langobj) : ''} (${dataPermissionAsString(pset?.givesPermission)} ${m.fromproj()} "${pset?.projectShortName}")`}
-			<Checkbox label={txt} position="right" bind:checked={user_permsets[pset?.permissionSetIri.toString()]}></Checkbox>
+			<Checkbox label={txt} position="right" bind:checked={user_permsets[pset?.roleIri.toString()]}></Checkbox>
 		{/each}
 
 
