@@ -8,7 +8,6 @@
 	import Textfield from '$lib/components/basic_gui/inputs/Textfield.svelte';
 	import { projectStore } from '$lib/stores/project';
 
-	import { p } from '../../../../../.svelte-kit/adapter-node/chunks/i18n';
 	import { OldapProject } from '$lib/oldap/classes/project';
 	import type { OldapUser } from '$lib/oldap/classes/user';
 	import { userStore } from '$lib/stores/user';
