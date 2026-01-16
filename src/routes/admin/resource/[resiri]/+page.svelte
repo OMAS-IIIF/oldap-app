@@ -307,7 +307,7 @@ and the actual property id (which is a xs:NCName
 			<DropdownButton bind:isOpen={addPropOpen} buttonText="Add property" name="add-prop-menu" class="text-xs">
 				<DropdownMenu bind:isOpen={addPropOpen} name="add-prop-menu" id="add-prop-menu-id" size="" transparent={false}>
 					<DropdownButtonItem bind:isOpen={addPropOpen} onclick={() => {add_property('new')}}>NEW PROPERTY</DropdownButtonItem>
-					{#each datamodel?.standaloneProperties || [] as prop}
+					{#each [...(datamodel?.standaloneProperties || []), ...($datamodelSharedStore?.standaloneProperties || [])] as prop}
 						<DropdownButtonItem bind:isOpen={addPropOpen} onclick={() => {add_property(prop.propertyIri.toString())}}>{prop.propertyIri.toString()}</DropdownButtonItem>
 					{/each}
 				</DropdownMenu>
