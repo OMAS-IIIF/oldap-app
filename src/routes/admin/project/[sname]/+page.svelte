@@ -178,7 +178,6 @@
 			}).catch((error) => {
 				errorInfoStore.set(process_api_error(error as Error));
 			});
-
 		}
 	};
 

@@ -59,8 +59,6 @@ export class OldapRole extends OldapObject {
 		const label = LangString.fromJson(json?.label);
 		const comment = LangString.fromJson(json?.comment);
 
-		console.log("...........roleIri:", roleIri.toString())
-
 		return new OldapRole(creator, created, contributor, modified, roleIri,
 			roleId, definedByProject, label, comment);
 	}

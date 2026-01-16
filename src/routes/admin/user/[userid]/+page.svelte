@@ -28,7 +28,7 @@
 	import { OldapRole } from '$lib/oldap/classes/role';
 	import { languageTag } from '$lib/paraglide/runtime';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
-	import { dataPermissionAsString } from '$lib/oldap/enums/data_permissions';
+	import { DataPermission, dataPermissionAsString } from '$lib/oldap/enums/data_permissions';
 	import { OldapErrorInvalidValue } from '$lib/oldap/errors/OldapErrorInvalidValue';
 	import { successInfoStore } from '$lib/stores/successinfo';
 	import { difference, intersection } from '$lib/helpers/setops';
@@ -36,10 +36,11 @@
 	import { goto_page } from '$lib/helpers/goto_page';
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
 	import { getProjectsOfUser } from '$lib/helpers/get_projects_of_user';
+	import DropdownField from '$lib/components/basic_gui/inputs/DropdownField.svelte';
 
 	type ProjRef = {iri: string, sname: string};
 	type CheckedState = {[key: string]: Record<AdminPermission, boolean>};
-	type AdminPerm = 'ADMIN_OLDAP' | 'ADMIN_USERS' | 'ADMIN_PERMISSION_SETS' | 'ADMIN_RESOURCES' | 'ADMIN_MODEL' |'ADMIN_CREATE'
+	type AdminPerm = 'ADMIN_OLDAP' | 'ADMIN_USERS' | 'ADMIN_ROLES' | 'ADMIN_RESOURCES' | 'ADMIN_MODEL' |'ADMIN_CREATE'
 
 	let { data }: PageProps = $props();
 
@@ -71,13 +72,23 @@
 	let isActive = $state(false);
 	let inProject = $state<CheckedState>({});
 	let roles = $state<OldapRole[]>([]);
-	let user_permsets = $state<Record<string, boolean>>({});
+	let user_roles = $state<Record<string, boolean>>({});
 	let topwin = $state<HTMLElement>();
 
 	let confirmation_dialog: Confirmation;
 	let confirmation_title = $state('');
 	let confirmation_message = $state('');
 
+	//
+	// data type definitions for update user, hasRole
+	//
+	type DataPermissionString = keyof typeof DataPermission;
+	type HasRoleMap = Record<string, DataPermissionString | null>;
+	type HasRoleUpdate = {
+		add?: HasRoleMap;
+		del?: string[];
+	};
+	type HasRole = HasRoleMap | HasRoleUpdate | null;
 
 	const allPermissions = Object.keys(AdminPermission)
 		.map(key => AdminPermission[key as keyof typeof AdminPermission]);
@@ -89,6 +100,10 @@
 	authInfoStore.subscribe(data => {
 		authinfo = data;
 	});
+
+	const data_permission_list: string[] = ["None", ...Object.keys(DataPermission)] as const;
+	//let selected_data_permission = $state<string>(data_permission_list[0]);
+	let selected_dperm = $state<Record<string, string>>({});
 
 	function scrollToTop() {
 		if (topwin) {
@@ -108,33 +123,38 @@
 		else {
 			tmp = user_in_projects;
 		}
-		const promises2 = tmp.map(async (in_project) => { // get data permission set iris for all projects the user is in
-			const permset_config = api_get_config(authinfo as AuthInfo, {definedByProject: in_project.iri});
-			const jsondata = await apiClient.getAdminrolesearch(permset_config);
+		const promises2 = tmp.map(async (in_project) => { // get all role iris for all projects the user is in
+			const role_config = api_get_config(authinfo as AuthInfo, {definedByProject: in_project.iri});
+			const jsondata = await apiClient.getAdminrolesearch(role_config);
 			return jsondata;
 		});
-		let permset_iris: string[] = [];
+		let role_iris: string[] = [];
 		try {
 			const results2 = await Promise.all(promises2);
-			permset_iris = results2.flat();
+			role_iris = results2.flat();
 		}
 		catch (error) {
 			return Promise.reject(error);
 		}
-		const promises3 = permset_iris.map(async ps_iri => { // get the complete permission set data for all permission sets
+		const promises3 = role_iris.map(async ps_iri => { // get the complete role data for all roles
 			const dataperm_config = api_get_config(authinfo as AuthInfo, {iri: ps_iri});
 			return await apiClient.getAdminroleget(dataperm_config);
 		});
 		try {
 			const results3 = await Promise.all(promises3);
-
-			let gaga = user?.hasPermissions?.map(item => item.toString()) || [];
+			//
+			// get all roles (iri's) the user has assigned to him/her
+			//
+			let userHasRoles: string[] = [];
+			if (user?.hasRole) {
+				userHasRoles = Object.keys(user?.hasRole).map(iri => iri.toString()) || [];
+			}
 
 			roles = results3.map(jsonobj => {
 				let tmp = OldapRole.fromOldapJson(jsonobj);
 				tmp.projectShortName = all_projects[tmp.definedByProject.toString()]?.projectShortName.toString();
 				if (tmp?.roleIri) {
-					user_permsets[tmp.roleIriAsString] = gaga.includes(tmp.roleIriAsString);
+					user_roles[tmp.roleIriAsString] = userHasRoles.includes(tmp.roleIriAsString);
 				}
 				return tmp;
 			});
@@ -222,7 +242,13 @@
 	$effect(() => {
 		const _ = userId;
 		process_permissions().then((res) => {
-			console.log("====> user_permsets: ", $state.snapshot(user_permsets))
+			selected_dperm = Object.fromEntries(
+				roles.map(r => {
+					const iri = r.roleIri.toString();
+					const v = (user?.hasRole as any)?.[iri] as string | null | undefined; // e.g. "oldap:DATA_VIEW"
+					return [iri, user_roles[iri] ? (v ? v.split(':')[1] : 'None') : 'None'];
+				})
+			);
 		}).catch(error => {
 			errorInfoStore.set(process_api_error(error as Error));
 		});
@@ -311,6 +337,7 @@
 			});
 			in_project.push({project: iri, permissions: p});
 		});
+
 		let userdata: {
 			givenName: string,
 			familyName: string,
@@ -318,7 +345,7 @@
 			password: string,
 			isActive: boolean,
 			inProjects: {project: string, permissions: AdminPerm[]}[],
-			hasPermissions: string[]
+			hasRole: Record<string, string | null>
 		} = {
 			givenName: givenName,
 			familyName: familyName,
@@ -326,23 +353,21 @@
 			password: password1,
 			isActive: isActive,
 			inProjects: in_project,
-			hasPermissions: []
+			hasRole: {}
 		};
 
 		//
 		// build permission sets the user has assigned
 		//
-		Object.entries(user_permsets).forEach(([iri, checked]) => {
+		Object.entries(user_roles).forEach(([iri, checked]) => {
 			if (checked) {
-				userdata.hasPermissions.push(iri);
+				userdata.hasRole[iri] = selected_dperm[iri] === 'None' ? null : selected_dperm[iri];
 			}
 		});
 		const user_put = api_notget_config(authinfo as AuthInfo, {userId: userId});
 		apiClient.putAdminuserUserId(userdata, user_put).then((res) => {
 			successInfoStore.set(`User "${res.userId}" added successfully!`);
 		}).catch((error) => {
-			console.log(userdata);
-			console.log(error);
 			errorInfoStore.set(process_api_error(error as Error));
 		});
 	}
@@ -361,7 +386,7 @@
 			password?: string,
 			isActive?: boolean,
 			inProjects?: {project: string, permissions: AdminPerm[] | null | Record<'add'|'del', AdminPerm[]> }[],
-			hasPermissions?: string[] | Record<'add'|'del', string[]>
+			hasRole?: HasRole
 		} = {};
 		if (userId !== user?.userId.toString()) {
 			userdata.userId = userId;
@@ -451,31 +476,50 @@
 		}
 
 		//
-		// process permission sets
+		// process roles
 		//
-		const u_permsets = new Set<string>(user?.hasPermissions?.map(x => x.toString()));
-		const n_permsets = new Set<string>([]);
-		Object.entries(user_permsets).forEach(([perm, is_set]) => {
-			if (is_set) n_permsets.add(perm);
+		const u_roles = new Set<string>([]);
+		const u_roles_with_dperm: Record<string, string | null> = {}
+		Object.entries(user?.hasRole ?? {}).forEach(([role, dperm]) => {
+			u_roles_with_dperm[role] = dperm;
+			u_roles.add(role);
 		});
-		if (n_permsets.size == 0) { // all permission sets have been removed!!
-			userdata.hasPermissions = [];
-		}
-		else if (u_permsets.size == 0) { // User had nore permission sets before
-			userdata.hasPermissions = Array.from(n_permsets);
-		}
-		else {
-			const add_permsets = difference(n_permsets, u_permsets);
-			const del_permsets = difference(u_permsets, n_permsets);
-			let tmp: Record<'add'|'del', string[]> = {} as Record<'add'|'del', string[]>;
-			if (add_permsets.size > 0) {
-				tmp.add = Array.from(add_permsets);
+
+		const n_roles = new Set<string>([]);
+		const n_roles_with_dperm: Record<string, string | null> = {}
+		Object.entries(user_roles).forEach(([role, is_set]) => {
+			if (is_set) {
+				n_roles.add(role);
+				n_roles_with_dperm[role] = selected_dperm[role] === 'None' ? null : selected_dperm[role];
 			}
-			if (del_permsets.size > 0) {
-				tmp.del = Array.from(del_permsets);
+		});
+		if (n_roles.size == 0) { // all assigned roles have been removed!!
+			userdata.hasRole = null;
+		}
+		else if (u_roles.size == 0) { // User had no roles assigned  before
+			userdata.hasRole = n_roles_with_dperm;
+		}
+		else { // we have roles added and/or roles removed and/or roles changed
+			const add_roles = difference(n_roles, u_roles);
+			const del_roles = difference(u_roles, n_roles);
+			const tmpset = intersection(u_roles, n_roles);
+			const tmpmod = Array.from(tmpset).filter(x => u_roles_with_dperm[x] !== n_roles_with_dperm[x]);
+			const mod_roles = new Set<string>(tmpmod);
+			let tmp: HasRole = {}
+			if ((add_roles.size > 0) || (mod_roles.size > 0)) {
+				tmp['add'] = {}
+				for (const role of add_roles) {
+					tmp['add'][role] = n_roles_with_dperm[role] as DataPermissionString;
+				}
+				for (const role of mod_roles) {
+					tmp['add'][role] = n_roles_with_dperm[role] as DataPermissionString;
+				}
 			}
-			if (tmp && Object.keys(tmp).length > 0) {
-				userdata.hasPermissions = tmp;
+			if (del_roles.size > 0) {
+				tmp['del'] = Array.from(del_roles)
+			}
+			if ((tmp?.add && Object.keys(tmp.add).length > 0) || (tmp?.del && Object.keys(tmp.del).length > 0)) {
+				userdata.hasRole = tmp;
 			}
 		}
 
@@ -547,8 +591,8 @@
 						</svg>
 					</Tooltip>
 				</TableColumnTitle>
-				<TableColumnTitle> <!-- ADMIN_PERMISSION_SETS -->
-					<Tooltip text={m.adminpermsets()}>
+				<TableColumnTitle> <!-- ADMIN_ROLES -->
+					<Tooltip text={m.adminroles()}>
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
 								 stroke="currentColor" class="size-4">
 							<path stroke-linecap="round" stroke-linejoin="round"
@@ -603,7 +647,7 @@
 						<TableItem>{p_ref.sname}</TableItem>
 						<TableItem><input type="checkbox" bind:checked={inProject[p_ref.iri][AdminPermission.ADMIN_OLDAP]}></TableItem>
 						<TableItem><input type="checkbox" bind:checked={inProject[p_ref.iri][AdminPermission.ADMIN_USERS]}></TableItem>
-						<TableItem><input type="checkbox" bind:checked={inProject[p_ref.iri][AdminPermission.ADMIN_PERMISSION_SETS]}></TableItem>
+						<TableItem><input type="checkbox" bind:checked={inProject[p_ref.iri][AdminPermission.ADMIN_ROLES]}></TableItem>
 						<TableItem><input type="checkbox" bind:checked={inProject[p_ref.iri][AdminPermission.ADMIN_RESOURCES]}></TableItem>
 						<TableItem><input type="checkbox" bind:checked={inProject[p_ref.iri][AdminPermission.ADMIN_MODEL]}></TableItem>
 						<TableItem><input type="checkbox" bind:checked={inProject[p_ref.iri][AdminPermission.ADMIN_CREATE]}></TableItem>
@@ -622,11 +666,38 @@
 			</TableBody>
 		</Table>
 
-		<div class="text-sm ">Data Permissions</div>
-		{#each roles as pset}
-			{@const txt = `${pset?.label ? pset?.label.get(langobj) : ''} (${dataPermissionAsString(pset?.givesPermission)} ${m.fromproj()} "${pset?.projectShortName}")`}
-			<Checkbox label={txt} position="right" bind:checked={user_permsets[pset?.roleIri.toString()]}></Checkbox>
+
+		<!--
+		<div class="text-sm pt-py-10">Roles and default data permissions</div>
+		{#each roles as role}
+			{@const txt = `${role?.label ? role?.label.get(langobj) : ''} (${dataPermissionAsString(role?.givesPermission)} ${m.fromproj()} "${role?.projectShortName}")`}
+			<Checkbox label={txt} position="right" bind:checked={user_roles[role?.roleIri.toString()]}></Checkbox>
 		{/each}
+		-->
+		<Table label="User Roles and data permissions" description="List of roles assigned to the user and their default data permissions" padding={false} >
+			<TableHeader>
+				<TableColumnTitle>Role</TableColumnTitle>
+				<TableColumnTitle>Data Permissions</TableColumnTitle>
+			</TableHeader>
+			<TableBody>
+				{#each roles as role}
+					{@const txt = `${role?.label ? role?.label.get(langobj) : ''} (${m.fromproj()} "${role?.projectShortName}")`}
+					<TableRow>
+						<TableItem>
+							<Checkbox label={txt} position="right" bind:checked={user_roles[role?.roleIri.toString()]}></Checkbox>
+						</TableItem>
+						<TableItem>
+							<!-- {user_roles[role?.roleIri.toString()] ? user?.hasRole[role?.roleIri] : '-'} -->
+							<select bind:value={selected_dperm[role.roleIri.toString()]}>
+								{#each data_permission_list as perm}
+									<option value={perm}>{perm}</option>
+								{/each}
+							</select>
+						</TableItem>
+					</TableRow>
+				{/each}
+			</TableBody>
+		</Table>
 
 
 		<div class="flex justify-center gap-4 mt-6">
@@ -643,5 +714,4 @@
 <Confirmation bind:this={confirmation_dialog} title={confirmation_title}>
 	{confirmation_message}
 </Confirmation>
-
 

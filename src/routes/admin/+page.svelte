@@ -83,7 +83,7 @@
 					case AdminPermission.ADMIN_MODEL:
 						tabs['models'] = m.datamodel();
 						break;
-					case AdminPermission.ADMIN_PERMISSION_SETS:
+					case AdminPermission.ADMIN_ROLES:
 						tabs['roles'] = m.roles();
 						break;
 				}

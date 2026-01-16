@@ -8,7 +8,8 @@ export enum DataPermission {
 	DATA_PERMISSIONS = 'oldap:DATA_PERMISSIONS' // Allow to modify permissions of resource
 }
 
-export function stringToDataPermission(value: string): DataPermission | undefined {
+export function stringToDataPermission(value: string | null): DataPermission | undefined {
+	if (value === null) return undefined;
 	if (!value.startsWith('oldap:')) value = `oldap:${value}`;
 	return Object.entries(DataPermission).find(([_, v]) => v === value)?.[1] as DataPermission | undefined;
 }

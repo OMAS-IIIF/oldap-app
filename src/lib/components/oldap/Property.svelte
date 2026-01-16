@@ -14,7 +14,7 @@ in relation with a resource class.
 	import { OldapUser } from '$lib/oldap/classes/user';
 	import { authInfoStore } from '$lib/stores/authinfo';
 	import { userStore } from '$lib/stores/user';
-	import { onMount, tick } from 'svelte';
+	import { onMount, tick, untrack } from 'svelte';
 	import { OwlPropertyType, PropertyClass } from '$lib/oldap/classes/property';
 	import Textfield from '$lib/components/basic_gui/inputs/Textfield.svelte';
 	import { datamodelStore } from '$lib/stores/datamodel';
@@ -320,59 +320,65 @@ in relation with a resource class.
 		// if we select the property to be a sub-property, it must have the same data type as the ancestor property!
 		//
 		if (subPropertyOf === 'NONE') {
-			if (propiri === 'new') {
-				datatype = 'xsd:string';
-				toClass = undefined;
-			} else {
-				subPropertyOf = prop?.subPropertyOf?.toString() || 'NONE'
-				datatype = prop?.datatype;
-				toClass = prop?.toClass?.toString();
-				name = prop?.name || null;
-				description = prop?.description || null;
-				pattern = prop?.pattern?.toString() || '';
-				min_length = prop?.minLength?.toString();
-				max_length = prop?.maxLength?.toString();
-				if (prop?.minExclusive) {
-					min_value = prop?.minExclusive?.toString() || '0';
-					min_inclusive = false;
-				} else if (prop?.minInclusive) {
-					min_value = prop?.minInclusive?.toString() || '0';
-					min_inclusive = true;
+			untrack(() => {
+				if (propiri === 'new') {
+					datatype = 'xsd:string';
+					toClass = undefined;
+				} else {
+					subPropertyOf = prop?.subPropertyOf?.toString() || 'NONE'
+					datatype = prop?.datatype;
+					toClass = prop?.toClass?.toString();
+					name = prop?.name || null;
+					description = prop?.description || null;
+					pattern = prop?.pattern?.toString() || '';
+					min_length = prop?.minLength?.toString();
+					max_length = prop?.maxLength?.toString();
+					if (prop?.minExclusive) {
+						min_value = prop?.minExclusive?.toString() || '0';
+						min_inclusive = false;
+					} else if (prop?.minInclusive) {
+						min_value = prop?.minInclusive?.toString() || '0';
+						min_inclusive = true;
+					}
+					if (prop?.maxExclusive) {
+						max_value = prop?.maxExclusive?.toString() || '0';
+						max_inclusive = false;
+					} else if (prop?.minInclusive) {
+						max_value = prop?.maxInclusive?.toString() || '0';
+						max_inclusive = true;
+					}
+					if (prop?.languageIn) {
+						allowedLanguages = Array.from(prop.languageIn).map(l => l.toString());
+					}
+					if (prop?.inSet) {
+						allowedStrings = new Set(Array.from(prop.inSet, x => x.toString()));
+					}
+					minCount = hasprop?.minCount?.toString();
+					maxCount = hasprop?.maxCount?.toString();
+					order = hasprop?.order?.toString();
 				}
-				if (prop?.maxExclusive) {
-					max_value = prop?.maxExclusive?.toString() || '0';
-					max_inclusive = false;
-				} else if (prop?.minInclusive) {
-					max_value = prop?.maxInclusive?.toString() || '0';
-					max_inclusive = true;
-				}
-				if (prop?.languageIn) {
-					allowedLanguages = Array.from(prop.languageIn).map(l => l.toString());
-				}
-				if (prop?.inSet) {
-					allowedStrings = new Set(Array.from(prop.inSet, x => x.toString()));
-				}
-				minCount = hasprop?.minCount?.toString();
-				maxCount = hasprop?.maxCount?.toString();
-				order = hasprop?.order?.toString();
-			}
+			});
 		} else {
 			const ancestorprop = datamodel?.standaloneProperties.find(p => p.propertyIri.toString() === subPropertyOf);
-			datatype = ancestorprop?.datatype;
-			toClass = ancestorprop?.toClass?.toString();
+			untrack(() => {
+				datatype = ancestorprop?.datatype;
+				toClass = ancestorprop?.toClass?.toString();
+			});
 		}
-		if (datatype !== undefined) {
-			proptype = PropType.LITERAL;
-		} else if (toClass !== undefined) {
-			//
-			// distinguish between link to other resource or link to a list
-			//
-			if (all_res_list.includes(toClass)) {
-				proptype = PropType.LINK;
-			} else if (all_lists_list.includes(toClass)) {
-				proptype = PropType.LIST;
+		untrack(() => {
+			if (datatype !== undefined) {
+				proptype = PropType.LITERAL;
+			} else if (toClass !== undefined) {
+				//
+				// distinguish between link to other resource or link to a list
+				//
+				if (all_res_list.includes(toClass)) {
+					proptype = PropType.LINK;
+				} else if (all_lists_list.includes(toClass)) {
+					proptype = PropType.LIST;
+				}
 			}
-		}
+		});
 
 	});
 

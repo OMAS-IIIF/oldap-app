@@ -12,7 +12,7 @@
 	import DropdownMenu from '$lib/components/basic_gui/dropdown/DropdownMenu.svelte';
 	import DropdownButton from '$lib/components/basic_gui/dropdown/DropdownButton.svelte';
 	import DropdownLinkItem from '$lib/components/basic_gui/dropdown/DropdownLinkItem.svelte';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { XsdDatatypes } from '$lib/oldap/enums/xsd_datatypes';
 	import { PropType, propTypeFromString } from '$lib/oldap/enums/proptypes';
 	import { api_get_config } from '$lib/helpers/api_config';
@@ -84,6 +84,8 @@
 
 	let hlists = $state<Record<string, OldapList>>({});
 
+	let gaga = $state('');
+
 	onMount(() => {
 		console.log("LANGUAGEOBJECT: " + langobj);
 		datatypeOptions = Object.values(XsdDatatypes);
@@ -136,13 +138,25 @@
 
 	$effect(() => {
 		if (proptype === PropType.LITERAL) {
-			datatype = datatypeOptions[0];
+			untrack(() => {
+				if (datatype === undefined) {
+					datatype = datatypeOptions[0];
+				}
+			});
 		}
 		else if (proptype === PropType.LINK) {
-			toClass = all_res_list[0];
+			untrack(() => {
+				if (toClass === undefined) {
+					toClass = all_res_list[0];
+				}
+			});
 		}
 		else if (proptype === PropType.LIST) {
-			toClass = all_lists_list[0];
+			untrack(() => {
+				if (toClass === undefined) {
+					toClass = all_lists_list[0];
+				}
+			});
 		}
 	});
 
@@ -167,6 +181,7 @@
 			<DropdownMenu bind:isOpen={datatype_is_open} position="left" name="datatype">
 				{#each datatypeOptions as dtype}
 					<DropdownLinkItem bind:isOpen={datatype_is_open}
+														value={dtype}
 														onclick={() => {datatype = dtype}}
 														selected={dtype === datatype}>
 						{dtype}
