@@ -152,6 +152,7 @@
 			prefix = $projectStore?.projectShortName.toString() || '';
 			fragment = '';
 		}
+		console.log($datamodelSharedStore?.standaloneProperties)
 	});
 
 	const propinfo_as_html = (prop: HasProperty) => {
@@ -276,8 +277,26 @@
 		propEditIsOpen = true;
 	}
 
-	const remove_property = () => {
+	const remove_property = async (iri: string) => {
+		if (authinfo) {
+			confirmation_title = "DELETE PROPERTY";
+			confirmation_message = 'Delete property ' + iri + '?';
+			const ok = await confirmation_dialog.open();
+			if (!ok) return;
 
+			const resourceIri = prefix + ':' + fragment;
+			const resource_delete = api_notget_config(authinfo, {
+				project: projectid,
+				resource: resourceIri,
+				property: iri
+			});
+			apiClient.deleteAdmindatamodelProjectResourceProperty(undefined, resource_delete).then(() => {
+				refreshResourcesListNow();
+				successInfoStore.set(m.mod_res_success({resiri: resourceIri}));
+			}).catch((error) => {
+				errorInfoStore.set(process_api_error(error as Error));
+			});
+		}
 	}
 
 </script>
@@ -352,7 +371,7 @@ and the actual property id (which is a xs:NCName
 									<Pencil size="16" strokeWidth="1" />
 								</Button>
 
-								<Button round={true} onclick={() => remove_property()}>
+								<Button round={true} onclick={() => remove_property(prop.property.propertyIri.toString())}>
 									<Trash2 size="16" strokeWidth="1" />
 								</Button>
 
@@ -363,7 +382,6 @@ and the actual property id (which is a xs:NCName
 				</TableBody>
 			</Table>
 		{/if}
-
 		<div class="flex justify-center gap-4 mt-6">
 			<Button class="mx-4 my-2" onclick={goto_page('/admin')}>{m.cancel()}</Button>
 			{#if data?.resiri === 'new'}

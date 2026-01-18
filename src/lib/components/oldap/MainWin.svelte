@@ -20,17 +20,54 @@ import { spinnerStore } from '$lib/stores/spinner';
 import { languageTag } from '$lib/paraglide/runtime';
 import { goto_page } from '$lib/helpers/goto_page';
 import { page } from '$app/state';
+import { createWindow } from '$lib/stores/windows.svelte';
+import ImageUpload from '$lib/components/basic_gui/upload/ImageUpload.svelte';
+import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
+import Button from '$lib/components/basic_gui/buttons/Button.svelte';
+import { Upload } from '@lucide/svelte';
+import { OldapProject } from '$lib/oldap/classes/project';
+import { projectStore } from '$lib/stores/project';
+import { AdminPermission } from '$lib/oldap/enums/admin_permissions';
+
 
 let { children } = $props();
 
 //let user: OldapUser | null = $state(null);
-let user: OldapUser | null = $state($userStore);
+let project = $state<OldapProject | null>(null);
+let user = $state<OldapUser | null>(null);
+let create_resource = $state(false);
 
 userStore.subscribe(stored_user => {
 	user = stored_user;
 });
 
+projectStore.subscribe(stored_project => {
+	project = stored_project;
+});
+
+$effect(() => {
+	if (project) {
+		console.log('project changed', project);
+	}
+	if (user) {
+		console.log('user changed', user);
+	}
+	create_resource = user && project &&
+		(project.projectShortName.toString() !== 'oldap') &&
+		(project.projectShortName.toString() !== 'shared') &&
+		user?.inProject?.some(p => p.project.toString() === project?.projectIri.toString() && p.permissions.includes(AdminPermission.ADMIN_CREATE)) || false;
+});
+
+
+function create_my_window() {
+	createWindow('Hello', imageUpload, { x: 120, y: 120, width: 400, height: 600 });
+}
+
 </script>
+
+{#snippet imageUpload()}
+	<ImageUpload></ImageUpload>
+{/snippet}
 
 
 <div class="oldap-body">
@@ -41,6 +78,13 @@ userStore.subscribe(stored_user => {
 			<button onclick={goto_page("/about")} class="hover:underline cursor-pointer">{m.about()}</button>
 			{#if user && user.userId.toString() !== 'unknown'}
 				<button onclick={goto_page("/admin")} class="hover:underline cursor-pointer">{m.admin()}</button>
+			{/if}
+			{#if create_resource }
+				<Tooltip text="UPLOAD MEDIA FILE">
+					<Button round={true} onclick={create_my_window}>
+						<Upload size="16" strokeWidth="1" />
+					</Button>
+				</Tooltip>
 			{/if}
 		</LeftHeader>
 

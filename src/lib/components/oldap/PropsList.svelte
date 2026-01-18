@@ -24,6 +24,8 @@
 	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
 	import { datamodelStore } from '$lib/stores/datamodel';
 	import { refreshPropertiesList, refreshPropertiesListNow } from '$lib/stores/refresh_propertieslist.svelte';
+	import { refreshProjectsList } from '$lib/stores/refresh_projectslist.svelte';
+
 	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
 	import { datamodelSharedStore } from '$lib/stores/datamodel_shared';
 
@@ -51,7 +53,8 @@
 	});
 
 	$effect(() => {
-		const _ = $refreshPropertiesList;
+		const _a = $refreshPropertiesList;
+		const _b = $refreshProjectsList;
 		let tmp_list = [];
 		let tmp_properties: Record<string, PropertyClass> = {};
 		for (const property of (datamodel?.standaloneProperties || [])) {
@@ -59,6 +62,7 @@
 			tmp_list.push(property.propertyIri.toString() || '');
 		}
 		if ((datamodel?.projectid.toString() !== 'shared') && (datamodel?.projectid.toString() !== 'oldap')) {
+			console.log("--------------------------------> shared prop", $datamodelSharedStore?.standaloneProperties)
 			for (const property of ($datamodelSharedStore?.standaloneProperties || [])) {
 				tmp_properties[property.propertyIri.toString()] = property;
 				tmp_list.push(property.propertyIri.toString() || '');

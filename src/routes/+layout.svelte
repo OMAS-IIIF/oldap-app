@@ -17,6 +17,7 @@
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { datamodelOldapStore } from '$lib/stores/datamodel_oldap';
 	import { datamodelSharedStore } from '$lib/stores/datamodel_shared';
+	import { refreshProjectsList } from '$lib/stores/refresh_projectslist.svelte';
 	import type { PageData } from './$types';
 
 	let {
@@ -36,12 +37,13 @@
 	});
 
 	authInfoStore.subscribe((authinfo: AuthInfo | null) => {
-		if (authinfo) {
+		if (authinfo && authinfo.userid !== 'unknown') {
 			const dmlist = ['oldap', 'shared']
 			const promises = dmlist.map(dm => {
 				const dm_config = api_config(authinfo, { project: dm });
 				return apiClient.getAdmindatamodelProject(dm_config)
 			});
+
 			Promise.all(promises).then((results) => {
 				results.forEach((dmdata) => {
 					const dm = DatamodelClass.fromOldapJson(dmdata);

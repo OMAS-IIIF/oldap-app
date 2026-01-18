@@ -218,7 +218,8 @@ in relation with a resource class.
 
 		// first we check if are trying to modify a standalone property from within a resource. That not allowed!
 		if (resiri && propiri !== 'new') {
-			const tmp = datamodel?.standaloneProperties.find(p => p.propertyIri.toString() === propiri);
+			const tmp = datamodel?.standaloneProperties.find(p => p.propertyIri.toString() === propiri) ||
+				$datamodelSharedStore?.standaloneProperties.find(p => p.propertyIri.toString() === propiri);
 			if (tmp !== undefined) {
 				add_standalone_prop = true;
 			}
