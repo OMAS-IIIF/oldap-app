@@ -2499,6 +2499,47 @@ The user must be authenticated with a Bearer token.
 		]
 	},
 	{
+		method: "get",
+		path: "/data/:project/:instiri",
+		alias: "getDataProjectInstiri",
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "project",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "instiri",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.object({}).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
+			},
+			{
+				status: 403,
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
+			},
+			{
+				status: 404,
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
+			},
+			{
+				status: 500,
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
+			},
+		]
+	},
+	{
 		method: "put",
 		path: "/data/:project/:resclass",
 		alias: "putDataProjectResclass",
@@ -2618,47 +2659,6 @@ The user must be authenticated with a Bearer token.
 			},
 		],
 		response: z.object({ message: z.string() }).partial().passthrough(),
-		errors: [
-			{
-				status: 400,
-				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
-				schema: Error
-			},
-			{
-				status: 403,
-				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
-				schema: Error
-			},
-			{
-				status: 404,
-				description: `Error 404: Not Found - Requested resource does not exist`,
-				schema: Error
-			},
-			{
-				status: 500,
-				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
-				schema: Error
-			},
-		]
-	},
-	{
-		method: "get",
-		path: "/data/:project/get/:instance",
-		alias: "getDataProjectgetInstance",
-		requestFormat: "json",
-		parameters: [
-			{
-				name: "project",
-				type: "Path",
-				schema: z.string()
-			},
-			{
-				name: "instance",
-				type: "Path",
-				schema: z.string()
-			},
-		],
-		response: z.object({}).partial().passthrough(),
 		errors: [
 			{
 				status: 400,

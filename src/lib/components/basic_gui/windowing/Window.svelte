@@ -178,9 +178,19 @@
 		resizeCorner = null;
 	}
 
-	function onActivateSelf() {
-		bringToFront();
-		rootEl?.focus?.();
+	function onActivateSelf(e: PointerEvent) {
+		console.log("+++++++>", e)
+		// If activation triggers a reactive update, doing it synchronously on pointerdown can
+		// interfere with inner control clicks. Defer activation to the next microtask.
+		const targetEl = e.target as HTMLElement | null;
+
+		queueMicrotask(() => {
+			bringToFront();
+			// Only steal focus if the click wasn't on an interactive element.
+			if (!targetEl?.closest('button, a, input, select, textarea, [role="button"]')) {
+				rootEl?.focus?.();
+			}
+		});
 	}
 
 	function onCloseSelf() {
@@ -207,7 +217,7 @@
 	class:shadow-2xl={active}
 	class:border-[color:var(--window-border-active,#7aa7ff)]={active}
 	bind:this={rootEl}
-	onpointerdown={onActivateSelf}
+	onpointerdown={(e) => onActivateSelf(e)}
 	style="left: {posX}px; top: {posY}px; width: {w}px; height: {h}px; z-index: {z};"
 	role="dialog"
 	tabindex="0"
@@ -228,7 +238,6 @@
 			>×</button>
 		{/if}
 	</div>
-
 	<div class="w-full h-[calc(100%-36px)] overflow-auto">
 		{@render children?.()}
 	</div>
@@ -240,4 +249,5 @@
 		<div class="absolute w-3.5 h-3.5 bg-transparent -left-0.5 -bottom-0.5 cursor-[nesw-resize]" onpointerdown={(e) => onResizePointerDown('sw', e)} />
 		<div class="absolute w-3.5 h-3.5 bg-transparent -right-0.5 -bottom-0.5 cursor-[nwse-resize]" onpointerdown={(e) => onResizePointerDown('se', e)} />
 	{/if}
+
 </div>

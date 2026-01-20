@@ -24,10 +24,11 @@ import { createWindow } from '$lib/stores/windows.svelte';
 import ImageUpload from '$lib/components/basic_gui/upload/ImageUpload.svelte';
 import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
 import Button from '$lib/components/basic_gui/buttons/Button.svelte';
-import { Upload } from '@lucide/svelte';
+import { Upload, Plus } from '@lucide/svelte';
 import { OldapProject } from '$lib/oldap/classes/project';
 import { projectStore } from '$lib/stores/project';
 import { AdminPermission } from '$lib/oldap/enums/admin_permissions';
+import InstanceEditor from '$lib/components/oldap/InstanceEditor.svelte';
 
 
 let { children } = $props();
@@ -60,13 +61,21 @@ $effect(() => {
 
 
 function create_my_window() {
-	createWindow('Hello', imageUpload, { x: 120, y: 120, width: 400, height: 600 });
+	createWindow('Image upload', imageUpload, { x: 120, y: 120, width: 400, height: 600 });
+}
+
+function create_instance_window() {
+	createWindow('Create Instance', createInstance, { x: 120, y: 120, width: 400, height: 600 });
 }
 
 </script>
 
 {#snippet imageUpload()}
 	<ImageUpload></ImageUpload>
+{/snippet}
+
+{#snippet createInstance()}
+	<InstanceEditor></InstanceEditor>
 {/snippet}
 
 
@@ -85,6 +94,9 @@ function create_my_window() {
 						<Upload size="16" strokeWidth="1" />
 					</Button>
 				</Tooltip>
+				<Button round={true} onclick={create_instance_window}>
+					<Plus size="16" strokeWidth="1" />
+				</Button>
 			{/if}
 		</LeftHeader>
 

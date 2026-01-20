@@ -24,6 +24,7 @@
 	import { goto_page } from '$lib/helpers/goto_page';
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
 	import { refreshProjectsListNow } from '$lib/stores/refresh_projectslist.svelte';
+	import NativeDatePicker from '$lib/components/basic_gui/inputs/NativeDatePicker.svelte';
 
 
 	let { data }: PageProps = $props();
@@ -194,8 +195,8 @@
 							 bind:value={namespaceIri} pattern={namespace_pattern} disabled={data?.sname !== 'new'} />
 		<LangstringField bind:this={label_field} label={m.label()} name="label" id="label" placeholder="label" value={label} />
 		<LangstringField bind:this={comment_field} label={m.comment()} name="comment" id="comment" placeholder="comment" value={comment} />
-		<DatePicker bind:this={projectStart_field} label="Project start" name="project_start" id="project_start" value={projectStart} />
-		<DatePicker bind:this={projectEnd_field} label="Project start" name="project_start" id="project_start" value={projectEnd} />
+		<NativeDatePicker bind:this={projectStart_field} label="Project start" name="project_start" id="project_start" value={projectStart} />
+		<NativeDatePicker bind:this={projectEnd_field} label="Project start" name="project_start" id="project_start" value={projectEnd} />
 
 		<div class="flex justify-center gap-4 mt-6">
 			<Button class="mx-4 my-2" onclick={goto_page('/admin')}>{m.cancel()}</Button>

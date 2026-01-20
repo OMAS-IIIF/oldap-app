@@ -61,7 +61,6 @@
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const _2 = $projectStore;
 		// get the list of all resource classes that can be the target of a link
-		console.log($state.snapshot(datamodel))
 		const tmp_res = datamodel?.resources.filter(x => {
 			const gaga = x?.superclass ? [...x.superclass].map(s => s.toString()) : [];
 			return !gaga.includes('oldap:OldapListNode');

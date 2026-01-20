@@ -13,6 +13,7 @@
 </script>
 
 <button type="button"
+				onpointerdown={(e) => e.stopPropagation()}
 				onclick={onclick || undefined}
 				{id}
 				{disabled}
