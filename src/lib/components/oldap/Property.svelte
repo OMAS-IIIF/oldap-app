@@ -29,7 +29,7 @@ in relation with a resource class.
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
 	import LangstringField from '$lib/components/basic_gui/inputs/LangstringField.svelte';
 	import { LangString } from '$lib/oldap/datatypes/langstring';
-	import { getLanguageShortname } from '$lib/oldap/enums/language';
+	import { convertToLanguage, getLanguageShortname, Language } from '$lib/oldap/enums/language';
 	import { PropType } from '$lib/oldap/enums/proptypes';
 	import DropdownButton from '$lib/components/basic_gui/dropdown/DropdownButton.svelte';
 	import DropdownMenu from '$lib/components/basic_gui/dropdown/DropdownMenu.svelte';
@@ -49,6 +49,8 @@ in relation with a resource class.
 	import { spinnerStore } from '$lib/stores/spinner';
 	import LangtextareaField from '$lib/components/basic_gui/inputs/LangtextareaField.svelte';
 	import { datamodelSharedStore } from '$lib/stores/datamodel_shared';
+	import LangstringfieldNew from '$lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
+	import { availableLanguageTags } from '$lib/paraglide/runtime';
 
 	interface PropertyData {
 		subPropertyOf?: string,
@@ -133,10 +135,11 @@ in relation with a resource class.
 	let proptype = $state<PropType>(PropType.LITERAL);
 	let datatype = $state<string|undefined>();
 	let toClass = $state<string|undefined>();
-	let name_field = $state<LangstringField>();
-	let name = $state<LangString | null>(null);
-	let description_field = $state<LangstringField>();
-	let description = $state<LangString | null>(null);
+	let name = $state<LangString>(new LangString());
+	let orig_name: LangString = new LangString();
+	//let description_field = $state<LangstringField>();
+	let description = $state<LangString>(LangString);
+	let orig_description: LangString = new LangString();
 
 	let all_prop_list = $state<string[]>([]);
 	let all_res_list = $state<string[]>([]);
@@ -173,6 +176,8 @@ in relation with a resource class.
 	let confirmation_dialog: Confirmation;
 	let confirmation_title = $state('');
 	let confirmation_message = $state('');
+
+	const languages = Array.from(availableLanguageTags).map(lang => convertToLanguage(lang) || Language.DE);
 
 	authInfoStore.subscribe(data => {
 		authinfo = data;
@@ -329,8 +334,10 @@ in relation with a resource class.
 					subPropertyOf = prop?.subPropertyOf?.toString() || 'NONE'
 					datatype = prop?.datatype;
 					toClass = prop?.toClass?.toString();
-					name = prop?.name || null;
-					description = prop?.description || null;
+					name = prop?.name || new LangString();
+					orig_name = name.clone()
+					description = prop?.description || new LangString();
+					orig_description = description.clone();
 					pattern = prop?.pattern?.toString() || '';
 					min_length = prop?.minLength?.toString();
 					max_length = prop?.maxLength?.toString();
@@ -389,8 +396,8 @@ in relation with a resource class.
 		const ok = await confirmation_dialog.open();
 		if (!ok) return;
 
-		const name = name_field?.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
-		const description = description_field?.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
+		const propname = name.map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
+		const propdescription = description.map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
 
 		//const inSet = allowedStrings.size > 0 ? Array.from(allowedStrings.values()) : allowedNumbers.size > 0 ? Array.from(allowedNumbers.values()) : [];
 
@@ -440,8 +447,8 @@ in relation with a resource class.
 			const orderNum = Number(order);
 			propertydata.order = !isNaN(orderNum) ? orderNum : undefined;
 		}
-		propertydata.name = name?.length && (name?.length > 0) ? name : undefined;
-		propertydata.description = description?.length && (description?.length > 0) ? description : undefined;
+		propertydata.name = propname.length && (propname?.length > 0) ? propname : undefined;
+		propertydata.description = propdescription.length && (propdescription?.length > 0) ? propdescription : undefined;
 		if (proptype === PropType.LITERAL) {
 			propertydata.datatype = datatype;
 			if (string_datatypes.includes(datatype || '')) {
@@ -527,13 +534,11 @@ in relation with a resource class.
 		if (subPropertyOf !== prop?.subPropertyOf?.toString() && subPropertyOf !== 'NONE') {
 			propertydata.subPropertyOf = subPropertyOf
 		}
-		const new_name = name_field?.get_value();
-		const tmp_modname = new_name?.modify_data(prop?.name || null);
+		const tmp_modname = name.modify_data(orig_name || null);
 		if (tmp_modname !== undefined) {
 			propertydata.name = tmp_modname;
 		}
-		const new_description = description_field?.get_value();
-		const tmp_moddescription = new_description?.modify_data(prop?.description || null);
+		const tmp_moddescription = description?.modify_data(orig_description || null);
 		if (tmp_moddescription !== undefined) {
 			propertydata.description = tmp_moddescription;
 		}
@@ -708,8 +713,23 @@ and the actual property id (which is a xs:NCName
 				{all_res_list}
 				{all_lists_list}
 				disabled={subPropertyOf !== 'NONE'} />
-			<LangstringField bind:this={name_field} label={m.name()} name="name" id="name" placeholder="name" value={name} />
-			<LangtextareaField bind:this={description_field} label={m.description()} name="description" id="description" placeholder="description" value={description} />
+			<LangstringfieldNew
+				label={m.name()}
+				name="name"
+				id="name"
+				languages={languages}
+				placeholder="name"
+				bind:value={name}
+			/>
+			<LangstringfieldNew
+				label={m.description()}
+				name="description"
+				id="description"
+				languages={languages}
+				placeholder="description"
+				input_type="textarea"
+				bind:value={description}
+			/>
 			{#if proptype === PropType.LITERAL}
 				<LabeledDivider>{m.restrictions()}:</LabeledDivider>
 				{#if string_datatypes.includes(datatype || '')}

@@ -24,5 +24,5 @@ export type WindowData = {
 	icon?: string;
 	minWidth?: number;
 	minHeight?: number;
-
+	closer?: () => void;
 }

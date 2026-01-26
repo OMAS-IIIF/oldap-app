@@ -1,3 +1,4 @@
+
 <script lang="ts">
 
 import LeftHeader from '$lib/components/basic_gui/header/LeftHeader.svelte';
@@ -29,8 +30,9 @@ import { OldapProject } from '$lib/oldap/classes/project';
 import { projectStore } from '$lib/stores/project';
 import { AdminPermission } from '$lib/oldap/enums/admin_permissions';
 import InstanceEditor from '$lib/components/oldap/InstanceEditor.svelte';
+import type { Snippet } from 'svelte';
 
-
+//type Closer = () => void;
 let { children } = $props();
 
 //let user: OldapUser | null = $state(null);

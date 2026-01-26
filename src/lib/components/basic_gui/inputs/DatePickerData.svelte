@@ -11,10 +11,11 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
 	import NativeDatePicker from './NativeDatePicker.svelte';
+	import { XsdDate } from '$lib/oldap/datatypes/xsd_date';
 
 	// Type of the NativeDatePicker component instance (so we can call get_value())
 	type NativeDatePickerInstance = {
-		get_value: () => string | null;
+		get_value: () => XsdDate | null;
 	};
 
 	let {
@@ -30,9 +31,6 @@
 		/** Optional initial values (prefill). Each entry may be XsdDate or null. */
 		values = [],
 
-		/** Required forwarded to DatePicker (if true, DatePicker won't show the checkbox) */
-		required = undefined,
-
 		/** Optional bindable disabled forwarded to DatePicker */
 		disabled = $bindable(false),
 
@@ -46,8 +44,7 @@
 		label: string;
 		name: string;
 		id?: string;
-		values?: string[];
-		required?: boolean;
+		values?: XsdDate[];
 		disabled?: boolean;
 		class?: string;
 		minCount?: number;
@@ -72,7 +69,7 @@
 
 	// We keep an internal list for how many pickers to render.
 	// Each entry stores the initial value passed to that picker.
-	let items = $state<(string | undefined)[]>([]);
+	let items = $state<XsdDate[]>([]);
 
 	onMount(() => {
 		ensureCardinality();
@@ -84,7 +81,7 @@
 		let next = [...current];
 
 		// Ensure at least minCount items
-		while (next.length < minCount) next.push('');
+		while (next.length < minCount) next.push(new XsdDate());
 
 		// Ensure not above maxCount
 		if (maxCount !== Infinity && next.length > maxCount) next = next.slice(0, maxCount);
@@ -102,28 +99,28 @@
 		// Refs to child components so we can call get_value() on each
 	let pickers = $state<(NativeDatePickerInstance | null)[]>([]);
 
-	function normalizeItems(src: string[]): string[] {
-		let next = [...src];
-
-		// Ensure at least minCount items
-		while (next.length < minCount) next.push(null);
-
-		// Ensure not above maxCount
-		if (maxCount !== Infinity && next.length > maxCount) {
-			next = next.slice(0, maxCount);
-		}
-
-		return next;
-	}
-
-	function shallowEqual(a: unknown[], b: unknown[]): boolean {
-		if (a === b) return true;
-		if (a.length !== b.length) return false;
-		for (let i = 0; i < a.length; i++) {
-			if (a[i] !== b[i]) return false;
-		}
-		return true;
-	}
+	// function normalizeItems(src: XsdDate[]): XsdDate[] {
+	// 	let next = [...src];
+	//
+	// 	// Ensure at least minCount items
+	// 	while (next.length < minCount) next.push(new XsdDate());
+	//
+	// 	// Ensure not above maxCount
+	// 	if (maxCount !== Infinity && next.length > maxCount) {
+	// 		next = next.slice(0, maxCount);
+	// 	}
+	//
+	// 	return next;
+	// }
+	//
+	// function shallowEqual(a: unknown[], b: unknown[]): boolean {
+	// 	if (a === b) return true;
+	// 	if (a.length !== b.length) return false;
+	// 	for (let i = 0; i < a.length; i++) {
+	// 		if (a[i] !== b[i]) return false;
+	// 	}
+	// 	return true;
+	// }
 
 	function alignPickers(nextLen: number) {
 		// Keep picker refs aligned WITHOUT making callers react to `pickers`.
@@ -151,7 +148,7 @@
 				? items.length
 				: Math.min(Math.max(0, afterIndex + 1), items.length);
 
-		items = [...items.slice(0, idx), null, ...items.slice(idx)];
+		items = [...items.slice(0, idx), new XsdDate(), ...items.slice(idx)];
 		alignPickers(items.length);
 	}
 
@@ -180,16 +177,16 @@
 	 * Returns an array of XsdDate|null, one entry per picker (in order).
 	 * - If a picker is "unused" (checkbox off), its get_value() returns null.
 	 */
-	export const get_value = (): (string | null)[] => {
+	export const get_value = (): XsdDate[] => {
 		// Ensure we have refs aligned; then pull values from children
-		return items.map((_, i) => pickers[i]?.get_value?.() ?? null);
+		return items.map((_, i) => pickers[i]?.get_value() || new XsdDate('0000-01-01'));
 	};
 </script>
 
 <div class="mt-3">
 	<label
 		for={id}
-		class="{required ? 'underline' : ''} block text-xs/4 font-medium text-input-label-fg dark:text-input-label-fg-dark"
+		class="{minCount > 0 ? 'underline' : ''} block text-xs/4 font-medium text-input-label-fg dark:text-input-label-fg-dark"
 	>
 		{label}:
 	</label>
@@ -220,7 +217,7 @@
 							name={`${name}[${i}]`}
 							id={id ? `${id}-${i}` : undefined}
 							value={initial}
-							required={required}
+							required={true}
 							bind:disabled={disabled}
 							class={userClass}
 						/>

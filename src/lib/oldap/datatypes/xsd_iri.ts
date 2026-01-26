@@ -9,8 +9,7 @@ import { OldapErrorInvalidValue } from '$lib/oldap/errors/OldapErrorInvalidValue
 
 export class Iri {
 	#iri: string | QName | null = null;
-	#representation: "FULL" | "QNAME" | null = null;
-
+	#representation: 'FULL' | 'QNAME' | null = null;
 
 	constructor(iri?: string);
 	constructor(qname: QName);
@@ -19,55 +18,48 @@ export class Iri {
 	constructor(iri?: string | QName | NCName, fragment?: string | NCName) {
 		if (iri === undefined) {
 			this.#iri = null;
-		}
-		else if (typeof iri === 'string' && fragment === undefined) {
+		} else if (typeof iri === 'string' && fragment === undefined) {
 			const parts = iri.split(':');
-			if (parts[0] === "http" || parts[0] === "https" || parts[0] === "urn") {
+			if (parts[0] === 'http' || parts[0] === 'https' || parts[0] === 'urn') {
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				const parsed = new URL(iri);
 				this.#iri = iri;
-				this.#representation = "FULL";
-			}
-			else {
+				this.#representation = 'FULL';
+			} else {
 				if (parts.length != 2) {
 					throw new OldapErrorInvalidValue(`Invalid IRI format: "${iri}"`);
 				}
 				this.#iri = iri;
-				this.#representation = "QNAME";
+				this.#representation = 'QNAME';
 			}
-		}
-		else if (iri instanceof QName && fragment === undefined) {
+		} else if (iri instanceof QName && fragment === undefined) {
 			this.#iri = iri;
-			this.#representation = "QNAME";
-		}
-		else if (typeof iri === "string" && typeof fragment === "string") {
+			this.#representation = 'QNAME';
+		} else if (typeof iri === 'string' && typeof fragment === 'string') {
 			const p = new NCName(iri);
 			const f = new NCName(fragment);
 			this.#iri = new QName(p, f);
-			this.#representation = "QNAME";
-		}
-		else if (iri instanceof NCName && fragment instanceof NCName) {
+			this.#representation = 'QNAME';
+		} else if (iri instanceof NCName && fragment instanceof NCName) {
 			this.#iri = new QName(iri, fragment);
-			this.#representation = "QNAME";
-		}
-		else {
-			throw new Error("Invalid IRI format: iri=" + iri + " fragment=" + fragment);
+			this.#representation = 'QNAME';
+		} else {
+			throw new Error('Invalid IRI format: iri=' + iri + ' fragment=' + fragment);
 		}
 	}
 
 	[Symbol.toPrimitive](hint: string) {
-		if (hint === "string") {
+		if (hint === 'string') {
 			return this.toString();
 		}
 		return null; // Default fallback
 	}
 
 	toString(): string {
-		if (typeof this.#iri === "string") {
+		if (typeof this.#iri === 'string') {
 			return this.#iri;
-		}
-		else {
-			return this.#iri?.toString() ?? "";
+		} else {
+			return this.#iri?.toString() ?? '';
 		}
 	}
 
@@ -76,11 +68,19 @@ export class Iri {
 	}
 
 	get prefix(): NCName | undefined {
-		if (this.#representation === "QNAME") {
+		if (this.#representation === 'QNAME') {
 			const tmp = this.#iri as QName;
 			return tmp.prefix;
+		} else {
+			return undefined;
 		}
-		else {
+	}
+
+	get fragment(): NCName | undefined {
+		if (this.#representation === 'QNAME') {
+			const tmp = this.#iri as QName;
+			return tmp.fragment;
+		} else {
 			return undefined;
 		}
 	}
@@ -90,15 +90,12 @@ export class Iri {
 	}
 
 	clone(): Iri {
-		if (this.#representation === "QNAME") {
+		if (this.#representation === 'QNAME') {
 			return new Iri(this.#iri as QName);
-		}
-		else if (this.#representation === "FULL") {
+		} else if (this.#representation === 'FULL') {
 			return new Iri(this.#iri as string);
-		}
-		else {
+		} else {
 			return new Iri();
 		}
 	}
-
 }

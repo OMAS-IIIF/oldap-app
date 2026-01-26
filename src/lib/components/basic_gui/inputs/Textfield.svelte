@@ -9,7 +9,7 @@
 -->
 <script lang="ts">
 	import { error } from '@sveltejs/kit';
-	import { onMount, type Snippet } from 'svelte';
+	import type { Snippet } from 'svelte';
 
 	type ValidateFunction = (value?: string) => [boolean, string];
 

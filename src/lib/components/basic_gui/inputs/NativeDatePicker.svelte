@@ -8,6 +8,8 @@
 -->
 <script lang="ts">
 
+	import { XsdDate } from '$lib/oldap/datatypes/xsd_date';
+
 	let {
 		/** Label shown above the field */
 		label,
@@ -36,15 +38,15 @@
 		label?: string;
 		name: string;
 		id?: string;
-		value?: string;
+		value?: XsdDate;
 		required?: boolean;
 		showCheckbox?: boolean;
 		disabled?: boolean;
 		class?: string;
 	} = $props();
 
-	// If not required, user can toggle whether the value is used at all.
-	let is_used = $state<boolean>(required ? true : !showCheckbox);
+	let is_used = $state<boolean>(true);
+	is_used = (() : boolean => required ? true : !showCheckbox)()
 
 	// Native date input uses "YYYY-MM-DD" (or "" for empty).
 	let dateStr = $state<string>('');
@@ -68,7 +70,7 @@
 			return;
 		}
 
-		dateStr = value || '';
+		dateStr = value.toString() || '';
 		is_used = true;
 	});
 
@@ -82,9 +84,9 @@
 	}
 
 	/** Pull API to match your existing DatePicker.svelte */
-	export const get_value = (): string | null => {
+	export const get_value = (): XsdDate | null => {
 		if (!is_used) return null;
-		return dateStr;
+		return new XsdDate(dateStr);
 	};
 </script>
 

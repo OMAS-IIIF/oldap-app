@@ -3,7 +3,7 @@
 -->
 
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, setContext } from 'svelte';
 	import type { Snippet } from 'svelte';
 	import type { WindowGeometry } from '$lib/helpers/WindowData';
 
@@ -179,27 +179,19 @@
 	}
 
 	function onActivateSelf(e: PointerEvent) {
-		console.log("+++++++>", e)
-		// If activation triggers a reactive update, doing it synchronously on pointerdown can
-		// interfere with inner control clicks. Defer activation to the next microtask.
+		// Activate the window only when clicking on non-interactive areas.
+		// Interactive elements handle their own pointer events.
 		const targetEl = e.target as HTMLElement | null;
-
-		queueMicrotask(() => {
-			bringToFront();
-			// Only steal focus if the click wasn't on an interactive element.
-			if (!targetEl?.closest('button, a, input, select, textarea, [role="button"]')) {
-				rootEl?.focus?.();
-			}
-		});
+		if (targetEl?.closest('button, a, input, select, textarea, [role="button"]')) return;
+		bringToFront();
+		rootEl?.focus?.();
 	}
 
 	function onCloseSelf() {
-		console.log("onCloseSelf")
 		onClose?.();
 	}
 
 	function onCloseClick(e: MouseEvent) {
-		console.log("onCloseClick")
 		e.stopPropagation();
 		onCloseSelf();
 	}
@@ -210,6 +202,10 @@
 		window.removeEventListener('pointermove', onResizeMove);
 	});
 
+	setContext('window', {
+		close: onCloseSelf
+		// you can add later: activate: bringToFront, etc.
+	});
 </script>
 
 <div
@@ -249,5 +245,4 @@
 		<div class="absolute w-3.5 h-3.5 bg-transparent -left-0.5 -bottom-0.5 cursor-[nesw-resize]" onpointerdown={(e) => onResizePointerDown('sw', e)} />
 		<div class="absolute w-3.5 h-3.5 bg-transparent -right-0.5 -bottom-0.5 cursor-[nwse-resize]" onpointerdown={(e) => onResizePointerDown('se', e)} />
 	{/if}
-
 </div>

@@ -4,10 +4,10 @@ import { difference } from '$lib/helpers/setops';
 
 export class LangString {
 	static defaultLang: Language = Language.EN
-	#langstrs: Record<Language, string>;
+	#langstrs: Partial<Record<Language, string>>;
 
-	constructor(langstrs: Record<Language, string> | null) {
-		this.#langstrs = langstrs ? langstrs : {} as Record<Language, string>;
+	constructor(langstrs?: Partial<Record<Language, string>> | null) {
+		this.#langstrs = langstrs ? langstrs : {};
 	}
 
 	setDefaultLanguage(defaultLanguage: Language): void {
@@ -18,15 +18,19 @@ export class LangString {
 		return Object.keys(this.#langstrs).length;
 	}
 
+	haslang(lang: Language): boolean {
+		return Object.keys(this.#langstrs).includes(lang);
+	}
+
 	get(lang: Language): string {
 		if (this.#langstrs[lang]) {
 			return this.#langstrs[lang];
 		}
 		if (this.#langstrs[LangString.defaultLang]) {
-			return this.#langstrs[LangString.defaultLang]; // ✅ Return the default language if available
+			return this.#langstrs[LangString.defaultLang] || ''; // ✅ Return the default language if available
 		}
 		const firstAvailable = Object.values(this.#langstrs)[0]; // ✅ Get first existing language
-		return firstAvailable ?? "not found"; // ❌ Return "not found" if empty
+		return firstAvailable ?? ""; // ❌ Return "not found" if empty
 	}
 
 	getraw(lang: Language): string | undefined {
@@ -70,7 +74,7 @@ export class LangString {
 		}
 	}
 
-	toJSON(): Record<Language, string> {
+	toJSON(): Partial<Record<Language, string>> {
 		return { ...this.#langstrs };
 	}
 
@@ -78,7 +82,7 @@ export class LangString {
 		if (!jsonArray) {
 			return undefined
 		}
-		const langString: Record<Language, string> = {} as Record<Language, string>;
+		const langString: Partial<Record<Language, string>> = {};
 		jsonArray.forEach((entry) => {
 			if (entry.length < 4) {
 				throw new OldapErrorInvalidValue(`Invalid value for LangString: "${entry}"! Expected "text@lang".`);

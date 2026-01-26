@@ -23,9 +23,18 @@ export class XsdDate {
 	 * @param dd The day
 	 * @throws OldapErrorInvalidValue if the datestr is not in the correct format
 	 */
-	constructor(datestr: string | number, mm?: number, dd?: number) {
+	constructor(datestr?: string | number, mm?: number, dd?: number) {
 		let parts: number[];
-		if (typeof datestr === 'number' && typeof mm === 'number' && typeof dd === 'number') {
+
+		if ((datestr === undefined) || (datestr === '')) {
+			const d = new Date();
+			const yyyy = d.getFullYear();
+			const mm = d.getMonth() + 1
+			const dd = d.getDate()
+
+			parts = [yyyy, mm, dd];
+		}
+		else if (typeof datestr === 'number' && typeof mm === 'number' && typeof dd === 'number') {
 			parts = [datestr, mm, dd];
 		}
 		else if (typeof datestr === 'string' && !mm && !dd) {
@@ -38,7 +47,9 @@ export class XsdDate {
 			const month = Number(m[2]);
 			const day = Number(m[3]);
 
-			if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null;
+			if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+				throw new OldapErrorInvalidValue(`Invalid xsd:date string: "${datestr}"`);
+			}
 			if (month < 1 || month > 12) throw new OldapErrorInvalidValue(`Invalid xsd:date string: "${datestr}"`);
 			if (day < 1 || day > 31) throw new OldapErrorInvalidValue(`Invalid xsd:date string: "${datestr}"`);
 
@@ -61,7 +72,9 @@ export class XsdDate {
 		if (month < 1 || month > 12 || day < 1 || day > 31) {
 			throw new OldapErrorInvalidValue(`Invalid month/day in xsd:date: "${datestr}"`);
 		}
-		[this.#year, this.#month, this.#day] = parts;
+		this.#year = year;
+		this.#month = month;
+		this.#day = day;
 	}
 
 	/**
@@ -106,8 +119,11 @@ export class XsdDate {
 			if (a) {
 				return a.equals(b);
 			}
-			else {
+			else if (b) {
 				return b?.equals(a);
+			}
+			else {
+				return false;
 			}
 		}
 	}

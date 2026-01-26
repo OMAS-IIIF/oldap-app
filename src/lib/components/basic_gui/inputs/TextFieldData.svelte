@@ -197,7 +197,7 @@
 		errortext = [...errortext];
 	}
 
-	export const getValues = (): string[] => internal_values || [];
+	export const get_value = (): (string | null)[] => internal_values || [];
 
 </script>
 
