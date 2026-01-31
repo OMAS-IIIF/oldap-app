@@ -1,7 +1,7 @@
 <script lang="ts">
 
 	import type { OldapProject } from '$lib/oldap/classes/project';
-	import { languageTag } from '$lib/paraglide/runtime';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
 	import { datamodelStore } from '$lib/stores/datamodel';
@@ -37,7 +37,7 @@
 	let onto_list = $state<string[]>([]);
 	let ontologies = $state<Record<string, ExternalOntology>>({});
 
-	let lang = $state(languageTag());
+	let lang = $state(getLocale());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
 
 	let confirmation_dialog: Confirmation;

@@ -20,7 +20,7 @@
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import { getLanguageShortname } from '$lib/oldap/enums/language';
 	import { authInfoStore } from '$lib/stores/authinfo';
-	import { languageTag } from '$lib/paraglide/runtime';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import { goto_page } from '$lib/helpers/goto_page';
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
 	import { refreshProjectsListNow } from '$lib/stores/refresh_projectslist.svelte';
@@ -34,7 +34,7 @@
 	const ncname_pattern: RegExp = /^[A-Za-z_][A-Za-z0-9._-]*$/;
 	const namespace_pattern = /^https?:\/\/[^\s<>"]+[/#]$/;
 
-	let lang = $state(languageTag());
+	let lang = $state(getLocale());
 
 	let authinfo: AuthInfo | null = $authInfoStore;
 	let administrator = $state<OldapUser | null>(null);

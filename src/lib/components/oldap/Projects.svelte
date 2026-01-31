@@ -10,7 +10,7 @@
 	import { api_config } from '$lib/helpers/api_config';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { OldapProject } from '$lib/oldap/classes/project';
-	import { languageTag } from '$lib/paraglide/runtime';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import { projectStore } from '$lib/stores/project';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import { authInfoStore } from '$lib/stores/authinfo';
@@ -24,7 +24,7 @@
 
 	let projectsIsOpen = $state(false);
 	let current_project_id = $state<string | null>(null);
-	let lang = $state(languageTag());
+	let lang = $state(getLocale());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
 	import * as m from '$lib/paraglide/messages';
 	import { read_projects } from '$lib/helpers/read_projects';

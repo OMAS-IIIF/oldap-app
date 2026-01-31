@@ -9,7 +9,7 @@
 	import TableBody from '$lib/components/basic_gui/table/TableBody.svelte';
 	import TableItem from '$lib/components/basic_gui/table/TableItem.svelte';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { languageTag } from '$lib/paraglide/runtime';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
 	import { authInfoStore } from '$lib/stores/authinfo';
@@ -39,7 +39,7 @@
 	let prop_list = $state<string[]>([]);
 	let properties = $state<Record<string, PropertyClass>>({});
 
-	let lang = $state(languageTag());
+	let lang = $state(getLocale());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
 
 	let datamodel = $state<DatamodelClass | null>(null);

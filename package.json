@@ -18,8 +18,10 @@
 		"zod": "npx openapi-zod-client ../oldap-api/API-def/oldap-api.yaml --with-docs -o src/lib/apischema/zod.ts --export-types"
 	},
 	"devDependencies": {
-		"@eslint/compat": "^1.2.5",
+		"@eslint/compat": "^2.0.2",
 		"@eslint/js": "^9.18.0",
+		"@inlang/paraglide-js": "^2.9.1",
+		"@lucide/svelte": "^0.563.1",
 		"@playwright/test": "^1.49.1",
 		"@sveltejs/adapter-node": "^5.2.11",
 		"@sveltejs/kit": "^2.49.5",
@@ -29,13 +31,13 @@
 		"@testing-library/svelte": "^5.2.4",
 		"eslint": "^9.18.0",
 		"eslint-config-prettier": "^10.0.1",
-		"eslint-plugin-svelte": "^2.46.1",
-		"globals": "^15.14.0",
-		"jsdom": "^25.0.1",
+		"eslint-plugin-svelte": "^3.14.0",
+		"globals": "^17.2.0",
+		"jsdom": "^27.4.0",
 		"openapi-zod-client": "^1.18.3",
-		"prettier": "3.6.2",
+		"prettier": "^3.8.1",
 		"prettier-plugin-svelte": "^3.3.3",
-		"prettier-plugin-tailwindcss": "^0.6.11",
+		"prettier-plugin-tailwindcss": "^0.7.2",
 		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
 		"svelte-loading-spinners": "^0.3.6",
@@ -46,8 +48,6 @@
 		"vitest": "^3.0.0"
 	},
 	"dependencies": {
-		"@inlang/paraglide-sveltekit": "^0.15.5",
-		"@lucide/svelte": "^0.509.0",
 		"@thisux/sveltednd": "^0.0.20",
 		"@zodios/core": "^10.9.6",
 		"crypto-js": "^4.2.0"

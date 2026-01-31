@@ -3,7 +3,7 @@
 <script lang="ts">
 	import { Language, getLanguageShortname, convertToLanguage } from '$lib/oldap/enums/language';
 	import { LangString } from '$lib/oldap/datatypes/langstring';
-	import { onMount, type Snippet } from 'svelte';
+	import { type Snippet } from 'svelte';
 
 	type InputType = "input" | "textarea";
 
@@ -53,16 +53,6 @@
 	let invalid = $state<boolean>(false);
 	let buffer = $state('');
 	let has_value = $state<Partial<Record<Language, boolean>>>({});
-
-	// onMount(() => {
-	// 	let tmp: Partial<Record<Language, boolean>> = {};
-	// 	for (const lang of languages) {
-	// 		console.log("::::>", lang, value.getraw(lang), (value.getraw(lang) || '').length > 0);
-	// 		tmp[lang] = hasLangValue(lang);
-	// 	}
-	// 	has_value = tmp;
-	// 	console.log("-----=======>", $state.snapshot(has_value));
-	// });
 
 	// whenever selected language changes, load exact (non-fallback) text
 	$effect(() => {
@@ -138,7 +128,7 @@
 	<label for={id} class="{required ? 'underline' : ''} block text-xs/4 font-medium text-input-label-fg dark:text-input-label-fg-dark">{label}:</label>
 
 	<!-- Grid mit Snippet und Input auf derselben Zeile -->
-	<div class="{additional_snippet ? 'mt-2 grid grid-cols-[auto_1fr] gap-2 items-center' : 'mt-2'}">
+	<div class="{additional_snippet ? 'mt-2 grid grid-cols-[auto_1fr] gap-2 items-start' : 'mt-2'}">
 		{#if additional_snippet}
 			<div class="flex-shrink-0">
 				{@render additional_snippet()}
@@ -154,16 +144,22 @@
 				>
 			{:else}
 				<textarea name={name} id={id} {rows} {disabled} {required} {readonly}
-									class="w-full py-1.0 oldap-textfield-common {disabled ? 'oldap-textfield-disabled' : (invalid ? 'oldap-textfield-invalid' : 'oldap-textfield-valid')} {userClass}"
-									placeholder={placeholder}
-									aria-invalid={invalid}
-									aria-describedby={id ? `${id}-error` : undefined}
-									bind:value={buffer}
-									oninput={onInput}
+							class="block w-full rounded-md border px-2 py-1.5 text-sm leading-5 shadow-sm resize-y
+								bg-white text-neutral-900 placeholder-neutral-400
+								dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder-neutral-500
+								focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-neutral-500
+								disabled:opacity-50 disabled:cursor-not-allowed
+								{invalid ? 'border-rose-500 dark:border-rose-400' : 'border-neutral-300 dark:border-neutral-700'}
+								{userClass}"
+							placeholder={placeholder}
+							aria-invalid={invalid}
+							aria-describedby={id ? `${id}-error` : undefined}
+							bind:value={buffer}
+							oninput={onInput}
 				></textarea>
 			{/if}
 		</div>
-		<div class="mt-2">
+		<div class="mt-2 {additional_snippet ? 'col-span-2' : ''}">
 			<div class="inline-flex flex-wrap gap-1" role="group" aria-label="Language">
 				{#each languages as lang (lang)}
 					{@const k = langKey(lang)}
@@ -198,4 +194,3 @@
 
 	</div>
 </div>
-

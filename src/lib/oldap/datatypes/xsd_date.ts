@@ -88,6 +88,10 @@ export class XsdDate {
 		return `${yearStr}-${monthStr}-${dayStr}`;
 	}
 
+	toApi() {
+		return this.toString();
+	}
+
 	/**
 	 * "Automatic" conversion to string
 	 * @param hint: Only string is supported

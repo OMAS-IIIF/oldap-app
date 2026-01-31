@@ -13,7 +13,7 @@
 	import NodeTree from '$lib/components/basic_gui/NodeTree/NodeTree.svelte';
 	import { OldapList } from '$lib/oldap/classes/list';
 	import type { OldapListNode } from '$lib/oldap/classes/listnode';
-	import { languageTag } from '$lib/paraglide/runtime';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import { authInfoStore } from '$lib/stores/authinfo';
 	import { refreshNodeTree } from '$lib/stores/refresh_nodetree.svelte.js';
@@ -33,7 +33,7 @@
 	let { data }: PageProps = $props();
 	let current_project = $state<OldapProject | null>(null);
 
-	let lang = $state(languageTag());
+	let lang = $state(getLocale());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
 
 	let authinfo: AuthInfo | null = $authInfoStore;

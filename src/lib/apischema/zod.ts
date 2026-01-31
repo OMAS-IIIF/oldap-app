@@ -11,6 +11,21 @@ type DataPermission = /**
  * @enum DATA_RESTRICTED, DATA_VIEW, DATA_EXTEND, DATA_UPDATE, DATA_DELETE, DATA_PERMISSIONS
  */
 "DATA_RESTRICTED" | "DATA_VIEW" | "DATA_EXTEND" | "DATA_UPDATE" | "DATA_DELETE" | "DATA_PERMISSIONS" | null;;
+type AttachedToRoleMap = /**
+ * Map of role IRI/QName to permission value.
+ */
+{};;
+type InstanceData = {
+    "rdf:type"?: Array<string> | undefined;
+    "oldap:attachedToRole"?: AttachedToRoleMap | undefined;
+    "oldap:createdBy": Array<string>;
+    "oldap:lastModifiedBy": Array<string>;
+    "oldap:creationDate": Array<string>;
+    "oldap:lastModificationDate": Array<string>;
+} & {
+    [key: string]: ValueArray;
+};;
+type ValueArray = Array<string | number | number | boolean | null>;;
 type user_get_body_200 = Partial<{
     userIri: string;
     userId: string;
@@ -279,6 +294,8 @@ const putAdminhlistProjectHlistid_Body = z.object({ prefLabel: LangString, defin
 const postAdminhlistProjectHlistid_Body = z.object({ prefLabel: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), definition: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]) }).partial().passthrough();
 const putAdminhlistProjectHlistidNodeid_Body = z.union([z.object({ prefLabel: LangString, definition: LangString.optional(), position: z.enum(["belowOf", "leftOf", "rightOf"]), refnode: z.string() }).passthrough(), z.object({ prefLabel: LangString, definition: LangString.optional(), position: z.literal("root") }).passthrough()]);
 const postAdminhlistProjectHlistidNodeidmove_Body = z.union([z.object({ leftOf: z.string() }).passthrough(), z.object({ rightOf: z.string() }).passthrough(), z.object({ belowOf: z.string() }).passthrough()]);
+const ValueArray = z.array(z.union([z.string(), z.number(), z.number(), z.boolean(), z.null()]));
+const InstanceData: z.ZodType<InstanceData> = z.record(ValueArray);
 
 export const schemas = {
 	Error,
@@ -305,6 +322,8 @@ export const schemas = {
 	postAdminhlistProjectHlistid_Body,
 	putAdminhlistProjectHlistidNodeid_Body,
 	postAdminhlistProjectHlistidNodeidmove_Body,
+	ValueArray,
+	InstanceData,
 };
 
 const endpoints = makeApi([
@@ -2515,7 +2534,94 @@ The user must be authenticated with a Bearer token.
 				schema: z.string()
 			},
 		],
-		response: z.object({}).partial().passthrough(),
+		response: z.record(ValueArray),
+		errors: [
+			{
+				status: 400,
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
+			},
+			{
+				status: 403,
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
+			},
+			{
+				status: 404,
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
+			},
+			{
+				status: 500,
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
+			},
+		]
+	},
+	{
+		method: "post",
+		path: "/data/:project/:instiri",
+		alias: "postDataProjectInstiri",
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "body",
+				type: "Body",
+				schema: z.object({}).partial().passthrough()
+			},
+			{
+				name: "project",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "instiri",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.object({ message: z.string() }).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
+			},
+			{
+				status: 403,
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
+			},
+			{
+				status: 404,
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
+			},
+			{
+				status: 500,
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
+			},
+		]
+	},
+	{
+		method: "delete",
+		path: "/data/:project/:instiri",
+		alias: "deleteDataProjectInstiri",
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "project",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "instiri",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.object({ message: z.string() }).partial().passthrough(),
 		errors: [
 			{
 				status: 400,
@@ -2571,108 +2677,6 @@ The user must be authenticated with a Bearer token.
 			{
 				status: 403,
 				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
-				schema: Error
-			},
-			{
-				status: 500,
-				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
-				schema: Error
-			},
-		]
-	},
-	{
-		method: "put",
-		path: "/data/:project/:resclass/:instance",
-		alias: "putDataProjectResclassInstance",
-		requestFormat: "json",
-		parameters: [
-			{
-				name: "body",
-				type: "Body",
-				schema: z.object({}).partial().passthrough()
-			},
-			{
-				name: "project",
-				type: "Path",
-				schema: z.string()
-			},
-			{
-				name: "resclass",
-				type: "Path",
-				schema: z.string()
-			},
-			{
-				name: "instance",
-				type: "Path",
-				schema: z.string()
-			},
-		],
-		response: z.object({ message: z.string() }).partial().passthrough(),
-		errors: [
-			{
-				status: 400,
-				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
-				schema: Error
-			},
-			{
-				status: 403,
-				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
-				schema: Error
-			},
-			{
-				status: 404,
-				description: `Error 404: Not Found - Requested resource does not exist`,
-				schema: Error
-			},
-			{
-				status: 500,
-				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
-				schema: Error
-			},
-		]
-	},
-	{
-		method: "post",
-		path: "/data/:project/:resclass/:instance",
-		alias: "postDataProjectResclassInstance",
-		requestFormat: "json",
-		parameters: [
-			{
-				name: "body",
-				type: "Body",
-				schema: z.object({}).partial().passthrough()
-			},
-			{
-				name: "project",
-				type: "Path",
-				schema: z.string()
-			},
-			{
-				name: "resclass",
-				type: "Path",
-				schema: z.string()
-			},
-			{
-				name: "instance",
-				type: "Path",
-				schema: z.string()
-			},
-		],
-		response: z.object({ message: z.string() }).partial().passthrough(),
-		errors: [
-			{
-				status: 400,
-				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
-				schema: Error
-			},
-			{
-				status: 403,
-				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
-				schema: Error
-			},
-			{
-				status: 404,
-				description: `Error 404: Not Found - Requested resource does not exist`,
 				schema: Error
 			},
 			{

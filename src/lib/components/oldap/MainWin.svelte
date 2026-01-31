@@ -18,19 +18,20 @@ import LeftFooter from '$lib/components/basic_gui/footer/LeftFooter.svelte';
 import RightFooter from '../basic_gui/footer/RightFooter.svelte';
 import { BarLoader } from 'svelte-loading-spinners';
 import { spinnerStore } from '$lib/stores/spinner';
-import { languageTag } from '$lib/paraglide/runtime';
+import { getLocale } from '$lib/paraglide/runtime';
 import { goto_page } from '$lib/helpers/goto_page';
 import { page } from '$app/state';
 import { createWindow } from '$lib/stores/windows.svelte';
 import ImageUpload from '$lib/components/basic_gui/upload/ImageUpload.svelte';
 import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
 import Button from '$lib/components/basic_gui/buttons/Button.svelte';
-import { Upload, Plus } from '@lucide/svelte';
+import { Upload, Plus, Search } from '@lucide/svelte';
 import { OldapProject } from '$lib/oldap/classes/project';
 import { projectStore } from '$lib/stores/project';
 import { AdminPermission } from '$lib/oldap/enums/admin_permissions';
 import InstanceEditor from '$lib/components/oldap/InstanceEditor.svelte';
 import type { Snippet } from 'svelte';
+import SearchInstances from '$lib/components/oldap/SearchInstances.svelte';
 
 //type Closer = () => void;
 let { children } = $props();
@@ -70,6 +71,10 @@ function create_instance_window() {
 	createWindow('Create Instance', createInstance, { x: 120, y: 120, width: 400, height: 600 });
 }
 
+function create_search_window() {
+	createWindow('Search Instances', searchInstances, { x: 120, y: 120, width: 400, height: 600 });
+}
+
 </script>
 
 {#snippet imageUpload()}
@@ -79,6 +84,11 @@ function create_instance_window() {
 {#snippet createInstance()}
 	<InstanceEditor></InstanceEditor>
 {/snippet}
+
+{#snippet searchInstances()}
+	<SearchInstances></SearchInstances>
+{/snippet}
+
 
 
 <div class="oldap-body">
@@ -99,6 +109,10 @@ function create_instance_window() {
 				<Button round={true} onclick={create_instance_window}>
 					<Plus size="16" strokeWidth="1" />
 				</Button>
+				<Button round={true} onclick={create_search_window}>
+					<Search size="16" strokeWidth="1" />
+				</Button>
+
 			{/if}
 		</LeftHeader>
 

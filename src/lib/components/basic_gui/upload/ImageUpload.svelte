@@ -3,7 +3,7 @@
   -->
 
 <script lang="ts">
-	import { languageTag } from '$lib/paraglide/runtime';
+	import { locales, getLocale } from '$lib/paraglide/runtime';
 	import { authInfoStore } from '$lib/stores/authinfo';
 	import { projectStore } from '$lib/stores/project';
 	import RadioButton from '$lib/components/basic_gui/buttons/RadioButton.svelte';
@@ -39,7 +39,7 @@
     placeholderUrl?: string;
   } = $props();
 
-	let lang = $state(languageTag());
+	let lang = $state(getLocale());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
 
   let file: File | null = $state(null);

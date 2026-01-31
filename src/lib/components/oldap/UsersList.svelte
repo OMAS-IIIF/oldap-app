@@ -19,7 +19,7 @@
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import { authInfoStore } from '$lib/stores/authinfo';
-	import { languageTag } from '$lib/paraglide/runtime';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import { goto_page } from '$lib/helpers/goto_page';
 	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
 
@@ -30,7 +30,7 @@
 		project: OldapProject | null
 	} = $props();
 
-	let lang = $state(languageTag());
+	let lang = $state(getLocale());
 
 	let show_all_users = $state(false);
 	let authinfo = $state<AuthInfo | null>($authInfoStore);

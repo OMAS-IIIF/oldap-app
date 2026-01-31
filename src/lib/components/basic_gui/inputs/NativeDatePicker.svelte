@@ -21,7 +21,7 @@
 		id,
 
 		/** Initial value */
-		value,
+		value = $bindable<XsdDate>(),
 
 		/** Optional flag to indicate mandatory field */
 		required = undefined,
@@ -112,6 +112,7 @@
 			bind:value={dateStr}
 			disabled={disabled || (showCheckbox && !required && !is_used)}
 			class="rounded-md bg-white px-3 py-1 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 {userClass}"
+			onchange={() => value = new XsdDate(dateStr)}
 		/>
 
 		<button

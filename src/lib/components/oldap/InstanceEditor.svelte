@@ -3,7 +3,7 @@
   -->
 <script lang="ts">
 
-	import { availableLanguageTags, languageTag } from '$lib/paraglide/runtime';
+	import { locales, getLocale } from '$lib/paraglide/runtime';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { authInfoStore } from '$lib/stores/authinfo';
 	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
@@ -25,10 +25,10 @@
 	import { LangString } from '$lib/oldap/datatypes/langstring';
 	import LangstringfieldNew from '$lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
 
-	let lang = $state(languageTag());
+	let lang = $state(getLocale());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
 
-	type DataTypes = string | XsdDate | LangString | null;
+	type DataTypes = string | XsdDate | null;
 
 	type InputFieldInstance = {
 		get_value: () => DataTypes[];
@@ -59,11 +59,11 @@
 	const date_dtypes = [XsdDatatypes.date]
 
 	let input_fields = $state<Record<string, InputFieldInstance | undefined>>({});
-	let values = $state<Record<string, DataTypes[]>>({});
+	let values = $state<Record<string, DataTypes[] | LangString>>({});
 
 	let success = $state<boolean | undefined>(undefined);
 
-	const languages = Array.from(availableLanguageTags).map(lang => convertToLanguage(lang));
+	const languages = Array.from(locales).map(lang => convertToLanguage(lang));
 
 
 	//
@@ -143,24 +143,26 @@
 					if (propertyIri === undefined) { // we create a new instance...
 						values[hasprop.property.propertyIri.toString()] = []
 						if (hasprop?.minCount && hasprop.minCount > 0) {
-							for (let i = 0; i < hasprop.minCount; i++) {
-								switch(hasprop.property.datatype) {
-									case XsdDatatypes.xsdString:
-										values[hasprop.property.propertyIri.toString()].push('');
-										console.log('xsd:String', $state.snapshot(values[hasprop.property.propertyIri.toString()]));
-										break;
-									case XsdDatatypes.date:
-										values[hasprop.property.propertyIri.toString()].push(new XsdDate());
-										console.log('XsdDate', $state.snapshot(values[hasprop.property.propertyIri.toString()]));
-										break;
-									case XsdDatatypes.langString:
-										values[hasprop.property.propertyIri.toString()].push(new LangString());
-										console.log('LangString', $state.snapshot(values[hasprop.property.propertyIri.toString()]));
-										break;
-									default:
-										values[hasprop.property.propertyIri.toString()].push('');
-								}
+							switch(hasprop.property.datatype) {
+								case XsdDatatypes.xsdString:
+									for (let j = 0; j < hasprop.minCount; j++) {
+										values[hasprop.property.propertyIri.toString()] = [...(values[hasprop.property.propertyIri.toString()] as []), ''];
+									}
+									console.log('xsd:String', $state.snapshot(values[hasprop.property.propertyIri.toString()]));
+									break;
+								case XsdDatatypes.date:
+									for (let j = 0; j < hasprop.minCount; j++) {
+										values[hasprop.property.propertyIri.toString()] = [...(values[hasprop.property.propertyIri.toString()] as []), new XsdDate()];
+									}
+									break;
+								case XsdDatatypes.langString:
+									values[hasprop.property.propertyIri.toString()] = new LangString();
+									console.log('LangString', $state.snapshot(values[hasprop.property.propertyIri.toString()]));
+									break;
+								default:
+									values[hasprop.property.propertyIri.toString()] = [...(values[hasprop.property.propertyIri.toString()] as []), ''];
 							}
+							// TODO: Deal with more datatypes
 						}
 						// else {
 						// 	values[hasprop.property.propertyIri.toString()].push('');
@@ -174,7 +176,17 @@
 						});
 						apiClient.getDataProjectInstiri(get_data).then(data => {
 							(resources[selres]?.hasProperty || []).forEach(prop => {
-								values[prop.property.propertyIri.toString()] = data[prop.property.propertyIri.toString()] as string[];
+								switch(prop.property.datatype) {
+									case XsdDatatypes.xsdString:
+										values[prop.property.propertyIri.toString()] = data[prop.property.propertyIri.toString()].map((x) => x as string);
+										break;
+									case XsdDatatypes.date:
+										values[prop.property.propertyIri.toString()] = data[prop.property.propertyIri.toString()].map((x) => new XsdDate(x as string));
+										break;
+									case XsdDatatypes.langString:
+										values[prop.property.propertyIri.toString()] = LangString.fromStringArray(data[prop.property.propertyIri.toString()]);
+								}
+								// TODO: Deal with more datatypes
 							});
 						}).catch(err => {console.error(err)});
 					}
@@ -187,12 +199,22 @@
 	function add_resource() {
 		let data: Record<string, (string | null)[]> = {};
 		(resources[selres] ? resources[selres]?.hasProperty || [] : []).forEach(hasprop => {
-			data[hasprop.property.propertyIri.toString()] = input_fields[hasprop.property.propertyIri.toString()]?.get_value();
+			const propname = hasprop.property.propertyIri.toString();
+			if (values[propname] instanceof LangString) {
+				data[hasprop.property.propertyIri.toString()] = values[propname].toApi();
+			}
+			if (Array.isArray(values[propname]) && values[propname].length > 0 && (values[propname][0] instanceof XsdDate)) {
+				data[hasprop.property.propertyIri.toString()] = (values[hasprop.property.propertyIri.toString()] as XsdDate[]).map(x => x.toApi());
+			}
+			if (Array.isArray(values[propname]) && values[propname].length > 0 && (typeof values[propname][0] === 'string')) {
+				data[hasprop.property.propertyIri.toString()] = values[hasprop.property.propertyIri.toString()] as string[];
+			}
 		});
 		const put_config = api_notget_config(authinfo || new AuthInfo('unknown', ''), {
 			'project': encodeURIComponent(project?.projectIri?.toString() || ''),
 			'resclass': encodeURIComponent(selres || ''),
 		});
+		console.log("PUT DATA:", data);
 		apiClient.putDataProjectResclass(data, put_config).then(res => {
 			console.log('add_resource success', res);
 			success = true;
@@ -222,7 +244,7 @@
 			bind:selectedItem={selres}
 		/>
 
-		{#each resources[selres] ? resources[selres].hasProperty : [] as hasprop}
+		{#each resources[selres] ? resources[selres].hasProperty : [] as hasprop (hasprop.property.propertyIri.toString())}
 			{@const propname = hasprop.property.propertyIri.toString()}
 			{#if values[propname]}
 				{#if hasprop.property?.datatype === XsdDatatypes.xsdString}
@@ -232,7 +254,7 @@
 						label={hasprop.property?.name?.get(langobj) || hasprop.property?.propertyIri.toString()}
 						minCount={hasprop?.minCount || 0}
 						maxCount={hasprop?.maxCount || Infinity}
-						values={values[propname].map(v => toString(v))}
+						values={values[propname]}
 						bind:this={input_fields[hasprop.property.propertyIri.toString()]}
 					/>
 				{:else if hasprop.property?.datatype === XsdDatatypes.date}
@@ -242,7 +264,7 @@
 						label={hasprop.property?.name?.get(langobj) || hasprop.property?.propertyIri.toString()}
 						minCount={hasprop?.minCount || 0}
 						maxCount={hasprop?.maxCount || Infinity}
-						values={(values[propname] || []).map(v => toXsdDate(v))}
+						bind:values={(values[propname])}
 						bind:this={input_fields[hasprop.property.propertyIri.toString()]}
 					/>
 				{:else if hasprop.property?.datatype === XsdDatatypes.langString}
@@ -251,8 +273,9 @@
 						name="prop_name"
 						placeholder="Enter a value"
 						{languages}
+						input_type={hasprop.editor === 'dash:TextFieldWithLangEditor' ? 'input' : 'textarea'}
 						label={hasprop.property?.name?.get(langobj) || hasprop.property?.propertyIri.toString()}
-						value={values[propname].map(v => toLangString(v))[0]}
+						bind:value={values[propname]}
 						/>
 				{/if}
 			{:else}

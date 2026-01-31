@@ -29,7 +29,7 @@
 		id,
 
 		/** Optional initial values (prefill). Each entry may be XsdDate or null. */
-		values = [],
+		values = $bindable<XsdDate[]>([]),
 
 		/** Optional bindable disabled forwarded to DatePicker */
 		disabled = $bindable(false),
@@ -72,55 +72,22 @@
 	let items = $state<XsdDate[]>([]);
 
 	onMount(() => {
-		ensureCardinality();
-	})
+		//ensureCardinality();
+		let changed = false;
+		if (!Array.isArray(values)) values = [];
+		while (values.length < minCount) {
+			changed = true;
+			values.push(new XsdDate());
+		}
+		if (maxCount !== Infinity && values.length > maxCount) {
+			values = values.slice(0, maxCount);
+			changed = false
+		}
+		if (changed) values = [...values];
+	});
 
-
-	function ensureCardinality() {
-		const current = Array.isArray(values) ? values : [];
-		let next = [...current];
-
-		// Ensure at least minCount items
-		while (next.length < minCount) next.push(new XsdDate());
-
-		// Ensure not above maxCount
-		if (maxCount !== Infinity && next.length > maxCount) next = next.slice(0, maxCount);
-
-		// Apply if changed
-		/*
-				if (next.length !== current.length || next.some((v, i) => v !== current[i])) {
-					values = next;
-				}
-		*/
-		items = next;
-	}
-
-
-		// Refs to child components so we can call get_value() on each
+	// Refs to child components so we can call get_value() on each
 	let pickers = $state<(NativeDatePickerInstance | null)[]>([]);
-
-	// function normalizeItems(src: XsdDate[]): XsdDate[] {
-	// 	let next = [...src];
-	//
-	// 	// Ensure at least minCount items
-	// 	while (next.length < minCount) next.push(new XsdDate());
-	//
-	// 	// Ensure not above maxCount
-	// 	if (maxCount !== Infinity && next.length > maxCount) {
-	// 		next = next.slice(0, maxCount);
-	// 	}
-	//
-	// 	return next;
-	// }
-	//
-	// function shallowEqual(a: unknown[], b: unknown[]): boolean {
-	// 	if (a === b) return true;
-	// 	if (a.length !== b.length) return false;
-	// 	for (let i = 0; i < a.length; i++) {
-	// 		if (a[i] !== b[i]) return false;
-	// 	}
-	// 	return true;
-	// }
 
 	function alignPickers(nextLen: number) {
 		// Keep picker refs aligned WITHOUT making callers react to `pickers`.
@@ -134,44 +101,32 @@
 	}
 
 	function canAdd() {
-		return maxCount === Infinity ? true : items.length < maxCount;
+		return maxCount === Infinity ? true : values.length < maxCount;
 	}
 
 	function canRemove() {
-		return items.length > minCount;
+		return values.length > minCount;
 	}
 
 	function addPicker(afterIndex?: number) {
 		if (!canAdd()) return;
 		const idx =
 			afterIndex === undefined
-				? items.length
-				: Math.min(Math.max(0, afterIndex + 1), items.length);
+				? values.length
+				: Math.min(Math.max(0, afterIndex + 1), values.length);
 
-		items = [...items.slice(0, idx), new XsdDate(), ...items.slice(idx)];
-		alignPickers(items.length);
+		values = [...values.slice(0, idx), new XsdDate(), ...values.slice(idx)];
+		alignPickers(values.length);
 	}
 
 	function removePicker(index: number) {
 		if (!canRemove()) return;
-		if (index < 0 || index >= items.length) return;
+		if (index < 0 || index >= values.length) return;
 
-		items = [...items.slice(0, index), ...items.slice(index + 1)];
-		alignPickers(items.length);
+		values = [...values.slice(0, index), ...values.slice(index + 1)];
+		alignPickers(values.length);
 	}
 
-	// If parent changes `values` later, we reflect it (best-effort)
-	// $effect(() => {
-	// 	const src = Array.isArray(values) ? values : [];
-	// 	const nextItems = normalizeItems(src);
-	//
-	// 	// Only write when something actually changed to avoid effect loops
-	// 	if (!shallowEqual(items, nextItems)) {
-	// 		items = nextItems;
-	// 	}
-	//
-	// 	alignPickers(items.length);
-	// });
 
 	/**
 	 * Returns an array of XsdDate|null, one entry per picker (in order).
@@ -179,7 +134,7 @@
 	 */
 	export const get_value = (): XsdDate[] => {
 		// Ensure we have refs aligned; then pull values from children
-		return items.map((_, i) => pickers[i]?.get_value() || new XsdDate('0000-01-01'));
+		return values.map((_, i) => pickers[i]?.get_value() || new XsdDate('0000-01-01'));
 	};
 </script>
 
@@ -192,7 +147,7 @@
 	</label>
 
 	<div class="mt-2 space-y-2">
-		{#if items.length === 0}
+		{#if values.length === 0}
 			<!-- No values yet (e.g., 0-1 or 0-n): show an add button -->
 			<div class="flex justify-end">
 				<button
@@ -207,7 +162,8 @@
 				</button>
 			</div>
 		{:else}
-			{#each items as initial, i (i)}
+			{#each values as v, i (i)}
+
 				<div class="grid grid-cols-[1fr_auto] gap-2 items-start">
 					<!-- The actual picker -->
 					<div class={userClass}>
@@ -216,7 +172,7 @@
 							showCheckbox={false}
 							name={`${name}[${i}]`}
 							id={id ? `${id}-${i}` : undefined}
-							value={initial}
+							bind:value={values[i]}
 							required={true}
 							bind:disabled={disabled}
 							class={userClass}
@@ -225,7 +181,7 @@
 
 					<!-- +/- controls -->
 					<div class="flex gap-1 pt-6">
-						{#if i === items.length - 1}
+						{#if i === values.length - 1}
 							<button
 								type="button"
 								class="px-2 py-1 rounded-md border text-sm disabled:opacity-40"

@@ -12,7 +12,7 @@
 	import { authInfoStore } from '$lib/stores/authinfo';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { onMount } from 'svelte';
-	import { languageTag } from '$lib/paraglide/runtime';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import { convertToLanguage, getLanguageShortname, Language } from '$lib/oldap/enums/language';
 	import SelectMutiple from '$lib/components/basic_gui/inputs/SelectMutiple.svelte';
 	import LangstringField from '$lib/components/basic_gui/inputs/LangstringField.svelte';
@@ -51,7 +51,7 @@
 
 	let { data } : PageProps = $props();
 
-	let lang = $state(languageTag());
+	let lang = $state(getLocale());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
 
 	let topwin = $state<HTMLElement>();

@@ -5,7 +5,7 @@
 <script lang="ts">
 	import type { OldapProject } from '$lib/oldap/classes/project';
 	import { ResourceClass } from '$lib/oldap/classes/resource';
-	import { languageTag } from '$lib/paraglide/runtime';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
@@ -42,7 +42,7 @@
 	let res_prefixes = $state<Record<string, string>>({});
 	let resources = $state<Record<string, ResourceClass>>({});
 
-	let lang = $state(languageTag());
+	let lang = $state(getLocale());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
 
 	let datamodel = $state<DatamodelClass | null>(null);

@@ -2,12 +2,39 @@ import { convertToLanguage, getLanguageShortname, Language } from '$lib/oldap/en
 import { OldapErrorInvalidValue } from '$lib/oldap/errors/OldapErrorInvalidValue';
 import { difference } from '$lib/helpers/setops';
 
+
+function parseLangTaggedString(input: string): { lang: Language; value: string } | null {
+	const trimmed = input.trim();
+
+	const idx = trimmed.lastIndexOf('@');
+	if (idx === -1) return null;
+
+	const value = trimmed.slice(0, idx);
+	const langTag = trimmed.slice(idx + 1).trim();
+
+	const lang = convertToLanguage(langTag);
+	if (!lang) return null;
+
+	return { lang, value };
+}
+
 export class LangString {
 	static defaultLang: Language = Language.EN
 	#langstrs: Partial<Record<Language, string>>;
 
 	constructor(langstrs?: Partial<Record<Language, string>> | null) {
 		this.#langstrs = langstrs ? langstrs : {};
+	}
+
+	static fromStringArray(strs: string[]) {
+		const result: Partial<Record<Language, string>> = {};
+		for (const str of strs) {
+			const parsed = parseLangTaggedString(str);
+			if (parsed) {
+				result[parsed.lang] = parsed.value;
+			}
+		}
+		return new LangString(result);
 	}
 
 	setDefaultLanguage(defaultLanguage: Language): void {
@@ -76,6 +103,10 @@ export class LangString {
 
 	toJSON(): Partial<Record<Language, string>> {
 		return { ...this.#langstrs };
+	}
+
+	toApi(): string[] {
+		return this.entries().map(([lang, value]) => `${value}@${getLanguageShortname(lang)}`);
 	}
 
 	static fromJson(jsonArray: string[] | undefined): LangString | undefined {

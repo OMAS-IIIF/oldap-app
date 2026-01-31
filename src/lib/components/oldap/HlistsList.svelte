@@ -14,7 +14,7 @@
 	import TableBody from '$lib/components/basic_gui/table/TableBody.svelte';
 	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
 	import TableItem from '$lib/components/basic_gui/table/TableItem.svelte';
-	import { languageTag } from '$lib/paraglide/runtime';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
@@ -32,7 +32,7 @@
 		hlistIsOpen?: boolean
 	} = $props();
 
-	let lang = $state(languageTag());
+	let lang = $state(getLocale());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
 
 	let authinfo = $state<AuthInfo | null>($authInfoStore);
