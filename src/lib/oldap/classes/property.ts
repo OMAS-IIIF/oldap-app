@@ -114,11 +114,11 @@ export class PropertyClass extends OldapObject {
 		this.equivalentProperty = equivalentProperty;
 	}
 
-	get projectId() {
+	get projectId(): NCname {
 		return this.#projectId;
 	}
 
-	get propertyIri() {
+	get propertyIri(): Iri {
 		return this.#propertyIri;
 	}
 

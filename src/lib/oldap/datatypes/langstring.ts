@@ -3,6 +3,11 @@ import { OldapErrorInvalidValue } from '$lib/oldap/errors/OldapErrorInvalidValue
 import { difference } from '$lib/helpers/setops';
 
 
+function extractLang(value: string): string | null {
+	const match = value.match(/@([a-zA-Z-]+)$/);
+	return match ? match[1] : null;
+}
+
 function parseLangTaggedString(input: string): { lang: Language; value: string } | null {
 	const trimmed = input.trim();
 
@@ -157,7 +162,7 @@ export class LangString {
 		}
 		else if (del_strs.size > 0) {
 			res = {
-				del: Array.from(del_strs)
+				del: Array.from(del_strs).map(str => extractLang(str)!)
 			};
 		}
 		return res;

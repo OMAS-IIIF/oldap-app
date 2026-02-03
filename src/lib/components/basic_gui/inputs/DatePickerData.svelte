@@ -67,10 +67,6 @@
 		}
 	})();
 
-	// We keep an internal list for how many pickers to render.
-	// Each entry stores the initial value passed to that picker.
-	let items = $state<XsdDate[]>([]);
-
 	onMount(() => {
 		//ensureCardinality();
 		let changed = false;

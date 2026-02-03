@@ -2800,7 +2800,7 @@ The user must be authenticated with a Bearer token.
 				schema: z.number().int().optional()
 			},
 		],
-		response: z.record(z.object({}).partial().passthrough()),
+		response: z.union([z.record(z.object({}).partial().passthrough()), z.object({ count: z.number().int().optional() })]),
 		errors: [
 			{
 				status: 400,
