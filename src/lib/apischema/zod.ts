@@ -23,7 +23,7 @@ type InstanceData = {
     "oldap:creationDate": Array<string>;
     "oldap:lastModificationDate": Array<string>;
 } & {
-    [key: string]: ValueArray;
+    [key: string]: ValueArray | AttachedToRoleMap;
 };;
 type ValueArray = Array<string | number | number | boolean | null>;;
 type user_get_body_200 = Partial<{
@@ -295,7 +295,8 @@ const postAdminhlistProjectHlistid_Body = z.object({ prefLabel: z.union([LangStr
 const putAdminhlistProjectHlistidNodeid_Body = z.union([z.object({ prefLabel: LangString, definition: LangString.optional(), position: z.enum(["belowOf", "leftOf", "rightOf"]), refnode: z.string() }).passthrough(), z.object({ prefLabel: LangString, definition: LangString.optional(), position: z.literal("root") }).passthrough()]);
 const postAdminhlistProjectHlistidNodeidmove_Body = z.union([z.object({ leftOf: z.string() }).passthrough(), z.object({ rightOf: z.string() }).passthrough(), z.object({ belowOf: z.string() }).passthrough()]);
 const ValueArray = z.array(z.union([z.string(), z.number(), z.number(), z.boolean(), z.null()]));
-const InstanceData: z.ZodType<InstanceData> = z.record(ValueArray);
+const AttachedToRoleMap: z.ZodType<AttachedToRoleMap> = z.record(DataPermission);
+const InstanceData: z.ZodType<InstanceData> = z.record(z.union([ValueArray, AttachedToRoleMap]));
 
 export const schemas = {
 	Error,
@@ -323,6 +324,7 @@ export const schemas = {
 	putAdminhlistProjectHlistidNodeid_Body,
 	postAdminhlistProjectHlistidNodeidmove_Body,
 	ValueArray,
+	AttachedToRoleMap,
 	InstanceData,
 };
 
@@ -2534,7 +2536,7 @@ The user must be authenticated with a Bearer token.
 				schema: z.string()
 			},
 		],
-		response: z.record(ValueArray),
+		response: InstanceData,
 		errors: [
 			{
 				status: 400,
@@ -2787,7 +2789,7 @@ The user must be authenticated with a Bearer token.
 			{
 				name: "sortBy",
 				type: "Query",
-				schema: z.enum(["PROPVAL", "CREATED", "LASTMOD"]).optional()
+				schema: z.array(z.string().regex(/^(?:[A-Za-z_][A-Za-z0-9._-]*:)?[A-Za-z_][A-Za-z0-9._-]*\|(asc|desc)$/)).optional()
 			},
 			{
 				name: "limit",
@@ -2800,7 +2802,7 @@ The user must be authenticated with a Bearer token.
 				schema: z.number().int().optional()
 			},
 		],
-		response: z.union([z.record(z.object({}).partial().passthrough()), z.object({ count: z.number().int().optional() })]),
+		response: z.union([z.record(z.record(z.array(z.string()))), z.object({ count: z.number().int().optional() })]),
 		errors: [
 			{
 				status: 400,
@@ -2854,7 +2856,7 @@ The user must be authenticated with a Bearer token.
 			{
 				name: "sortBy",
 				type: "Query",
-				schema: z.enum(["PROPVAL", "CREATED", "LASTMOD"]).optional()
+				schema: z.array(z.string().regex(/^(?:[A-Za-z_][A-Za-z0-9._-]*:)?[A-Za-z_][A-Za-z0-9._-]*\|(asc|desc)$/)).optional()
 			},
 			{
 				name: "limit",

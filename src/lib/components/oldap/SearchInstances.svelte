@@ -15,11 +15,15 @@
 	import DropdownField from '$lib/components/basic_gui/inputs/DropdownField.svelte';
 	import { ResourceClass } from '$lib/oldap/classes/resource';
 	import { onMount } from 'svelte';
-	import { Search } from '@lucide/svelte';
+	import { Search, Pencil, Trash2 } from '@lucide/svelte';
 	import { api_config } from '$lib/helpers/api_config';
 	import { apiClient } from '$lib/shared/apiClient';
 	import SelectMutiple from '$lib/components/basic_gui/inputs/SelectMutiple.svelte';
 	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
+	import { extractLang, LangString } from '$lib/oldap/datatypes/langstring';
+
+	type ApiRes = Record<string, Record<string, (string|number|boolean|null)[]>>;
+	type Result = Record<string, LangString | string[] | null>;
 
 	let lang = $state(getLocale());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
@@ -41,7 +45,7 @@
 	let all_props = $state<Set<{key: string, label?: string}>>();
 	let selprops = $state<Set<string>>(new Set());
 	let count = $state(0);
-	let results = $state<Record<string, string[]>>({});
+	let results = $state<ApiRes>({});
 
 	let searchstring = $state('');
 
@@ -71,10 +75,6 @@
 		return [];
 	}
 
-	type ApiRes =
-		| Record<string, Record<string, unknown>>   // “passthrough object”
-		| { count?: number }
-		| undefined;
 
 	function normalizeToRecordOfStringArrays(
 		res: ApiRes,
@@ -94,6 +94,25 @@
 		return out;
 	}
 
+	function formatCellValue(v: string | number | boolean | null): string {
+		if (v === null) return '';
+		if (typeof v === 'boolean') return v ? 'true' : 'false';
+		return String(v);
+	}
+
+	function cellValues(row: Record<string, (string | number | boolean | null)[]> | undefined, prop: string): (string | number | boolean | null)[] {
+		return row?.[prop] ?? [];
+	}
+
+	function openEditor(iri: string) {
+		// TODO: wire to your real editor route
+		console.log('open editor for', iri);
+	}
+
+	function deleteInstance(iri: string) {
+		// TODO: wire to your real delete endpoint (and probably ask for confirmation)
+		console.log('delete instance', iri);
+	}
 
 	function do_search(searchstring: string) {
 		if (!authinfo || !datamodel) return;
@@ -111,6 +130,9 @@
 				count = Number(res.count) || 0;
 				if (!authinfo || !datamodel) return;
 				if (!project) return;
+				if (selprops.size == 0) {
+					selprops.add('oldap:creationDate');
+				}
 				let allofclass_get_config = api_config(
 					authinfo,
 					{
@@ -121,14 +143,24 @@
 						...(selprops ? { includeProperties: Array.from(selprops) } : {})
 					}
 				);
+				console.log("allofclass_get_config", allofclass_get_config);
 				return apiClient.getDataofclassProject(allofclass_get_config)
 			}).then(res => {
-				const r = normalizeToRecordOfStringArrays(res);
-				Object.entries(r).forEach(([iri, vals]) => {
-					results[iri] = [ ...vals]
-				})
-				console.log('got 1 ', res);
-				console.log('got 2 ', r);
+				console.log('res', res);
+				// The API returns ApiRes: Record<iri, Record<prop, primitive[]>>
+				results = (res ?? {}) as ApiRes;
+				for (const [iri, row] of Object.entries(results)) {
+					for (const [prop, values] of Object.entries(row)) {
+						let is_langstring = true;
+						for (const v of values) {
+							if (!extractLang(v)) is_langstring = false;
+						}
+						if (is_langstring) {
+							results[iri][prop] = [LangString.fromStringArray(values).get(langobj) || ''] as [string | null]
+						}
+					}
+				}
+				console.log('>>>', $state.snapshot(results));
 			})
 
 		}
@@ -194,7 +226,6 @@
 			bind:values={selprops}
 		/>
 
-
 		<div class="mt-4 flex items-center gap-2">
 			<input
 				type="text"
@@ -216,22 +247,57 @@
 	</form>
 	<hr />
 	{#if count > 0}
-		<div> Found {count} instances</div>
-		<table>
-			<thead>
-			{#each Array.from(selprops) as prop (prop) }
-				<th>{prop}</th>
-			{/each}
-			</thead>
-			<tbody>
-			{#each Object.entries(results) as [prop, tmp] (prop)}
-				<tr>
-					{#each tmp as val (val) }
-						<td>{val}</td>
+		<div class="mt-2">Found {count} instances</div>
+
+		<div class="mt-2 overflow-x-auto">
+			<table class="min-w-full table-auto border-collapse text-sm">
+				<thead>
+					<tr class="border-b">
+						{#each Array.from(selprops) as prop (prop)}
+							<th class="px-2 py-2 text-left font-medium">{prop}</th>
+						{/each}
+						<th class="px-2 py-2 text-left font-medium">Actions</th>
+					</tr>
+				</thead>
+
+				<tbody>
+					{#each Object.entries(results) as [iri, row] (iri)}
+						<tr class="border-b align-top">
+							{#each Array.from(selprops) as prop (prop)}
+								<td class="px-2 py-2 align-top">
+									<div class="flex flex-col gap-1">
+										{#each cellValues(row, prop) as v (formatCellValue(v))}
+											<div class="whitespace-pre-wrap break-words">{formatCellValue(v)}</div>
+										{/each}
+									</div>
+								</td>
+							{/each}
+
+							<td class="px-2 py-2 align-top">
+								<div class="flex items-center gap-2">
+									<button
+										type="button"
+										class="rounded p-1 hover:bg-gray-100"
+										title="Edit"
+										onclick={() => openEditor(iri)}
+									>
+										<Pencil size={16} />
+									</button>
+
+									<button
+										type="button"
+										class="rounded p-1 hover:bg-gray-100"
+										title="Delete"
+										onclick={() => deleteInstance(iri)}
+									>
+										<Trash2 size={16} />
+									</button>
+								</div>
+							</td>
+						</tr>
 					{/each}
-				</tr>
-			{/each}
-			</tbody>
-		</table>
+				</tbody>
+			</table>
+		</div>
 	{/if}
 </div>

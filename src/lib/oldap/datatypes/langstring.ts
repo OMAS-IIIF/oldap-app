@@ -3,8 +3,8 @@ import { OldapErrorInvalidValue } from '$lib/oldap/errors/OldapErrorInvalidValue
 import { difference } from '$lib/helpers/setops';
 
 
-function extractLang(value: string): string | null {
-	const match = value.match(/@([a-zA-Z-]+)$/);
+export function extractLang(value: string): string | null {
+	const match = value.match(/@([a-z][a-z])$/);
 	return match ? match[1] : null;
 }
 
@@ -99,6 +99,10 @@ export class LangString {
 		return this.entries().map(([key, value]) => callback(key, value));
 	}
 
+	filter(callback: (key: Language, value: string) => boolean): [Language, string][] {
+		return this.entries().filter(([key, value]) => callback(key, value));
+	}
+
 	// Optional: make it iterable
 	*[Symbol.iterator](): IterableIterator<[Language, string]> {
 		for (const entry of this.entries()) {
@@ -138,7 +142,7 @@ export class LangString {
 
 	modify_data(from: LangString | null): string[] | Partial<Record<'add'|'del', string[]>> | null | undefined {
 		let res: string[] | Partial<Record<'add'|'del', string[]>> | null | undefined = undefined;
-
+		this.removeEmpty();
 		const from_strs = new Set<string>(from?.map((lang, val) => `${val}@${getLanguageShortname(lang)}`));
 		const this_strs = new Set<string>(this.map((lang, val) => `${val}@${getLanguageShortname(lang)}`));
 		const add_strs = difference(this_strs, from_strs);
@@ -152,7 +156,7 @@ export class LangString {
 		else if (add_strs.size > 0 && del_strs.size > 0) {
 			res = {
 				add: Array.from(add_strs),
-				del: Array.from(del_strs)
+				del: Array.from(del_strs).map(str => extractLang(str)!)
 			};
 		}
 		else if (add_strs.size > 0) {
@@ -166,6 +170,14 @@ export class LangString {
 			};
 		}
 		return res;
+	}
+
+	removeEmpty(): void {
+		for (const [lang, value] of Object.entries(this.#langstrs) as [Language, string][]) {
+			if (value.trim() === "") {
+				delete this.#langstrs[lang];
+			}
+		}
 	}
 
 	clone(): LangString {
