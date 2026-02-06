@@ -1,4 +1,3 @@
-
 <script lang="ts">
 
 import LeftHeader from '$lib/components/basic_gui/header/LeftHeader.svelte';
@@ -40,6 +39,7 @@ let { children } = $props();
 let project = $state<OldapProject | null>(null);
 let user = $state<OldapUser | null>(null);
 let create_resource = $state(false);
+let edit_instiri = $state<string | undefined>(undefined);
 
 userStore.subscribe(stored_user => {
 	user = stored_user;
@@ -72,8 +72,9 @@ function create_instance_window() {
 }
 
 function create_search_window() {
-	createWindow('Search Instances', searchInstances, { x: 120, y: 120, width: 400, height: 600 });
+	createWindow('Search Instances', searchInstances, { x: 120, y: 120, width: 600, height: 600 });
 }
+
 
 </script>
 
@@ -147,5 +148,4 @@ function create_search_window() {
 	<ErrorMsg></ErrorMsg>
 	<SuccessMsg></SuccessMsg>
 </div>
-
 

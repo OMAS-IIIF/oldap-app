@@ -19,8 +19,9 @@
 	import { api_config } from '$lib/helpers/api_config';
 	import { apiClient } from '$lib/shared/apiClient';
 	import SelectMutiple from '$lib/components/basic_gui/inputs/SelectMutiple.svelte';
-	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
 	import { extractLang, LangString } from '$lib/oldap/datatypes/langstring';
+	import { createWindow } from '$lib/stores/windows.svelte';
+	import InstanceEditor from '$lib/components/oldap/InstanceEditor.svelte';
 
 	type ApiRes = Record<string, Record<string, (string|number|boolean|null)[]>>;
 	type Result = Record<string, LangString | string[] | null>;
@@ -48,6 +49,7 @@
 	let results = $state<ApiRes>({});
 
 	let searchstring = $state('');
+	let edit_instiri = $state<string | undefined>(undefined);
 
 	// type guards and their helpers
 	function isCountResponse(x: unknown): x is { count?: number } {
@@ -75,25 +77,6 @@
 		return [];
 	}
 
-
-	function normalizeToRecordOfStringArrays(
-		res: ApiRes,
-		pickField?: string // optional: which field inside each object holds the strings
-	): Record<string, string[]> {
-		if (!res || isCountResponse(res)) return {};
-
-		const out: Record<string, string[]> = {};
-
-		for (const [key, value] of Object.entries(res)) {
-			// If each entry is an object and you need a specific property from it:
-			const payload = pickField ? (value as any)?.[pickField] : value;
-
-			out[key] = toStringArray(payload);
-		}
-
-		return out;
-	}
-
 	function formatCellValue(v: string | number | boolean | null): string {
 		if (v === null) return '';
 		if (typeof v === 'boolean') return v ? 'true' : 'false';
@@ -105,8 +88,9 @@
 	}
 
 	function openEditor(iri: string) {
-		// TODO: wire to your real editor route
 		console.log('open editor for', iri);
+		edit_instiri = iri;
+		createWindow('Edit Instance', editInstance, { x: 220, y: 80, width: 400, height: 600 });
 	}
 
 	function deleteInstance(iri: string) {
@@ -254,7 +238,7 @@
 				<thead>
 					<tr class="border-b">
 						{#each Array.from(selprops) as prop (prop)}
-							<th class="px-2 py-2 text-left font-medium">{prop}</th>
+							<th class="px-2 py-2 text-left font-medium">{Array.from(all_props || []).find(x => x.key === prop)?.label || prop}</th>
 						{/each}
 						<th class="px-2 py-2 text-left font-medium">Actions</th>
 					</tr>
@@ -301,3 +285,7 @@
 		</div>
 	{/if}
 </div>
+
+{#snippet editInstance()}
+	<InstanceEditor propertyIri={edit_instiri} />
+{/snippet}

@@ -19,7 +19,7 @@
 	import DatePickerData from '$lib/components/basic_gui/inputs/DatePickerData.svelte';
 	import { XsdDate } from '$lib/oldap/datatypes/xsd_date';
 	import { apiClient } from '$lib/shared/apiClient';
-	import { api_get_config, api_notget_config } from '$lib/helpers/api_config';
+	import { api_config, api_get_config, api_notget_config } from '$lib/helpers/api_config';
 	import { projectStore } from '$lib/stores/project';
 	import type { OldapProject } from '$lib/oldap/classes/project';
 	import { LangString } from '$lib/oldap/datatypes/langstring';
@@ -36,10 +36,8 @@
 
 	let {
 		propertyIri,
-		closer,
 	} : {
 		propertyIri?: string;
-		closer?: () => void;
 	} = $props();
 
 	let authinfo = $state<AuthInfo | null>(null);
@@ -125,6 +123,36 @@
 		res_prefixes = tmp_prefixes
 		resources = tmp_resources;
 		selected_resource = tmp_list[0];
+		if (propertyIri) {
+			values = {};
+			const get_data = api_config(authinfo || new AuthInfo('unknown', ''), {
+				project: project?.projectShortName.toString() || '',
+				instiri: encodeURIComponent(propertyIri.toString() || ''),
+			});
+			apiClient.getDataProjectInstiri(get_data).then(data => {
+				selres = data && data['rdf:type'] ? data['rdf:type'][0]?.toString() : '';
+				for (const prop of (resources[selres]?.hasProperty || [])) {
+					if (data[prop.property.propertyIri.toString()] === undefined) {
+						values[prop.property.propertyIri.toString()] = [];
+						continue;
+					}
+					if (prop.property.propertyIri.toString() !== 'oldap:attachedToRole') {
+						switch(prop.property.datatype) {
+							case XsdDatatypes.xsdString:
+								values[prop.property.propertyIri.toString()] = data[prop.property.propertyIri.toString()] as Array<string>;
+								break;
+							case XsdDatatypes.date:
+								values[prop.property.propertyIri.toString()] = (data[prop.property.propertyIri.toString()] as Array<string>).map((x) => new XsdDate(x));
+								break;
+							case XsdDatatypes.langString:
+								values[prop.property.propertyIri.toString()] = LangString.fromStringArray(data[prop.property.propertyIri.toString()] as Array<string>);
+								break;
+						}
+					}
+				}
+				console.log('VALUES', $state.snapshot(values));
+			}).catch(err => {console.error(err)});
+		}
 	});
 
 	$effect(() => {
@@ -134,6 +162,7 @@
 
 	$effect(() => {
 		const _ = selres; // effect must run if selres changes
+		if (propertyIri) return;
 		untrack(() => {
 			if (resources[selres]?.hasProperty !== undefined) {
 				const hasprops = (resources[selres].hasProperty || []).sort((a: HasProperty, b: HasProperty) => a?.order || 9999 - b?.order || 9999);
@@ -148,7 +177,6 @@
 									for (let j = 0; j < hasprop.minCount; j++) {
 										values[hasprop.property.propertyIri.toString()] = [...(values[hasprop.property.propertyIri.toString()] as []), ''];
 									}
-									console.log('xsd:String', $state.snapshot(values[hasprop.property.propertyIri.toString()]));
 									break;
 								case XsdDatatypes.date:
 									for (let j = 0; j < hasprop.minCount; j++) {
@@ -157,7 +185,6 @@
 									break;
 								case XsdDatatypes.langString:
 									values[hasprop.property.propertyIri.toString()] = new LangString();
-									console.log('LangString', $state.snapshot(values[hasprop.property.propertyIri.toString()]));
 									break;
 								default:
 									values[hasprop.property.propertyIri.toString()] = [...(values[hasprop.property.propertyIri.toString()] as []), ''];
@@ -168,31 +195,8 @@
 						// 	values[hasprop.property.propertyIri.toString()].push('');
 						// }
 					}
-					else { // we want to edit an existing instance...
-						values[hasprop.property.propertyIri.toString()] = []
-						const get_data = api_get_config(authinfo || new AuthInfo('unknown', ''), {
-							project: project?.projectIri?.toString() || '',
-							instiri: propertyIri.toString() || '',
-						});
-						apiClient.getDataProjectInstiri(get_data).then(data => {
-							(resources[selres]?.hasProperty || []).forEach(prop => {
-								switch(prop.property.datatype) {
-									case XsdDatatypes.xsdString:
-										values[prop.property.propertyIri.toString()] = data[prop.property.propertyIri.toString()].map((x) => x as string);
-										break;
-									case XsdDatatypes.date:
-										values[prop.property.propertyIri.toString()] = data[prop.property.propertyIri.toString()].map((x) => new XsdDate(x as string));
-										break;
-									case XsdDatatypes.langString:
-										values[prop.property.propertyIri.toString()] = LangString.fromStringArray(data[prop.property.propertyIri.toString()]);
-								}
-								// TODO: Deal with more datatypes
-							});
-						}).catch(err => {console.error(err)});
-					}
 				});
 			}
-			console.log("values", $state.snapshot(values));
 		});
 	});
 
@@ -241,6 +245,7 @@
 			id="allres_id"
 			name="allprops"
 			label="FROM RESOURCE TYPE"
+			disabled={propertyIri !== undefined}
 			bind:selectedItem={selres}
 		/>
 
