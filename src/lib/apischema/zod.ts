@@ -2802,7 +2802,7 @@ The user must be authenticated with a Bearer token.
 				schema: z.number().int().optional()
 			},
 		],
-		response: z.union([z.record(z.record(z.array(z.string()))), z.object({ count: z.number().int().optional() })]),
+		response: z.union([z.array(z.record(z.array(z.string()))), z.object({ count: z.number().int().optional() })]),
 		errors: [
 			{
 				status: 400,

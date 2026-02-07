@@ -23,8 +23,8 @@
 	import { createWindow } from '$lib/stores/windows.svelte';
 	import InstanceEditor from '$lib/components/oldap/InstanceEditor.svelte';
 
-	type ApiRes = Record<string, Record<string, (string|number|boolean|null)[]>>;
-	type Result = Record<string, LangString | string[] | null>;
+	type ApiRes = Record<string, (string|number|boolean|null)[]>[];
+	type Result = Record<string, Record<string, (string|number|boolean|null)[] | null>>;
 
 	let lang = $state(getLocale());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
@@ -46,7 +46,7 @@
 	let all_props = $state<Set<{key: string, label?: string}>>();
 	let selprops = $state<Set<string>>(new Set());
 	let count = $state(0);
-	let results = $state<ApiRes>({});
+	let results = $state<Result>({});
 
 	let searchstring = $state('');
 	let edit_instiri = $state<string | undefined>(undefined);
@@ -129,22 +129,29 @@
 				);
 				console.log("allofclass_get_config", allofclass_get_config);
 				return apiClient.getDataofclassProject(allofclass_get_config)
-			}).then(res => {
-				console.log('res', res);
-				// The API returns ApiRes: Record<iri, Record<prop, primitive[]>>
-				results = (res ?? {}) as ApiRes;
-				for (const [iri, row] of Object.entries(results)) {
-					for (const [prop, values] of Object.entries(row)) {
+			}).then(data => {
+				console.log('data', data);
+				// The API returns ApiRes: Record<prop, primitive[]>[]
+				results = {};
+				for (const d of (data as Record<string, string[]>[]) || []) {
+					const iri = d['iri'][0];
+					results[iri] = {};
+					for (const [prop, values] of Object.entries(d)) {
+						if (prop === 'iri') continue;
+
 						let is_langstring = true;
 						for (const v of values) {
 							if (!extractLang(v)) is_langstring = false;
 						}
 						if (is_langstring) {
-							results[iri][prop] = [LangString.fromStringArray(values).get(langobj) || ''] as [string | null]
+							results[iri][prop] = [LangString.fromStringArray(values).get(langobj)];
+						}
+						else {
+							results[iri][prop] = values.map(v => v.toString());
 						}
 					}
 				}
-				console.log('>>>', $state.snapshot(results));
+
 			})
 
 		}
