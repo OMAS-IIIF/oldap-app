@@ -90,7 +90,7 @@
 			return;
 		}
 		const config_hlistdata = api_config(authinfo as AuthInfo, {
-			project: project?.projectIri?.toString() || '',
+			project: project?.projectShortName?.toString() || '',
 			hlistid: hlist_id
 		});
 		apiClient.deleteAdminhlistProjectHlistid(undefined, config_hlistdata).then((result) => {

@@ -49,7 +49,6 @@
 
 	datamodelStore.subscribe(dm => {
 		datamodel = dm;
-		console.log("datamodel changed", dm);
 	});
 
 	projectStore.subscribe(proj => {
@@ -58,7 +57,6 @@
 
 	$effect(() => {
 		//const _ = $refreshPropertiesList;
-		console.log("ExternalOntologies: $effect() called", datamodel);
 		let tmp_list = [];
 		let tmp_extontos: Record<string, ExternalOntology> = {};
 		//const datamodel = $datamodelStore;

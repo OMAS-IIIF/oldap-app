@@ -5,6 +5,7 @@ import { LangString } from '$lib/oldap/datatypes/langstring';
 import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
 import { DataPermission } from '$lib/oldap/enums/data_permissions';
+import { QName } from '$lib/oldap/datatypes/xsd_qname';
 
 export enum OwlPropertyType {
 	OwlDataProperty = 'owl:DatatypeProperty',
@@ -56,6 +57,7 @@ export type PropertyClassOptions = {
 	lessThanOrEquals?: Iri;
 	inverseOf?: Iri;
 	equivalentProperty?: Iri;
+	editor?: QName;
 }
 
 export class PropertyClass extends OldapObject {
@@ -81,13 +83,14 @@ export class PropertyClass extends OldapObject {
 	lessThanOrEquals?: Iri;
 	inverseOf?: Iri;
 	equivalentProperty?: Iri;
+	editor?: QName;
 
 
 	constructor({
 								creator, created, contributor, modified, projectId, propertyIri, ptype, subPropertyOf, toClass, datatype,
 								name, description, languageIn, uniqueLang, inSet, minLength, maxLength, pattern,
 								minExclusive, minInclusive, maxExclusive, maxInclusive, lessThan, lessThanOrEquals,
-								inverseOf, equivalentProperty
+								inverseOf, equivalentProperty, editor
 							}: PropertyClassOptions) {
 		super(creator, created, contributor, modified);
 		this.#projectId = projectId;
@@ -112,9 +115,10 @@ export class PropertyClass extends OldapObject {
 		this.lessThanOrEquals = lessThanOrEquals;
 		this.inverseOf = inverseOf;
 		this.equivalentProperty = equivalentProperty;
+		this.editor = editor;
 	}
 
-	get projectId(): NCname {
+	get projectId(): NCName {
 		return this.#projectId;
 	}
 
@@ -150,6 +154,7 @@ export class PropertyClass extends OldapObject {
 			lessThanOrEquals: this.lessThanOrEquals?.clone(),
 			inverseOf: this.inverseOf?.clone(),
 			equivalentProperty: this.equivalentProperty?.clone(),
+			editor: this.editor?.clone(),
 		})
 	}
 
@@ -180,6 +185,7 @@ export class PropertyClass extends OldapObject {
 		const lessThanOrEquals = new Iri(json?.lessThanOrEquals);
 		const inverseOf = new Iri(json?.inverseOf);
 		const equivalentProperty = json?.equivalentProperty;
+		const editor = json?.editor ? QName.createQName(json?.editor) : undefined;
 
 		return new PropertyClass({
 			creator: creator,
@@ -208,6 +214,7 @@ export class PropertyClass extends OldapObject {
 			lessThanOrEquals: lessThanOrEquals,
 			inverseOf: inverseOf,
 			equivalentProperty: equivalentProperty,
+			editor: editor,
 		});
 
 	}

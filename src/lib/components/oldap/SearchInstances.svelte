@@ -23,7 +23,6 @@
 	import { createWindow } from '$lib/stores/windows.svelte';
 	import InstanceEditor from '$lib/components/oldap/InstanceEditor.svelte';
 
-	type ApiRes = Record<string, (string|number|boolean|null)[]>[];
 	type Result = Record<string, Record<string, (string|number|boolean|null)[] | null>>;
 
 	let lang = $state(getLocale());
@@ -37,8 +36,7 @@
 	const languages = Array.from(locales).map(lang => convertToLanguage(lang));
 
 	let res_list = $state<string[]>([]);
-	let res_prefixes = $state<Record<string, string>>({});
-	let resources = $state<Record<string, ResourceClass>>({});
+	//let resources = $state<Record<string, ResourceClass>>({});
 	let selected_resource = $state<string>('');
 
 	let selres = $state<string>('');
@@ -95,6 +93,19 @@
 
 	function deleteInstance(iri: string) {
 		// TODO: wire to your real delete endpoint (and probably ask for confirmation)
+		const ok = window.confirm(`Do you really want to delete item ${iri}?`);
+		if (!ok) return;
+
+		const delete_data = api_config(authinfo || new AuthInfo('unknown', ''), {
+			project: encodeURIComponent(project?.projectShortName?.toString() || ''),
+			instiri: encodeURIComponent(iri)
+		})
+		apiClient.deleteDataProjectInstiri(undefined, delete_data).then(res => {
+			delete results[iri];
+			window.alert('Instance deleted successfully');
+		}).catch(err => {
+			window.alert('Error deleting instance: ' + err.message);
+		});
 		console.log('delete instance', iri);
 	}
 
@@ -165,23 +176,33 @@
 	datamodelStore.subscribe(data => { datamodel = data });
 	projectStore.subscribe(proj => { project = proj });
 
-	onMount(async () => {
+	// onMount(async () => {
+	// 	const tmp_res = datamodel?.resources.filter(x => {
+	// 		const gaga = x?.superclass ? [...x.superclass].map(s => s.toString()) : [];
+	// 		return !gaga.includes('oldap:OldapListNode');
+	// 	}) || [];
+	// 	let tmp_list = [];
+	// 	//let tmp_resources: Record<string, ResourceClass> = {};
+	// 	//const datamodel = $datamodelStore;
+	// 	for (const res of tmp_res) {
+	// 		//tmp_resources[res.iri.toString()] = res
+	// 		tmp_list.push(res.iri.toString() || 'XXXX');
+	// 	}
+	// 	res_list = tmp_list
+	// 	//resources = tmp_resources;
+	// 	selected_resource = tmp_list[0];
+	// });
+
+	$effect(() => {
 		const tmp_res = datamodel?.resources.filter(x => {
 			const gaga = x?.superclass ? [...x.superclass].map(s => s.toString()) : [];
 			return !gaga.includes('oldap:OldapListNode');
 		}) || [];
 		let tmp_list = [];
-		let tmp_prefixes: Record<string, string> = {};
-		let tmp_resources: Record<string, ResourceClass> = {};
-		//const datamodel = $datamodelStore;
 		for (const res of tmp_res) {
-			tmp_resources[res.iri.toString()] = res
 			tmp_list.push(res.iri.toString() || 'XXXX');
-			tmp_prefixes[res.iri.toString()] = res.iri.toString();
 		}
 		res_list = tmp_list
-		res_prefixes = tmp_prefixes
-		resources = tmp_resources;
 		selected_resource = tmp_list[0];
 	});
 

@@ -287,6 +287,7 @@ in relation with a resource class.
 			irreflexiveProperty = false;
 			functionalProperty = false;
 			inverseFunctionalProperty = false;
+			editor = gui_editor_hints[0];
 		}
 		else {
 		  const tmp = QName.createQName(propiri);

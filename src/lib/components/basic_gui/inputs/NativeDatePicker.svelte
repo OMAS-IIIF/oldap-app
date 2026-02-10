@@ -38,7 +38,7 @@
 		label?: string;
 		name: string;
 		id?: string;
-		value?: XsdDate;
+		value?: XsdDate | null;
 		required?: boolean;
 		showCheckbox?: boolean;
 		disabled?: boolean;
@@ -57,21 +57,31 @@
 
 	// Sync incoming `value` into the input string and is_used.
 	$effect(() => {
-		if (!showCheckbox) {
-			is_used = true;
-		}
-		if (required) {
-			is_used = true;
-		}
-
 		if (value === null || value === undefined) {
 			dateStr = '';
 			if (!required) is_used = false;
 			return;
+		} else {
+			if (!showCheckbox) {
+				is_used = true;
+			}
+			if (required) {
+				is_used = true;
+			}
 		}
+
 
 		dateStr = value.toString() || '';
 		is_used = true;
+	});
+
+	$effect(() => {
+		if (is_used) {
+			value = new XsdDate(dateStr);
+		}
+		else {
+			value = null;
+		}
 	});
 
 	function set_today() {

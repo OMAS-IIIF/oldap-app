@@ -12,19 +12,18 @@
 	import { OldapProject } from '$lib/oldap/classes/project';
 	import { api_notget_config } from '$lib/helpers/api_config.js';
 	import { LangString } from '$lib/oldap/datatypes/langstring';
-	import LangstringField from '$lib/components/basic_gui/inputs/LangstringField.svelte';
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
-	import DatePicker from '$lib/components/basic_gui/inputs/DatePicker.svelte';
 	import { XsdDate } from '$lib/oldap/datatypes/xsd_date';
 	import { successInfoStore } from '$lib/stores/successinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
-	import { getLanguageShortname } from '$lib/oldap/enums/language';
+	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import { authInfoStore } from '$lib/stores/authinfo';
-	import { getLocale } from '$lib/paraglide/runtime';
+	import { getLocale, locales } from '$lib/paraglide/runtime';
 	import { goto_page } from '$lib/helpers/goto_page';
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
 	import { refreshProjectsListNow } from '$lib/stores/refresh_projectslist.svelte';
 	import NativeDatePicker from '$lib/components/basic_gui/inputs/NativeDatePicker.svelte';
+	import LangstringfieldNew from '$lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
 
 
 	let { data }: PageProps = $props();
@@ -36,6 +35,8 @@
 
 	let lang = $state(getLocale());
 
+	const languages = Array.from(locales).map(lang => convertToLanguage(lang) || Language.DE);
+
 	let authinfo: AuthInfo | null = $authInfoStore;
 	let administrator = $state<OldapUser | null>(null);
 
@@ -43,14 +44,14 @@
 	let projectIri = $state('');
 	let sname = $state('');
 	let namespaceIri = $state('');
-	let label_field: LangstringField;
-	let label = $state<LangString | null>(null);
-	let comment_field: LangstringField;
-	let comment = $state<LangString | null>(null);
-	let projectStart_field: DatePicker;
-	let projectStart = $state<XsdDate | null>(null);
-	let projectEnd_field: DatePicker;
+	let label = $state<LangString>(new LangString());
+	let orig_label: LangString = new LangString();
+	let comment = $state<LangString>(new LangString());
+	let orig_comment: LangString = new LangString();
+	let projectStart = $state<XsdDate>(new XsdDate());
+	let orig_projectStart: XsdDate = new XsdDate();
 	let projectEnd = $state<XsdDate | null>(null);
+	let orig_projectEnd: XsdDate | null = null;
 
 	let topwin = $state<HTMLElement>();
 
@@ -84,10 +85,14 @@
 						projectIri = project.projectIri.toString();
 						sname = project.projectShortName.toString();
 						namespaceIri = project.namespaceIri.toString();
-						label = project.label || null;
-						comment = project.comment || null;
-						projectStart = project.projectStart || null;
+						label = project.label || new LangString();
+						orig_label = label.clone();
+						comment = project.comment || new LangString();
+						orig_comment = comment.clone();
+						projectStart = project.projectStart || new XsdDate();
+						orig_projectStart = projectStart.clone();
 						projectEnd = project.projectEnd || null;
+						orig_projectEnd = projectEnd ? projectEnd.clone() : null;
 					}
 				}
 			}
@@ -107,10 +112,8 @@
 		if (!ok) return;
 
 		if (!authinfo) return;
-		const label = label_field.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
-		const comment = comment_field.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
-		const projectStart = projectStart_field.get_value();
-		const projectEnd = projectEnd_field.get_value();
+		//const projectStart = projectStart_field.get_value();
+		//const projectEnd = projectEnd_field.get_value();
 		let projectdata: {
 			projectIri?: string,
 			namespaceIri: string,
@@ -121,14 +124,14 @@
 		} = {
 			projectIri: projectIri.length > 0 ? projectIri : undefined,
 			namespaceIri: namespaceIri,
-			label: label.length > 0 ? label : undefined,
-			comment: comment.length > 0 ? comment : undefined,
-			projectStart: projectStart?.toString(),
-			projectEnd: projectEnd?.toString()
+			label: label.toApi() || undefined,
+			comment: comment.toApi() || undefined,
+			projectStart: projectStart.toApi() || undefined,
+			projectEnd: projectEnd?.toApi() || undefined
 		};
 		const project_put = api_notget_config(authinfo, {projectId: sname});
 		apiClient.putAdminprojectProjectId(projectdata, project_put).then(() => {
-			const empty_dm = api_notget_config(authinfo, {project: sname});
+			const empty_dm = api_notget_config(authinfo || new AuthInfo('unknown', ''), {project: sname});
 			return apiClient.putAdmindatamodelProject(undefined, empty_dm);
 		}).then(() => {
 			successInfoStore.set(`Project ${sname} added successfully!`);
@@ -150,30 +153,18 @@
 			projectStart?: string | null,
 			projectEnd?: string | null,
 		} = {};
-		const new_label = label_field.get_value();
-		const tmp_modlabel = new_label.modify_data(project?.label || null);
-		if (tmp_modlabel !== undefined) {
-			projectdata.label = new_label.modify_data(project?.label || null);
-		}
 
-		const new_comment = comment_field.get_value();
-		const tmp_modcomment = new_comment.modify_data(project?.comment || null);
-		if (tmp_modcomment !== undefined) {
-			projectdata.comment = new_comment.modify_data(project?.comment || null);
+		projectdata.label = label.modify_data(orig_label || null);
+		projectdata.comment = comment.modify_data(orig_comment || null);
+		if (!XsdDate.areEqual(projectStart, orig_projectStart)) {
+			projectdata.projectStart = projectStart?.toApi() || null;
 		}
-
-		const new_projectStart = projectStart_field.get_value();
-		if (!XsdDate.areEqual(new_projectStart, project?.projectStart)) {
-			projectdata.projectStart = new_projectStart?.toString() || null;
-		}
-
-		const new_projectEnd = projectEnd_field.get_value();
-		if (!XsdDate.areEqual(new_projectEnd, project?.projectEnd)) {
-			projectdata.projectEnd = new_projectEnd?.toString() || null;
+		if (!XsdDate.areEqual(projectEnd, orig_projectEnd)) {
+			projectdata.projectEnd = projectEnd?.toApi() || null;
 		}
 
 		if (projectdata) {
-			const project_post = api_notget_config(authinfo, {projectId: project?.projectShortName.toString() || ''});
+			const project_post = api_notget_config(authinfo || new AuthInfo('unknown', ''), {projectId: project?.projectShortName.toString() || ''});
 			apiClient.postAdminprojectProjectId(projectdata, project_post).then((res) => {
 				successInfoStore.set(`Project "${res.projectId}" modified successfully!`);
 			}).catch((error) => {
@@ -193,10 +184,35 @@
 							 bind:value={sname} pattern={ncname_pattern} disabled={data?.sname !== 'new'} />
 		<Textfield type='text' label={m.namespaceiri()} name="namespaceiri" id="namespaceiri" placeholder="namespace iri" required={true}
 							 bind:value={namespaceIri} pattern={namespace_pattern} disabled={data?.sname !== 'new'} />
-		<LangstringField bind:this={label_field} label={m.label()} name="label" id="label" placeholder="label" value={label} />
-		<LangstringField bind:this={comment_field} label={m.comment()} name="comment" id="comment" placeholder="comment" value={comment} />
-		<NativeDatePicker bind:this={projectStart_field} label="Project start" name="project_start" id="project_start" value={projectStart} />
-		<NativeDatePicker bind:this={projectEnd_field} label="Project start" name="project_start" id="project_start" value={projectEnd} />
+		<LangstringfieldNew
+			label={m.label()}
+			name="label"
+			id="label"
+			languages={languages}
+			placeholder="label"
+			bind:value={label}
+		/>
+		<LangstringfieldNew
+			label={m.comment()}
+			name="comment"
+			id="comment"
+			languages={languages}
+			placeholder="comment"
+			input_type="textarea"
+			bind:value={comment}
+		/>
+		<NativeDatePicker
+			label="Project start"
+			name="project_start"
+			id="project_start"
+			required={true}
+			bind:value={projectStart} />
+		<NativeDatePicker
+			label="Project start"
+			name="project_start"
+			id="project_start"
+			bind:value={projectEnd}
+		/>
 
 		<div class="flex justify-center gap-4 mt-6">
 			<Button class="mx-4 my-2" onclick={goto_page('/admin')}>{m.cancel()}</Button>

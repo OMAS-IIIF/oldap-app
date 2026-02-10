@@ -12,7 +12,7 @@
 	import { authInfoStore } from '$lib/stores/authinfo';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { onMount } from 'svelte';
-	import { getLocale } from '$lib/paraglide/runtime';
+	import { getLocale, locales } from '$lib/paraglide/runtime';
 	import { convertToLanguage, getLanguageShortname, Language } from '$lib/oldap/enums/language';
 	import SelectMutiple from '$lib/components/basic_gui/inputs/SelectMutiple.svelte';
 	import LangstringField from '$lib/components/basic_gui/inputs/LangstringField.svelte';
@@ -48,11 +48,13 @@
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import { refreshResourcesListNow } from '$lib/stores/refresh_resourceslist.svelte';
 	import { datamodelSharedStore } from '$lib/stores/datamodel_shared';
+	import LangstringfieldNew from '$lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
 
 	let { data } : PageProps = $props();
 
 	let lang = $state(getLocale());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
+	const languages = Array.from(locales).map(lang => convertToLanguage(lang) || Language.DE);
 
 	let topwin = $state<HTMLElement>();
 
@@ -69,11 +71,14 @@
 	let all_prefixes = $state<string[]>([]);
 	let superclasses = $state<Set<string>>(new Set());
 	let res = $state<ResourceClass | null>(null);
-	let label_field: LangstringField;
-	let label = $state<LangString | null>(null);
-	let comment_field: LangstringField;
-	let comment = $state<LangString | null>(null);
+	//let label_field: LangstringField;
+	let label = $state<LangString>(new LangString());
+	let orig_label: LangString = new LangString();
+	//let comment_field: LangstringField;
+	let comment = $state<LangString>(new LangString());
+	let orig_comment: LangString = new LangString();
 	let closed = $state(false);
+	let orig_closed = $state(false);
 
 	let addPropOpen = $state(false);
 	let propEditIsOpen = $state(false);
@@ -139,9 +144,12 @@
 			res = tmp_resources.find(r => r.iri.toString() === data.resiri) || null;
 			if (res) {
 				superclasses = res.superclass ? new Set<string>([...res.superclass].filter(s => s.toString() !== 'oldap:Thing').map(s => s.toString())) : new Set<string>();
-				label = res.label || null;
-				comment = res.comment || null;
+				label = res.label || new LangString();
+				orig_label = label.clone();
+				comment = res.comment || new LangString();
+				orig_comment = comment.clone();
 				closed = res.closed || true;
+				orig_closed = closed;
 				const tmp = QName.createQName(res.iri.toString());
 				prefix = tmp.prefix.toString();
 				fragment = tmp.fragment.toString();
@@ -204,9 +212,6 @@
 		const ok = await confirmation_dialog.open();
 		if (!ok) return;
 
-		const label = label_field?.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
-		const comment = comment_field?.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
-
 		let resourcedata: {
 			superclass?: string[],
 			label?: string[],
@@ -214,8 +219,8 @@
 			closed?: boolean
 		} = {
 			superclass: superclasses.size > 0 ?  Array.from(superclasses) : undefined,
-			label: label?.length > 0 ? label : undefined,
-			comment: comment?.length > 0 ? comment : undefined,
+			label: label ? label.toApi() : undefined,
+			comment: comment ? comment.toApi() : undefined,
 			closed: closed
 		}
 		const resourceIri = prefix + ':' + fragment;
@@ -241,19 +246,12 @@
 			label?: string[] | Partial<Record<'add'|'del', string[]>> | null,
 			comment?: string[] | Partial<Record<'add'|'del', string[]>> | null,
 			closed?: boolean
-		} = {};
+		} = {
+			label: label.modify_data(orig_label),
+			comment: comment.modify_data(orig_comment),
+			closed: closed !== orig_closed ? closed : undefined
+		};
 
-		const new_label = label_field.get_value();
-		const tmp_modlabel = new_label.modify_data(res?.label || null);
-		if (tmp_modlabel !== undefined) {
-			resourcedata.label = new_label.modify_data(res?.label || null);
-		}
-
-		const new_comment = comment_field.get_value();
-		const tmp_modcomment = new_comment.modify_data(res?.comment || null);
-		if (tmp_modcomment !== undefined) {
-			resourcedata.comment = new_comment.modify_data(res?.comment || null);
-		}
 
 		const resourceIri = prefix + ':' + fragment;
 		if (authinfo) {
@@ -344,8 +342,23 @@ and the actual property id (which is a xs:NCName
 		/>
 
 		<SelectMutiple label={m.superclasses()} selectables={all_res_set} bind:values={superclasses} disabled={data.resiri !== 'new'}/>
-		<LangstringField bind:this={label_field} label={m.label()} name="label" id="label" placeholder="label_id" value={label} />
-		<LangstringField bind:this={comment_field} label={m.comment()} name="comment" id="comment_id" placeholder="comment" value={comment} />
+		<LangstringfieldNew
+			label={m.label()}
+			name="label"
+			id="label"
+			languages={languages}
+			placeholder="label"
+			bind:value={label}
+		/>
+		<LangstringfieldNew
+			label={m.comment()}
+			name="comment"
+			id="comment"
+			languages={languages}
+			placeholder="comment"
+			input_type="textarea"
+			bind:value={comment}
+		/>
 		<Togglefield label={m.is_closed()} id="closed_id" bind:toggle_state={closed} />
 
 		{#if data.resiri !== 'new'}

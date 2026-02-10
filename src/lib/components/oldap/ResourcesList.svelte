@@ -75,8 +75,10 @@
 			tmp_prefixes[res.iri.toString()] = res.iri.toString();
 		}
 		if (datamodel?.projectid.toString() !== 'shared' && datamodel?.projectid.toString() !== 'oldap') {
+			console.log("--------> SHARED RESOURCES...")
 			const shared = $datamodelSharedStore;
 			if (shared) {
+				console.log("--------> SHARED RESOURCES FOUND:", $state.snapshot(shared.resources))
 				for (const res of shared.resources) {
 					tmp_resources[res.iri.toString()] = res
 					tmp_list.push(res.iri.toString() || 'XXXX');

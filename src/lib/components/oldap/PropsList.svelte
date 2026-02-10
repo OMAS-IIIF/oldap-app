@@ -62,7 +62,6 @@
 			tmp_list.push(property.propertyIri.toString() || '');
 		}
 		if ((datamodel?.projectid.toString() !== 'shared') && (datamodel?.projectid.toString() !== 'oldap')) {
-			console.log("--------------------------------> shared prop", $datamodelSharedStore?.standaloneProperties)
 			for (const property of ($datamodelSharedStore?.standaloneProperties || [])) {
 				tmp_properties[property.propertyIri.toString()] = property;
 				tmp_list.push(property.propertyIri.toString() || '');

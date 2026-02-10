@@ -13,7 +13,7 @@
 	import NodeTree from '$lib/components/basic_gui/NodeTree/NodeTree.svelte';
 	import { OldapList } from '$lib/oldap/classes/list';
 	import type { OldapListNode } from '$lib/oldap/classes/listnode';
-	import { getLocale } from '$lib/paraglide/runtime';
+	import { getLocale, locales } from '$lib/paraglide/runtime';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import { authInfoStore } from '$lib/stores/authinfo';
 	import { refreshNodeTree } from '$lib/stores/refresh_nodetree.svelte.js';
@@ -29,12 +29,15 @@
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import { onMount, tick } from 'svelte';
+	import LangstringfieldNew from '$lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
 
 	let { data }: PageProps = $props();
 	let current_project = $state<OldapProject | null>(null);
 
 	let lang = $state(getLocale());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
+	const languages = Array.from(locales).map(lang => convertToLanguage(lang) || Language.DE);
+
 
 	let authinfo: AuthInfo | null = $authInfoStore;
 	let administrator = $state<OldapUser | null>(null);
@@ -45,10 +48,10 @@
 	let hlist = $state<OldapList>();
 	let rootIsOpen = $state(false);
 
-	let prefLabel_field: LangstringField;
-	let prefLabel = $state<LangString | null>(null);
-	let definition_field: LangstringField;
-	let definition = $state<LangString | null>(null);
+	let prefLabel = $state<LangString>(new LangString());
+	let orig_prefLabel: LangString = new LangString()
+	let definition = $state<LangString>(new LangString());
+	let orig_definition: LangString = new LangString()
 
 	let confirmation_dialog: Confirmation;
 	let confirmation_title = $state('');
@@ -106,8 +109,10 @@
 					const jsondata = await apiClient.getAdminhlistProjectHlistid(config_hlistdata);
 					console.log(jsondata);
 					hlist = OldapList.fromOldapJson(jsondata);
-					prefLabel = hlist.prefLabel || null;
-					definition = hlist.definition || null;
+					prefLabel = hlist.prefLabel || new LangString();
+					orig_prefLabel = prefLabel.clone();
+					definition = hlist.definition || new LangString();
+					orig_definition = definition.clone();
 					topnodes = process_tnodes(hlist.nodes) || []
 				}
 			}
@@ -138,19 +143,11 @@
 			definition?: string[] | Partial<Record<'add'|'del', string[]>> | null,
 		} = {};
 
-		const new_prefLabel = prefLabel_field.get_value();
-		const tmp_modprefLabel = new_prefLabel.modify_data(hlist?.prefLabel || null);
-		if (tmp_modprefLabel !== undefined) {
-			hlistdata.prefLabel = new_prefLabel.modify_data(hlist?.prefLabel || null);
-		}
+		hlistdata.prefLabel = prefLabel.modify_data(orig_prefLabel);
+		hlistdata.definition = definition.modify_data(orig_definition);
 
-		const new_definition = definition_field.get_value();
-		const tmp_modcomment = new_definition.modify_data(hlist?.definition || null);
-		if (tmp_modcomment !== undefined) {
-			hlistdata.definition = new_definition.modify_data(hlist?.definition || null);
-		}
 		if (hlistdata) {
-			const hlist_post = api_notget_config(authinfo, {
+			const hlist_post = api_notget_config(authinfo || new AuthInfo('unknown', ''), {
 				project: current_project?.projectShortName.toString() || '',
 				hlistid: data.hlistid
 			});
@@ -169,10 +166,30 @@
 	<div class="py-2"> </div>
 	<form class="max-w-128 min-w-96">
 		<LabeledDivider>LIST</LabeledDivider>
+		<LangstringfieldNew
+			label={m.label()}
+			name="label"
+			id="label"
+			languages={languages}
+			placeholder="label"
+			bind:value={prefLabel}
+		/>
+		<LangstringfieldNew
+			label={m.comment()}
+			name="comment"
+			id="comment"
+			languages={languages}
+			placeholder="comment"
+			input_type="textarea"
+			bind:value={definition}
+		/>
+
+		<!--
 		<LangstringField bind:this={prefLabel_field} label={m.label()} name="label" id="label" placeholder="label"
 										 value={prefLabel} />
 		<LangstringField bind:this={definition_field} label={m.comment()} name="comment" id="comment" placeholder="comment"
 										 value={definition} />
+		-->
 		<Button class="mx-4 my-2" onclick={(event: Event) => {modify_hlist(event)}}>{m.modify()}</Button>
 
 	</form>
