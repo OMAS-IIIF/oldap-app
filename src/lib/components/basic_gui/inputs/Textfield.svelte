@@ -75,9 +75,11 @@
 	let modified = $state(false);
 	let orig_value: string = value || '';
 
-	if (!allowed_types.includes(type)) {
-		throw error(400, `Internal error: invalid type "${type}"cfor Input-field. must be "text", "password", "email", "number", "search", "tel" or "url"`);
-	}
+	$effect(() => {
+		if (!allowed_types.includes(type)) {
+			throw error(400, `Internal error: invalid type "${type}"cfor Input-field. must be "text", "password", "email", "number", "search", "tel" or "url"`);
+		}
+	});
 
 	/**
 	 * Callback when the field loses the focus. Performs validation (required field, regex pattern and,

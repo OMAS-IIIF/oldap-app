@@ -1,25 +1,20 @@
 #!/bin/sh
-#
-# Copyright (©) 2025. This software is licenced under the GNU General Public License v3.0 (https://www.gnu.org/licenses/gpl-3.0.en.html)
-#
 set -e
 
-API_URL="${1:-${API_URL:-http://localhost:8000}}"
+# ---- Fail fast on misconfiguration ----
+: "${PUBLIC_API_URL:?PUBLIC_API_URL is required}"
+: "${SERVER_API_URL:?SERVER_API_URL is required}"
 
-# Debug logging
+# Optional extras (only if you still use them)
+IIIF_URL="${IIIF_URL:-}"
+UPLOAD_URL="${UPLOAD_URL:-}"
+
+# ---- Debug logging ----
 echo "[entrypoint] Starting oldap-app..."
-echo "[entrypoint] Using API_URL=${API_URL}"
-echo "[entrypoint] Using IIIF_URL=${IIIF_URL}"
-echo "[entrypoint] Using $UPLOAD_URL=${UPLOAD_URL}"
+echo "[entrypoint] PUBLIC_API_URL=${PUBLIC_API_URL}"
+echo "[entrypoint] SERVER_API_URL=${SERVER_API_URL}"
+echo "[entrypoint] IIIF_URL=${IIIF_URL}"
+echo "[entrypoint] UPLOAD_URL=${UPLOAD_URL}"
 
-# Write runtime config.json (the frontend will fetch this at /config.json)
-cat > /app/build/client/config.json <<EOF
-{
-  "apiUrl": "$API_URL"
-  "iiifUrl": "$IIIF_URL"
-  "uploadUrl": $UPLOAD_URL"
-}
-EOF
-
-# Start the SvelteKit Node adapter server
+# ---- Start SvelteKit Node adapter ----
 exec node build

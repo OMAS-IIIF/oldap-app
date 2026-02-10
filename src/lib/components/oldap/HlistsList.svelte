@@ -2,7 +2,8 @@
 	import type { OldapProject } from '$lib/oldap/classes/project';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { api_config, api_get_config } from '$lib/helpers/api_config';
-	import { apiClient, apiUrl } from '$lib/shared/apiClient';
+	import { apiClient } from '$lib/shared/apiClient';
+	import { PUBLIC_API_URL } from '$env/static/public';
 	import { OldapList } from '$lib/oldap/classes/list';
 	import * as m from '$lib/paraglide/messages';
 	import { Pencil, Trash2, Plus, Upload, Download } from '@lucide/svelte'
@@ -132,7 +133,7 @@
 		});
 		spinnerStore.set("Downloading...");
 
-		const url = `${apiUrl}/admin/hlist/${encodeURIComponent(project?.projectIri?.toString() || '')}/${hlist_id}/download?format=YAML`; // or JSON
+		const url = `${PUBLIC_API_URL}/admin/hlist/${encodeURIComponent(project?.projectIri?.toString() || '')}/${hlist_id}/download?format=YAML`; // or JSON
 		fetch(url, {
 			method: config_download.method,
 			headers: config_download.headers
