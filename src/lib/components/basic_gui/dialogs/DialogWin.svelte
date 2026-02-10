@@ -7,19 +7,11 @@
 		onclose = null
 	} = $props();
 
-	let class1 = $state('');
-	let class2 = $state('');
+	let class1 = $state('fixed inset-0 bg-black/50 flex items-center justify-center z-9999');
+	let class2 = $derived(alert
+		? "bg-oldap-error-bg p-3 rounded-lg shadow-lg w-96 border-4 border-oldap-error-border text-oldap-error-fg"
+		: "bg-oldap-bg dark:bg-oldap-bg-dark p-3 rounded-lg shadow-lg w-96");
 
-	$effect(() => {
-		if (alert) {
-			class1 = "fixed inset-0 bg-black/50 flex items-center justify-center z-9999";
-			class2 = "bg-oldap-error-bg p-3 rounded-lg shadow-lg w-96 border-4 border-oldap-error-border text-oldap-error-fg";
-		}
-		else {
-			class1 = "fixed inset-0 bg-black/50 flex items-center justify-center z-9999";
-			class2 = "bg-oldap-bg dark:bg-oldap-bg-dark p-3 rounded-lg shadow-lg w-96";
-		}
-	});
 
 	let closeit = (event: Event) => {
 		event.preventDefault();

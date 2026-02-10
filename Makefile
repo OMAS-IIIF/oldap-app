@@ -57,7 +57,6 @@ docker-push:
 docker-run:
 	#docker run --rm -it -e API_URL=https://localhost:8000 -p 3000:3000 lrosenth/oldap-app:$(VERSION)
 	docker run --rm -it \
-		-e API_URL=https://localhost:8000 \
 		-e PUBLIC_API_URL=http://localhost:8000 \
 		-e SERVER_API_URL=http://host.docker.internal:8000 \
 		-p 3000:3000 lrosenth/oldap-app:$(VERSION)

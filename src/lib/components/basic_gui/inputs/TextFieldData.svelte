@@ -78,9 +78,11 @@
 	let internal_values = $state<string[]>([]);
 
 	const allowed_types = ['text', 'password', 'email', 'number', 'search', 'tel', 'url'];
-	if (!allowed_types.includes(type)) {
-		throw error(400, `Internal error: invalid type "${type}" for Input-field. must be "text", "password", "email", "number", "search", "tel" or "url"`);
-	}
+	$effect(() => {
+		if (!allowed_types.includes(type)) {
+			throw error(400, `Internal error: invalid type "${type}" for Input-field. must be "text", "password", "email", "number", "search", "tel" or "url"`);
+		}
+	});
 
 	// Normalize min/max
 	(() => {

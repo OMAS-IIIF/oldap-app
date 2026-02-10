@@ -54,10 +54,10 @@
 	} & WindowCallbacks = $props();
 
 	// Internal reactive state (Svelte 5 runes)
-	let posX = $state(windowGeometry.x);
-	let posY = $state(windowGeometry.y);
-	let w = $state(windowGeometry.width);
-	let h = $state(windowGeometry.height);
+	let posX = $derived(windowGeometry.x);
+	let posY = $derived(windowGeometry.y);
+	let w = $derived(windowGeometry.width);
+	let h = $derived(windowGeometry.height);
 	let z = $state(++nextZIndex);
 	let active = $state(false);
 	let rootEl: HTMLDivElement | null = null;
@@ -222,6 +222,7 @@
 	<div
 		class="h-9 flex items-center justify-between gap-2 px-2 bg-gradient-to-b from-[var(--titlebar-bg1,#f6f7fb)] to-[var(--titlebar-bg2,#e9ecf6)] border-b border-[color:var(--window-border,#c9c9c9)] cursor-move"
 		onpointerdown={onTitlePointerDown}
+        role="none"
 	>
 		<div class="text-[0.95rem] font-semibold truncate text-[color:var(--title-fg,#222)]">{title}</div>
 		{#if closable}
@@ -240,9 +241,9 @@
 
 	{#if resizable}
 		<!-- Corner resize handles -->
-		<div class="absolute w-3.5 h-3.5 bg-transparent -left-0.5 -top-0.5 cursor-[nwse-resize]" onpointerdown={(e) => onResizePointerDown('nw', e)} />
-		<div class="absolute w-3.5 h-3.5 bg-transparent -right-0.5 -top-0.5 cursor-[nesw-resize]" onpointerdown={(e) => onResizePointerDown('ne', e)} />
-		<div class="absolute w-3.5 h-3.5 bg-transparent -left-0.5 -bottom-0.5 cursor-[nesw-resize]" onpointerdown={(e) => onResizePointerDown('sw', e)} />
-		<div class="absolute w-3.5 h-3.5 bg-transparent -right-0.5 -bottom-0.5 cursor-[nwse-resize]" onpointerdown={(e) => onResizePointerDown('se', e)} />
+		<div class="absolute w-3.5 h-3.5 bg-transparent -left-0.5 -top-0.5 cursor-[nwse-resize]" role="none" onpointerdown={(e) => onResizePointerDown('nw', e)}></div>
+		<div class="absolute w-3.5 h-3.5 bg-transparent -right-0.5 -top-0.5 cursor-[nesw-resize]" role="none" onpointerdown={(e) => onResizePointerDown('ne', e)}></div>
+		<div class="absolute w-3.5 h-3.5 bg-transparent -left-0.5 -bottom-0.5 cursor-[nesw-resize]" role="none" onpointerdown={(e) => onResizePointerDown('sw', e)}></div>
+		<div class="absolute w-3.5 h-3.5 bg-transparent -right-0.5 -bottom-0.5 cursor-[nwse-resize]" role="none" onpointerdown={(e) => onResizePointerDown('se', e)}></div>
 	{/if}
 </div>

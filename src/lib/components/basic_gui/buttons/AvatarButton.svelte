@@ -1,21 +1,19 @@
 <script lang="ts">
 
-	let { children = () => {}, isOpen = $bindable(), src = null, initials = "", onclick = null, id = null,
-		class: userClass = "", ariaExpanded = null, ariaHaspopup = null} = $props();
+	let {
+		children = () => {},
+		isOpen = $bindable(),
+		src = null,
+		initials = "",
+		onclick = null,
+		id = null,
+		class: userClass = "",
+		ariaExpanded = null,
+		ariaHaspopup = null
+	} = $props();
 
-	let class_str: string = $state('')
+	let class_str = $derived<string>((src ? "" : initials ? "inline-flex size-10 items-center justify-center rounded-full bg-gray-500" : "inline-block size-10 overflow-hidden rounded-full bg-gray-100") + ` ${userClass} aria-expanded=${ariaExpanded || undefined} aria-haspopup=${ariaHaspopup || undefined}`);
 	let avatar_error = $state(false);
-
-	if (src) {
-		class_str = "";
-	}
-	else if (initials) {
-		class_str = "inline-flex size-10 items-center justify-center rounded-full bg-gray-500";
-	}
-	else {
-		class_str = "inline-block size-10 overflow-hidden rounded-full bg-gray-100";
-	}
-	class_str += ` ${userClass} aria-expanded=${ariaExpanded || undefined} aria-haspopup=${ariaHaspopup || undefined}`;
 
 	const no_avatar = () => {
 		avatar_error = true;
