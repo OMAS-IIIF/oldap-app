@@ -10,7 +10,7 @@
 
 import { createApiClient } from '$lib/apischema/zod';
 import { browser } from '$app/environment';
-import { PUBLIC_API_URL } from '$env/static/public';
+import { env as publicEnv } from '$env/dynamic/public';
 
 type ApiClient = ReturnType<typeof createApiClient>;
 
@@ -30,15 +30,15 @@ function getServerEnv(name: string): string | undefined {
 async function getBaseUrl(): Promise<string> {
 	// Browser: use PUBLIC_API_URL (available client-side)
 	if (browser) {
-		if (!PUBLIC_API_URL) {
+		if (!publicEnv.PUBLIC_API_URL) {
 			throw new Error('PUBLIC_API_URL is not set');
 		}
-		return stripTrailingSlash(PUBLIC_API_URL);
+		return stripTrailingSlash(publicEnv.PUBLIC_API_URL);
 	}
 
 	// Server/SSR: read SERVER_API_URL from process.env (available at runtime in Node)
 	const serverUrl = getServerEnv('SERVER_API_URL');
-	const url = serverUrl ?? PUBLIC_API_URL;
+	const url = serverUrl ?? publicEnv.PUBLIC_API_URL;
 	if (!url) {
 		throw new Error('SERVER_API_URL (or PUBLIC_API_URL fallback) is not set on the server');
 	}
