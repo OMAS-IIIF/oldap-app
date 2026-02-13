@@ -5,7 +5,7 @@
 <script lang="ts">
 	import type { OldapProject } from '$lib/oldap/classes/project';
 	import { ResourceClass } from '$lib/oldap/classes/resource';
-	import { languageTag } from '$lib/paraglide/runtime';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
@@ -42,7 +42,7 @@
 	let res_prefixes = $state<Record<string, string>>({});
 	let resources = $state<Record<string, ResourceClass>>({});
 
-	let lang = $state(languageTag());
+	let lang = $state(getLocale());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
 
 	let datamodel = $state<DatamodelClass | null>(null);
@@ -61,7 +61,6 @@
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const _2 = $projectStore;
 		// get the list of all resource classes that can be the target of a link
-		console.log($state.snapshot(datamodel))
 		const tmp_res = datamodel?.resources.filter(x => {
 			const gaga = x?.superclass ? [...x.superclass].map(s => s.toString()) : [];
 			return !gaga.includes('oldap:OldapListNode');
@@ -76,8 +75,10 @@
 			tmp_prefixes[res.iri.toString()] = res.iri.toString();
 		}
 		if (datamodel?.projectid.toString() !== 'shared' && datamodel?.projectid.toString() !== 'oldap') {
+			console.log("--------> SHARED RESOURCES...")
 			const shared = $datamodelSharedStore;
 			if (shared) {
+				console.log("--------> SHARED RESOURCES FOUND:", $state.snapshot(shared.resources))
 				for (const res of shared.resources) {
 					tmp_resources[res.iri.toString()] = res
 					tmp_list.push(res.iri.toString() || 'XXXX');

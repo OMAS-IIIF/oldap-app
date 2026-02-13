@@ -29,7 +29,7 @@
 			<div class="flex items-center justify-between">
 				<label for="password" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-400">{m.password()}</label>
 				<div class="text-sm">
-					<a href="#" tabindex="-1" class="font-semibold text-indigo-600 hover:text-indigo-500">{m.forgot_passwd()}</a>
+					<button type="button" tabindex="-1" class="font-semibold text-indigo-600 hover:text-indigo-500">{m.forgot_passwd()}</button>
 				</div>
 			</div>
 			<div class="mt-2">
@@ -44,7 +44,7 @@
 
 	<p class="mt-10 text-center text-sm/6 text-gray-500">
 		{m.no_reg()}
-		<a href="#" class="font-semibold text-indigo-600 hover:text-indigo-500">{m.apply_for_acc()}</a>
+		<button type="button" class="font-semibold text-indigo-600 hover:text-indigo-500">{m.apply_for_acc()}</button>
 	</p>
 </div>
 

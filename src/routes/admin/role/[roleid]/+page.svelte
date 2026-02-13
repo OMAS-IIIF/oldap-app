@@ -19,22 +19,15 @@
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
 	import { successInfoStore } from '$lib/stores/successinfo';
-	import { getLanguageShortname } from '$lib/oldap/enums/language';
+	import { convertToLanguage, getLanguageShortname, Language } from '$lib/oldap/enums/language';
 	import { userStore } from '$lib/stores/user';
 	import { OldapUser } from '$lib/oldap/classes/user';
 	import { OldapProject } from '$lib/oldap/classes/project';
 	import { getProjectsOfUser } from '$lib/helpers/get_projects_of_user';
 	import { page } from '$app/state';
 	import { projectStore } from '$lib/stores/project';
-
-	type DataPermissionShort =
-		| 'DATA_RESTRICTED'
-		| 'DATA_VIEW'
-		| 'DATA_EXTEND'
-		| 'DATA_UPDATE'
-		| 'DATA_DELETE'
-		| 'DATA_PERMISSIONS'
-		| undefined;
+	import LangstringfieldNew from '$lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
+	import { locales } from '$lib/paraglide/runtime';
 
 	let { data } : PageProps = $props();
 
@@ -51,14 +44,12 @@
 	let definedByProject: string | null = null;  // is set for modify, the value is given as query parameter "definedByProject"
 	let role: OldapRole;
 	let roleId = $state('');
-	let oldPermission: DataPermissionShort;
-	let currentPermission = $state<DataPermissionShort>("DATA_RESTRICTED");
-	let label_field: LangstringField;
-	let label = $state<LangString | null>(null);
-	let comment_field: LangstringField;
-	let comment = $state<LangString | null>(null);
+	let label = $state<LangString>(new LangString());
+	let orig_label: LangString = new LangString();
+	let comment = $state<LangString>(new LangString());
+	let orig_comment: LangString = new LangString();
 
-	const allPermissions = strippedDataPermission();
+	const languages = Array.from(locales).map(lang => convertToLanguage(lang) || Language.DE);
 
 	let topwin = $state<HTMLElement>();
 
@@ -107,8 +98,10 @@
 				role = OldapRole.fromOldapJson(data);
 				if (role) {
 					roleId = role.roleId.toString();
-					label = role.label || null;
-					comment = role.comment || null;
+					label = role.label || new LangString();
+					orig_label = label.clone();
+					comment = role.comment || new LangString();
+					orig_comment = comment.clone();
 				}
 			}).catch((error) => {
 				errorInfoStore.set(process_api_error(error as Error));
@@ -130,15 +123,13 @@
 		if (!ok) return;
 
 		if (!authinfo) return;
-		const label = label_field.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
-		const comment = comment_field.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
 
 		let roledata: {
 			label?: string[],
 			comment?: string[],
 		} = {
-			label: label.length > 0 ? label : undefined,
-			comment: comment.length > 0 ? comment : undefined,
+			label: label ? label.toApi() : undefined,
+			comment: comment ? comment.toApi() : undefined,
 		};
 		const role_put = api_notget_config(authinfo, {
 			definedByProject: selectedProjectId,
@@ -160,19 +151,10 @@
 		let roledata: {
 			label?: string[] | Partial<Record<'add'|'del', string[]>> | null,
 			comment?: string[] | Partial<Record<'add'|'del', string[]>> | null,
-		} = {};
-
-		const new_label = label_field.get_value();
-		const tmp_modlabel = new_label.modify_data(role?.label || null);
-		if (tmp_modlabel !== undefined) {
-			roledata.label = new_label.modify_data(role?.label || null);
-		}
-
-		const new_comment = comment_field.get_value();
-		const tmp_modcomment = new_comment.modify_data(role?.comment || null);
-		if (tmp_modcomment !== undefined) {
-			roledata.comment = new_comment.modify_data(role?.comment || null);
-		}
+		} = {
+			label: label.modify_data(orig_label),
+			comment: comment.modify_data(orig_comment)
+		};
 
 		if (roledata) {
 			const role_post = api_notget_config(authinfo as AuthInfo, {
@@ -198,8 +180,23 @@
 		<Textfield type='text' label={m.role_id()} name="roleid" id="roleid" placeholder="role ID" required={true}
 							 bind:value={roleId} pattern={ncname_pattern} disabled={data?.roleid !== 'new'} />
 
-		<LangstringField bind:this={label_field} label={m.label()} name="label" id="label" placeholder="label" value={label} />
-		<LangstringField bind:this={comment_field} label={m.comment()} name="comment" id="comment" placeholder="comment" value={comment} />
+		<LangstringfieldNew
+			label={m.label()}
+			name="label"
+			id="label"
+			languages={languages}
+			placeholder="label"
+			bind:value={label}
+		/>
+		<LangstringfieldNew
+			label={m.comment()}
+			name="comment"
+			id="comment"
+			languages={languages}
+			placeholder="comment"
+			input_type="textarea"
+			bind:value={comment}
+		/>
 
 		<div class="flex justify-center gap-4 mt-6">
 			<Button class="mx-4 my-2" onclick={goto_page('/admin')}>{m.cancel()}</Button>

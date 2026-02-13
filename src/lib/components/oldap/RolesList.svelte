@@ -2,7 +2,7 @@
 
 	import { OldapUser } from '$lib/oldap/classes/user';
 	import type { OldapProject } from '$lib/oldap/classes/project';
-	import { languageTag } from '$lib/paraglide/runtime';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { authInfoStore } from '$lib/stores/authinfo';
@@ -32,7 +32,7 @@
 		project: OldapProject | null
 	} = $props();
 
-	let lang = $state(languageTag());
+	let lang = $state(getLocale());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
 
 	let authinfo = $state<AuthInfo | null>($authInfoStore);

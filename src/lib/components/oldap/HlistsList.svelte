@@ -2,7 +2,8 @@
 	import type { OldapProject } from '$lib/oldap/classes/project';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { api_config, api_get_config } from '$lib/helpers/api_config';
-	import { apiClient, apiUrl } from '$lib/shared/apiClient';
+	import { apiClient } from '$lib/shared/apiClient';
+	import { PUBLIC_API_URL } from '$env/static/public';
 	import { OldapList } from '$lib/oldap/classes/list';
 	import * as m from '$lib/paraglide/messages';
 	import { Pencil, Trash2, Plus, Upload, Download } from '@lucide/svelte'
@@ -14,7 +15,7 @@
 	import TableBody from '$lib/components/basic_gui/table/TableBody.svelte';
 	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
 	import TableItem from '$lib/components/basic_gui/table/TableItem.svelte';
-	import { languageTag } from '$lib/paraglide/runtime';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
@@ -32,7 +33,7 @@
 		hlistIsOpen?: boolean
 	} = $props();
 
-	let lang = $state(languageTag());
+	let lang = $state(getLocale());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
 
 	let authinfo = $state<AuthInfo | null>($authInfoStore);
@@ -90,7 +91,7 @@
 			return;
 		}
 		const config_hlistdata = api_config(authinfo as AuthInfo, {
-			project: project?.projectIri?.toString() || '',
+			project: project?.projectShortName?.toString() || '',
 			hlistid: hlist_id
 		});
 		apiClient.deleteAdminhlistProjectHlistid(undefined, config_hlistdata).then((result) => {
@@ -132,7 +133,7 @@
 		});
 		spinnerStore.set("Downloading...");
 
-		const url = `${apiUrl}/admin/hlist/${encodeURIComponent(project?.projectIri?.toString() || '')}/${hlist_id}/download?format=YAML`; // or JSON
+		const url = `${PUBLIC_API_URL}/admin/hlist/${encodeURIComponent(project?.projectIri?.toString() || '')}/${hlist_id}/download?format=YAML`; // or JSON
 		fetch(url, {
 			method: config_download.method,
 			headers: config_download.headers

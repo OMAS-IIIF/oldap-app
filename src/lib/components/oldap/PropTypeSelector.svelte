@@ -23,7 +23,7 @@
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import { OldapList } from '$lib/oldap/classes/list';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
-	import { languageTag } from '$lib/paraglide/runtime';
+	import { getLocale } from '$lib/paraglide/runtime';
 
 
 	let {
@@ -68,7 +68,7 @@
 	} = $props();
 
 	let authinfo: AuthInfo | null = $authInfoStore;
-	let lang = $state(languageTag());
+	let lang = $state(getLocale());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
 
 	let proptype_is_open = $state(false);

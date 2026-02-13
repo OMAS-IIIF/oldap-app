@@ -26,7 +26,7 @@
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import Checkbox from '$lib/components/basic_gui/checkbox/Checkbox.svelte';
 	import { OldapRole } from '$lib/oldap/classes/role';
-	import { languageTag } from '$lib/paraglide/runtime';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import { DataPermission, dataPermissionAsString } from '$lib/oldap/enums/data_permissions';
 	import { OldapErrorInvalidValue } from '$lib/oldap/errors/OldapErrorInvalidValue';
@@ -44,7 +44,7 @@
 
 	let { data }: PageProps = $props();
 
-	let lang = $state(languageTag());
+	let lang = $state(getLocale());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
 
 	let authinfo: AuthInfo | null = $authInfoStore;

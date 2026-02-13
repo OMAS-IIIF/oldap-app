@@ -27,10 +27,10 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3000
-ENV API_URL=http://localhost:8000
 
 # Copy only needed files from build stage
 COPY --from=build /app/build ./build
+COPY --from=build /app/static ./static
 
 # Copy dependencies
 COPY --from=build /app/package.json ./package.json

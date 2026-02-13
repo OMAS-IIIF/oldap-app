@@ -34,18 +34,23 @@
 	let tooltipElement = $state<HTMLElement>();
 	let showTimeout: ReturnType<typeof setTimeout> | undefined = $state();
 	let hideTimeout: ReturnType<typeof setTimeout> | undefined = $state();
-	let actualPosition = $state<Position>(position);
+	let actualPosition = $derived<Position>(position);
 	let tooltipStyles = $state('');
 
 	// ✅ Normale Variable statt $derived für HTML-Inhalt
-	let sanitizedContent = $state('');
+	//let sanitizedContent = $state('');
 
 	// ✅ Effect um sanitizedContent zu aktualisieren
+	/*
 	$effect(() => {
 		sanitizedContent = content
 			.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
 			.replace(/<(?!\/?)(?!(?:b|strong|i|em|u|br|p|span|div|h[1-6]|ul|ol|li|a|code|pre)\b)[^>]+>/gi, '');
 	});
+	*/
+	let sanitizedContent = $derived(content
+		.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+		.replace(/<(?!\/?)(?!(?:b|strong|i|em|u|br|p|span|div|h[1-6]|ul|ol|li|a|code|pre)\b)[^>]+>/gi, ''))
 
 	// Tooltip anzeigen
 	const showTooltip = () => {

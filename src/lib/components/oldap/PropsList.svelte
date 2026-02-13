@@ -9,7 +9,7 @@
 	import TableBody from '$lib/components/basic_gui/table/TableBody.svelte';
 	import TableItem from '$lib/components/basic_gui/table/TableItem.svelte';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { languageTag } from '$lib/paraglide/runtime';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
 	import { authInfoStore } from '$lib/stores/authinfo';
@@ -24,6 +24,8 @@
 	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
 	import { datamodelStore } from '$lib/stores/datamodel';
 	import { refreshPropertiesList, refreshPropertiesListNow } from '$lib/stores/refresh_propertieslist.svelte';
+	import { refreshProjectsList } from '$lib/stores/refresh_projectslist.svelte';
+
 	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
 	import { datamodelSharedStore } from '$lib/stores/datamodel_shared';
 
@@ -37,7 +39,7 @@
 	let prop_list = $state<string[]>([]);
 	let properties = $state<Record<string, PropertyClass>>({});
 
-	let lang = $state(languageTag());
+	let lang = $state(getLocale());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
 
 	let datamodel = $state<DatamodelClass | null>(null);
@@ -51,7 +53,8 @@
 	});
 
 	$effect(() => {
-		const _ = $refreshPropertiesList;
+		const _a = $refreshPropertiesList;
+		const _b = $refreshProjectsList;
 		let tmp_list = [];
 		let tmp_properties: Record<string, PropertyClass> = {};
 		for (const property of (datamodel?.standaloneProperties || [])) {

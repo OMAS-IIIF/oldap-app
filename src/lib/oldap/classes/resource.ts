@@ -8,6 +8,7 @@ export interface HasProperty {
 	maxCount?: number
 	minCount?: number;
 	order?: number;
+	editor?: string;
 	property: PropertyClass;
 }
 
@@ -77,6 +78,7 @@ export class ResourceClass extends OldapObject {
 				if (tmphp?.minCount) hp.minCount = parseInt(tmphp.minCount);
 				if (tmphp?.maxCount) hp.maxCount = parseInt(tmphp.maxCount);
 				if (tmphp?.order)	hp.order = parseFloat(tmphp.order);
+				if (tmphp?.editor) hp.editor = tmphp.editor;
 				tmphp.property = PropertyClass.fromOldapJson(tmphp.property);
 				hp.property = tmphp.property;
 				hps.push(hp)
@@ -128,7 +130,8 @@ export class ResourceClass extends OldapObject {
 					property: x.property.clone(),
 					minCount: x.minCount,
 					maxCount: x.maxCount,
-					order: x.order
+					order: x.order,
+					editor: x.editor,
 				}
 			})
 		});

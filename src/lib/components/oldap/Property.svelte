@@ -29,7 +29,7 @@ in relation with a resource class.
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
 	import LangstringField from '$lib/components/basic_gui/inputs/LangstringField.svelte';
 	import { LangString } from '$lib/oldap/datatypes/langstring';
-	import { getLanguageShortname } from '$lib/oldap/enums/language';
+	import { convertToLanguage, getLanguageShortname, Language } from '$lib/oldap/enums/language';
 	import { PropType } from '$lib/oldap/enums/proptypes';
 	import DropdownButton from '$lib/components/basic_gui/dropdown/DropdownButton.svelte';
 	import DropdownMenu from '$lib/components/basic_gui/dropdown/DropdownMenu.svelte';
@@ -49,6 +49,8 @@ in relation with a resource class.
 	import { spinnerStore } from '$lib/stores/spinner';
 	import LangtextareaField from '$lib/components/basic_gui/inputs/LangtextareaField.svelte';
 	import { datamodelSharedStore } from '$lib/stores/datamodel_shared';
+	import LangstringfieldNew from '$lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
+	import { locales } from '$lib/paraglide/runtime';
 
 	interface PropertyData {
 		subPropertyOf?: string,
@@ -133,10 +135,10 @@ in relation with a resource class.
 	let proptype = $state<PropType>(PropType.LITERAL);
 	let datatype = $state<string|undefined>();
 	let toClass = $state<string|undefined>();
-	let name_field = $state<LangstringField>();
-	let name = $state<LangString | null>(null);
-	let description_field = $state<LangstringField>();
-	let description = $state<LangString | null>(null);
+	let name = $state<LangString>(new LangString());
+	let orig_name: LangString = new LangString();
+	let description = $state<LangString>(new LangString);
+	let orig_description: LangString = new LangString();
 
 	let all_prop_list = $state<string[]>([]);
 	let all_res_list = $state<string[]>([]);
@@ -167,12 +169,16 @@ in relation with a resource class.
 	let minCount = $state<string>();
 	let maxCount = $state<string>();
 	let order = $state<string>();
+	let gui_editor_hints = $state<string[]>([]);
+	let editor = $state<string>('');
 
 	let add_standalone_prop = $state(false);
 
 	let confirmation_dialog: Confirmation;
 	let confirmation_title = $state('');
 	let confirmation_message = $state('');
+
+	const languages = Array.from(locales).map(lang => convertToLanguage(lang) || Language.DE);
 
 	authInfoStore.subscribe(data => {
 		authinfo = data;
@@ -218,7 +224,8 @@ in relation with a resource class.
 
 		// first we check if are trying to modify a standalone property from within a resource. That not allowed!
 		if (resiri && propiri !== 'new') {
-			const tmp = datamodel?.standaloneProperties.find(p => p.propertyIri.toString() === propiri);
+			const tmp = datamodel?.standaloneProperties.find(p => p.propertyIri.toString() === propiri) ||
+				$datamodelSharedStore?.standaloneProperties.find(p => p.propertyIri.toString() === propiri);
 			if (tmp !== undefined) {
 				add_standalone_prop = true;
 			}
@@ -280,6 +287,7 @@ in relation with a resource class.
 			irreflexiveProperty = false;
 			functionalProperty = false;
 			inverseFunctionalProperty = false;
+			editor = gui_editor_hints[0];
 		}
 		else {
 		  const tmp = QName.createQName(propiri);
@@ -324,12 +332,15 @@ in relation with a resource class.
 				if (propiri === 'new') {
 					datatype = 'xsd:string';
 					toClass = undefined;
+					editor = gui_editor_hints[0]
 				} else {
 					subPropertyOf = prop?.subPropertyOf?.toString() || 'NONE'
 					datatype = prop?.datatype;
 					toClass = prop?.toClass?.toString();
-					name = prop?.name || null;
-					description = prop?.description || null;
+					name = prop?.name || new LangString();
+					orig_name = name.clone()
+					description = prop?.description || new LangString();
+					orig_description = description.clone();
 					pattern = prop?.pattern?.toString() || '';
 					min_length = prop?.minLength?.toString();
 					max_length = prop?.maxLength?.toString();
@@ -356,6 +367,7 @@ in relation with a resource class.
 					minCount = hasprop?.minCount?.toString();
 					maxCount = hasprop?.maxCount?.toString();
 					order = hasprop?.order?.toString();
+					editor = hasprop?.editor?.toString() || gui_editor_hints[0];
 				}
 			});
 		} else {
@@ -379,7 +391,23 @@ in relation with a resource class.
 				}
 			}
 		});
+	});
 
+	$effect(() => {
+		let _ = datatype;
+		untrack(() => {
+			if (datatype === 'rdf:langString') {
+				gui_editor_hints = ['None', 'dash:TextFieldWithLangEditor', 'dash:TextAreaWithLangEditor']
+				//editor = gui_editor_hints[0];
+			} else if (datatype === 'xsd:string') {
+				gui_editor_hints=['None', 'dash:TextFieldEditor', 'dash:TextAreaEditor']
+				//editor = gui_editor_hints[0];
+			}
+			else {
+				gui_editor_hints = [];
+			}
+			editor = hasprop?.editor || gui_editor_hints[0];
+		})
 	});
 
 	const add_property = async () => {
@@ -388,8 +416,8 @@ in relation with a resource class.
 		const ok = await confirmation_dialog.open();
 		if (!ok) return;
 
-		const name = name_field?.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
-		const description = description_field?.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
+		const propname = name.map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
+		const propdescription = description.map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
 
 		//const inSet = allowedStrings.size > 0 ? Array.from(allowedStrings.values()) : allowedNumbers.size > 0 ? Array.from(allowedNumbers.values()) : [];
 
@@ -425,6 +453,7 @@ in relation with a resource class.
 			minCount?: number, // only used when resiri is given, non-standalone property!
 			maxCount?: number, // only used when resiri is given, non-standalone property!
 			order?: number, // only used when resiri is given, non-standalone property!
+			editor?: string, // only used when resiri is given, non-standalone property!
 		}
 
 		let propertydata: AddPropertyData = {
@@ -438,9 +467,11 @@ in relation with a resource class.
 			propertydata.maxCount = !isNaN(maxCountNum) ? maxCountNum : undefined;
 			const orderNum = Number(order);
 			propertydata.order = !isNaN(orderNum) ? orderNum : undefined;
+			const editorStr = editor;
+			propertydata.editor = (editorStr?.length || 0) > 0 ? editorStr : undefined;
 		}
-		propertydata.name = name?.length && (name?.length > 0) ? name : undefined;
-		propertydata.description = description?.length && (description?.length > 0) ? description : undefined;
+		propertydata.name = propname.length && (propname?.length > 0) ? propname : undefined;
+		propertydata.description = propdescription.length && (propdescription?.length > 0) ? propdescription : undefined;
 		if (proptype === PropType.LITERAL) {
 			propertydata.datatype = datatype;
 			if (string_datatypes.includes(datatype || '')) {
@@ -520,19 +551,18 @@ in relation with a resource class.
 			minCount?: number | null, // only used when resiri is given, non-standalone property!
 			maxCount?: number | null, // only used when resiri is given, non-standalone property!
 			order?: number | null, // only used when resiri is given, non-standalone property!
+			editor?: string | null,  // only used when resiri is given, non-standalone property!
 		} = {};
 
 
 		if (subPropertyOf !== prop?.subPropertyOf?.toString() && subPropertyOf !== 'NONE') {
 			propertydata.subPropertyOf = subPropertyOf
 		}
-		const new_name = name_field?.get_value();
-		const tmp_modname = new_name?.modify_data(prop?.name || null);
+		const tmp_modname = name.modify_data(orig_name || null);
 		if (tmp_modname !== undefined) {
 			propertydata.name = tmp_modname;
 		}
-		const new_description = description_field?.get_value();
-		const tmp_moddescription = new_description?.modify_data(prop?.description || null);
+		const tmp_moddescription = description?.modify_data(orig_description || null);
 		if (tmp_moddescription !== undefined) {
 			propertydata.description = tmp_moddescription;
 		}
@@ -624,6 +654,12 @@ in relation with a resource class.
 				propertydataWithResiri.order = order_number;
 			}
 
+			if (hasprop?.editor && editor?.length === 0) {
+				propertydataWithResiri.editor = null;
+			}
+			if (hasprop?.editor !== editor) {
+				propertydataWithResiri.editor = editor;
+			}
 		}
 
 		propertyIri = prop.propertyIri.toString();
@@ -707,8 +743,23 @@ and the actual property id (which is a xs:NCName
 				{all_res_list}
 				{all_lists_list}
 				disabled={subPropertyOf !== 'NONE'} />
-			<LangstringField bind:this={name_field} label={m.name()} name="name" id="name" placeholder="name" value={name} />
-			<LangtextareaField bind:this={description_field} label={m.description()} name="description" id="description" placeholder="description" value={description} />
+			<LangstringfieldNew
+				label={m.name()}
+				name="name"
+				id="name"
+				languages={languages}
+				placeholder="name"
+				bind:value={name}
+			/>
+			<LangstringfieldNew
+				label={m.description()}
+				name="description"
+				id="description"
+				languages={languages}
+				placeholder="description"
+				input_type="textarea"
+				bind:value={description}
+			/>
 			{#if proptype === PropType.LITERAL}
 				<LabeledDivider>{m.restrictions()}:</LabeledDivider>
 				{#if string_datatypes.includes(datatype || '')}
@@ -765,6 +816,12 @@ and the actual property id (which is a xs:NCName
 		<Checkbox label="Irreflexive property" position="right" bind:checked={irreflexiveProperty} name="irreflexiveProperty"/>
 		<Checkbox label="Functional property" position="right" bind:checked={functionalProperty} name="functionalProperty"/>
 		<Checkbox label="Inverse functional property" position="right" bind:checked={inverseFunctionalProperty} name="inverseFunctionalProperty"/>
+		{#if gui_editor_hints.length > 0}
+			<LabeledDivider>GUI HINTS</LabeledDivider>
+			{editor}
+			<DropdownField items={gui_editor_hints} label="GUI_HINTS" id="gui_hints" name="gui_hints" bind:selectedItem={editor}/>
+		{/if}
+
 		<div class="flex justify-center gap-4 mt-6">
 			{#if dialogstatus !== undefined}
 				<Button class="mx-4 my-2" onclick={() => {dialogstatus = false}}>{m.cancel()}</Button>

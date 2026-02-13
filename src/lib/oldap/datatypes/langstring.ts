@@ -2,12 +2,44 @@ import { convertToLanguage, getLanguageShortname, Language } from '$lib/oldap/en
 import { OldapErrorInvalidValue } from '$lib/oldap/errors/OldapErrorInvalidValue';
 import { difference } from '$lib/helpers/setops';
 
+
+export function extractLang(value: string): string | null {
+	const match = value.match(/@([a-z][a-z])$/);
+	return match ? match[1] : null;
+}
+
+function parseLangTaggedString(input: string): { lang: Language; value: string } | null {
+	const trimmed = input.trim();
+
+	const idx = trimmed.lastIndexOf('@');
+	if (idx === -1) return null;
+
+	const value = trimmed.slice(0, idx);
+	const langTag = trimmed.slice(idx + 1).trim();
+
+	const lang = convertToLanguage(langTag);
+	if (!lang) return null;
+
+	return { lang, value };
+}
+
 export class LangString {
 	static defaultLang: Language = Language.EN
-	#langstrs: Record<Language, string>;
+	#langstrs: Partial<Record<Language, string>>;
 
-	constructor(langstrs: Record<Language, string> | null) {
-		this.#langstrs = langstrs ? langstrs : {} as Record<Language, string>;
+	constructor(langstrs?: Partial<Record<Language, string>> | null) {
+		this.#langstrs = langstrs ? langstrs : {};
+	}
+
+	static fromStringArray(strs: string[]) {
+		const result: Partial<Record<Language, string>> = {};
+		for (const str of strs) {
+			const parsed = parseLangTaggedString(str);
+			if (parsed) {
+				result[parsed.lang] = parsed.value;
+			}
+		}
+		return new LangString(result);
 	}
 
 	setDefaultLanguage(defaultLanguage: Language): void {
@@ -18,15 +50,19 @@ export class LangString {
 		return Object.keys(this.#langstrs).length;
 	}
 
+	haslang(lang: Language): boolean {
+		return Object.keys(this.#langstrs).includes(lang);
+	}
+
 	get(lang: Language): string {
 		if (this.#langstrs[lang]) {
 			return this.#langstrs[lang];
 		}
 		if (this.#langstrs[LangString.defaultLang]) {
-			return this.#langstrs[LangString.defaultLang]; // ✅ Return the default language if available
+			return this.#langstrs[LangString.defaultLang] || ''; // ✅ Return the default language if available
 		}
 		const firstAvailable = Object.values(this.#langstrs)[0]; // ✅ Get first existing language
-		return firstAvailable ?? "not found"; // ❌ Return "not found" if empty
+		return firstAvailable ?? ""; // ❌ Return "not found" if empty
 	}
 
 	getraw(lang: Language): string | undefined {
@@ -63,6 +99,10 @@ export class LangString {
 		return this.entries().map(([key, value]) => callback(key, value));
 	}
 
+	filter(callback: (key: Language, value: string) => boolean): [Language, string][] {
+		return this.entries().filter(([key, value]) => callback(key, value));
+	}
+
 	// Optional: make it iterable
 	*[Symbol.iterator](): IterableIterator<[Language, string]> {
 		for (const entry of this.entries()) {
@@ -70,15 +110,19 @@ export class LangString {
 		}
 	}
 
-	toJSON(): Record<Language, string> {
+	toJSON(): Partial<Record<Language, string>> {
 		return { ...this.#langstrs };
+	}
+
+	toApi(): string[] {
+		return this.entries().map(([lang, value]) => `${value}@${getLanguageShortname(lang)}`);
 	}
 
 	static fromJson(jsonArray: string[] | undefined): LangString | undefined {
 		if (!jsonArray) {
 			return undefined
 		}
-		const langString: Record<Language, string> = {} as Record<Language, string>;
+		const langString: Partial<Record<Language, string>> = {};
 		jsonArray.forEach((entry) => {
 			if (entry.length < 4) {
 				throw new OldapErrorInvalidValue(`Invalid value for LangString: "${entry}"! Expected "text@lang".`);
@@ -98,7 +142,7 @@ export class LangString {
 
 	modify_data(from: LangString | null): string[] | Partial<Record<'add'|'del', string[]>> | null | undefined {
 		let res: string[] | Partial<Record<'add'|'del', string[]>> | null | undefined = undefined;
-
+		this.removeEmpty();
 		const from_strs = new Set<string>(from?.map((lang, val) => `${val}@${getLanguageShortname(lang)}`));
 		const this_strs = new Set<string>(this.map((lang, val) => `${val}@${getLanguageShortname(lang)}`));
 		const add_strs = difference(this_strs, from_strs);
@@ -112,7 +156,7 @@ export class LangString {
 		else if (add_strs.size > 0 && del_strs.size > 0) {
 			res = {
 				add: Array.from(add_strs),
-				del: Array.from(del_strs)
+				del: Array.from(del_strs).map(str => extractLang(str)!)
 			};
 		}
 		else if (add_strs.size > 0) {
@@ -122,10 +166,18 @@ export class LangString {
 		}
 		else if (del_strs.size > 0) {
 			res = {
-				del: Array.from(del_strs)
+				del: Array.from(del_strs).map(str => extractLang(str)!)
 			};
 		}
 		return res;
+	}
+
+	removeEmpty(): void {
+		for (const [lang, value] of Object.entries(this.#langstrs) as [Language, string][]) {
+			if (value.trim() === "") {
+				delete this.#langstrs[lang];
+			}
+		}
 	}
 
 	clone(): LangString {

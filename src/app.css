@@ -133,6 +133,11 @@
     focus:outline-2 focus:-outline-offset-2
 }
 
+.oldap-langstringselect {
+    @apply block w-auto rounded-md bg-oldap-bg dark:bg-oldap-bg-dark
+    px-1 text-sm sm:text-sm/6 outline-1 -outline-offset-1
+    focus:outline-2 focus:-outline-offset-2;
+}
 .oldap-textfield-valid {
     @apply text-input-text-valid dark:text-input-text-valid-dark
     outline-input-outline-valid placeholder:text-input-placeholder-valid focus:outline-oldap-focus

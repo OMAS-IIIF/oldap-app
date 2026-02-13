@@ -11,7 +11,7 @@
 	import { projectStore } from '$lib/stores/project';
 	import { apiClient } from '$lib/shared/apiClient';
 	import { OldapListNode } from '$lib/oldap/classes/listnode';
-	import { getLanguageShortname } from '$lib/oldap/enums/language';
+	import { convertToLanguage, getLanguageShortname, Language } from '$lib/oldap/enums/language';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import { successInfoStore } from '$lib/stores/successinfo';
@@ -20,6 +20,8 @@
 	import { OldapError } from '$lib/oldap/errors/OldapError';
 	import { refreshNodeTreeNow } from '../../stores/refresh_nodetree.svelte.js';
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import LangstringfieldNew from '$lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
+	import { locales } from '$lib/paraglide/runtime';
 
 	const ncname_pattern: RegExp = /^[A-Za-z_][A-Za-z0-9._-]*$/;
 
@@ -29,16 +31,19 @@
 	let authinfo = $authInfoStore || new AuthInfo('', '');
 	let current_project = $projectStore;
 
-	let prefLabel_field: LangstringField;
-	let prefLabel = $state<LangString | null>(null);
-	let definition_field: LangstringField;
-	let definition = $state<LangString | null>(null);
+	//let prefLabel_field: LangstringField;
+	let prefLabel = $state<LangString>(new LangString());
+	let orig_prefLabel: LangString = new LangString();
+	//let definition_field: LangstringField;
+	let definition = $state<LangString>(new LangString());
+	let orig_definition: LangString = new LangString();
 	let node: OldapListNode;
 
 	let confirmation_dialog: Confirmation;
 	let confirmation_title = $state('');
 	let conformation_text = $state('');
 
+	const languages = Array.from(locales).map(lang => convertToLanguage(lang) || Language.DE);
 
 	onMount(() => {
 		if (nodeid && authinfo) {
@@ -49,9 +54,13 @@
 			});
 			apiClient.getAdminhlistProjectHlistidNodeid(config_nodedata).then((jsondata) => {
 				node = OldapListNode.fromOldapJson(jsondata, new NCName(hlistid));
-				prefLabel = node.prefLabel || null;
-				definition = node.definition || null;
-			})
+				prefLabel = node.prefLabel || new LangString();
+				orig_prefLabel = prefLabel.clone();
+				definition = node.definition || new LangString();
+				orig_definition = definition.clone();
+			}).catch((error) => {
+				errorInfoStore.set(process_api_error(error as Error));
+			});
 		}
 	});
 
@@ -89,20 +98,12 @@
 			let nodedata: {
 				prefLabel?: string[] | Partial<Record<'add'|'del', string[]>> | null,
 				definition?: string[] | Partial<Record<'add'|'del', string[]>> | null,
-			} = {};
-			const new_prefLabel = prefLabel_field.get_value();
-			const tmp_modprefLabel = new_prefLabel.modify_data(node?.prefLabel || null);
-			if (tmp_modprefLabel !== undefined) {
-				nodedata.prefLabel = new_prefLabel.modify_data(node?.prefLabel || null);
-			}
+			} = {
+				prefLabel: prefLabel.modify_data(orig_prefLabel),
+				definition: definition.modify_data(orig_definition)
+			};
 
-			const new_definition = definition_field.get_value();
-			const tmp_moddefinition = new_definition.modify_data(node?.definition || null);
-			if (tmp_moddefinition !== undefined) {
-				nodedata.definition = new_definition.modify_data(node?.definition || null);
-			}
-
-			if (tmp_modprefLabel === undefined && tmp_moddefinition === undefined) {
+			if (nodedata.prefLabel === undefined && nodedata.definition === undefined) {
 				return;
 			}
 
@@ -125,9 +126,6 @@
 			}
 		}
 		else {
-			const prefLabel = prefLabel_field.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
-			const definition = definition_field.get_value().map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
-
 			let pos: 'root' | 'leftOf' | 'rightOf' | 'belowOf';
 			switch (action) {
 				case 'root': pos = 'root'; break;
@@ -146,8 +144,8 @@
 				position: 'root' |'leftOf' | 'rightOf' | 'belowOf',
 				refnode: string,
 			} = {
-				prefLabel: prefLabel,
-				definition: definition.length > 0 ? definition : undefined,
+				prefLabel: prefLabel.toApi(),
+				definition: definition ? definition.toApi() : undefined,
 				position: pos,
 				refnode: refnode || '',
 			};
@@ -174,8 +172,23 @@
 		<Textfield type='text' label="NODE_ID" name="nodeId" id="nodeId" placeholder="nodeID" required={refnode !== undefined}
 							 bind:value={nodeid} pattern={ncname_pattern} disabled={false} />
 
-		<LangstringField bind:this={prefLabel_field} label={m.label()} name="label" id="label" placeholder="label" value={prefLabel} />
-		<LangstringField bind:this={definition_field} label="COMMENT" name="comment" id="comment" placeholder="comment" value={definition} />
+		<LangstringfieldNew
+			label={m.label()}
+			name="label"
+			id="label"
+			languages={languages}
+			placeholder="label"
+			bind:value={prefLabel}
+		/>
+		<LangstringfieldNew
+			label={m.comment()}
+			name="comment"
+			id="comment"
+			languages={languages}
+			placeholder="comment"
+			input_type="textarea"
+			bind:value={definition}
+		/>
 		<div class="flex justify-center gap-4 mt-6">
 			<Button class="mx-4 my-2" onclick={() => {isopen = false}}>{m.cancel()}</Button>
 			<Button class="mx-4 my-2" onclick={(event: Event) => {process_event(event)}}>{m.add()}</Button>

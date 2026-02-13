@@ -1,33 +1,53 @@
+
+/**
+ * IMPORTANT:
+ * - API base URL MUST come from env vars:
+ *   - Browser: PUBLIC_API_URL
+ *   - SSR:     SERVER_API_URL
+ * - Do NOT read apiUrl from config.json
+ * - Do NOT use import.meta.env.VITE_* for runtime URLs
+ */
+
 import { createApiClient } from '$lib/apischema/zod';
-import { dev } from '$app/environment';
-import { getConfig } from '$lib/config';
-
-export const apiUrl = dev ? import.meta.env.VITE_API_DEV_URL : import.meta.env.VITE_API_PROD_URL;
-
-//export const apiClient = createApiClient(apiUrl);
-
+import { browser } from '$app/environment';
+import { env as publicEnv } from '$env/dynamic/public';
 
 type ApiClient = ReturnType<typeof createApiClient>;
 
 let clientPromise: Promise<ApiClient> | null = null;
 
-/*
-async function getClient(): Promise<ApiClient> {
-	if (!clientPromise) {
-		clientPromise = fetch('/config.json')
-			.then((res) => {
-				if (!res.ok) throw new Error(`Failed to load config.json: ${res.status}`);
-				return res.json();
-			})
-			.then((config) => createApiClient(config.apiUrl));
-	}
-	return clientPromise;
+function stripTrailingSlash(url: string) {
+	return url.replace(/\/+$/, '');
 }
-*/
+
+function getServerEnv(name: string): string | undefined {
+	// Avoid importing $env/static/private in shared modules; read from process.env at runtime on the server.
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const p = (globalThis as any).process;
+	return p?.env?.[name] as string | undefined;
+}
+
+async function getBaseUrl(): Promise<string> {
+	// Browser: use PUBLIC_API_URL (available client-side)
+	if (browser) {
+		if (!publicEnv.PUBLIC_API_URL) {
+			throw new Error('PUBLIC_API_URL is not set');
+		}
+		return stripTrailingSlash(publicEnv.PUBLIC_API_URL);
+	}
+
+	// Server/SSR: read SERVER_API_URL from process.env (available at runtime in Node)
+	const serverUrl = getServerEnv('SERVER_API_URL');
+	const url = serverUrl ?? publicEnv.PUBLIC_API_URL;
+	if (!url) {
+		throw new Error('SERVER_API_URL (or PUBLIC_API_URL fallback) is not set on the server');
+	}
+	return stripTrailingSlash(url);
+}
 
 async function getClient(): Promise<ApiClient> {
 	if (!clientPromise) {
-		clientPromise = getConfig().then((config) => createApiClient(config.apiUrl));
+		clientPromise = getBaseUrl().then((baseUrl) => createApiClient(baseUrl));
 	}
 	return clientPromise;
 }

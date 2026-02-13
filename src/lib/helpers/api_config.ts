@@ -3,7 +3,7 @@ import type { DeepReadonlyObject } from '@zodios/core/lib/utils.types';
 
 export function api_config(authinfo: AuthInfo,
 													 params?: Record<string, string>,
-													 queries?: Record<string, string>) {
+													 queries?: Record<string, string | string[] | boolean>) {
 	return {
 		headers: {
 			'Accept': 'application/json',

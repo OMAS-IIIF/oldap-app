@@ -6,7 +6,7 @@
 -->
 <script lang="ts">
 
-	import { availableLanguageTags } from '$lib/paraglide/runtime';
+	import { locales } from '$lib/paraglide/runtime';
 	import { LangString } from '$lib/oldap/datatypes/langstring';
 	import { convertToLanguage, getLanguageShortname, Language } from '$lib/oldap/enums/language';
 	import { onMount } from 'svelte';
@@ -46,7 +46,7 @@
 		class?: string
 	} = $props();
 
-	const languagesArray = Array.from(availableLanguageTags);
+	const languagesArray = Array.from(locales);
 
 	let vals = $state<Record<string, string>>({});
 	let orig_vals = <Record<string, string>>({});
