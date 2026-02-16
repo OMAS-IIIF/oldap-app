@@ -51,6 +51,7 @@ in relation with a resource class.
 	import { datamodelSharedStore } from '$lib/stores/datamodel_shared';
 	import LangstringfieldNew from '$lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
 	import { locales } from '$lib/paraglide/runtime';
+	import { setsEqual } from '$lib/helpers/setops';
 
 	interface PropertyData {
 		subPropertyOf?: string,
@@ -58,7 +59,7 @@ in relation with a resource class.
 		datatype?: string,
 		name?: string[] | Partial<Record<'add' | 'del', string[]>> | null,
 		description?: string[] | Partial<Record<'add' | 'del', string[]>> | null,
-		languageIn?: string[],
+		languageIn?: string[] | null,
 		uniqueLang?: boolean,
 		inSet?: string[],
 		minLength?: number | null,
@@ -315,6 +316,7 @@ in relation with a resource class.
 			irreflexiveProperty = OwlPropertyType.IrreflexiveProperty in (prop?.ptype || new Set());
 			functionalProperty = OwlPropertyType.FunctionalProperty in (prop?.ptype || new Set());
 			inverseFunctionalProperty = OwlPropertyType.InverseFunctionalProperty in (prop?.ptype || new Set());
+			editor = hasprop?.editor || gui_editor_hints[0];
 		}
 		await tick();
 		scrollToTop();
@@ -544,6 +546,8 @@ in relation with a resource class.
 		const ok = await confirmation_dialog.open();
 		if (!ok) return;
 
+		console.log("prop?.languageIn", prop?.languageIn, "allowedStrings", allowedStrings);
+
 		let propertydata: PropertyData = {};
 
 		let propertydataWithResiri: {
@@ -567,54 +571,87 @@ in relation with a resource class.
 			propertydata.description = tmp_moddescription;
 		}
 		if (proptype === PropType.LITERAL) {
+
 			if (prop.datatype !== datatype) {
 				propertydata.datatype = datatype;
 			}
 			if (string_datatypes.includes(datatype || '')) {
-				if (prop?.minLength && min_length?.length === 0) {
+				if (prop?.minLength && !min_length) {
 					propertydata.minLength = null;
 				}
-				const min_length_number = Number(min_length);
-				if (!Number.isNaN(min_length_number) && prop.minLength !== min_length_number) {
-					propertydata.minLength = min_length_number;
+				else {
+					const min_length_number = Number(min_length);
+					if (!Number.isNaN(min_length_number) && prop.minLength !== min_length_number) {
+						propertydata.minLength = min_length_number;
+					}
 				}
 
-				if (prop?.maxLength && max_length?.length === 0) {
+				if (prop?.maxLength && !max_length) {
 					propertydata.maxLength = null;
 				}
-				const max_length_number = Number(max_length);
-				if (!Number.isNaN(max_length_number) && prop.maxLength !== max_length_number) {
-					propertydata.maxLength = max_length_number;
+				else {
+					const max_length_number = Number(max_length);
+					if (!Number.isNaN(max_length_number) && prop.maxLength !== max_length_number) {
+						propertydata.maxLength = max_length_number;
+					}
+				}
+
+				if (prop?.pattern && !pattern) {
+					propertydata.pattern = null;
+				}
+				else {
+					if (pattern && (prop?.pattern !== pattern)) {
+						propertydata.pattern = pattern;
+					}
+				}
+
+				if (prop?.languageIn && (allowedLanguages.length === 0)) {
+					propertydata.languageIn = null;
+				}
+				else {
+					if (prop?.languageIn && !setsEqual(prop.languageIn, new Set(allowedLanguages))) {
+						propertydata.languageIn = allowedLanguages;
+					}
 				}
 			} else if (comparable_datatypes.includes(datatype || '')) {
-				if (prop?.minExclusive && min_value?.length === 0) {
+				if (prop?.minExclusive && !min_value) {
 					propertydata.minExclusive = null;
 				}
-				const min_value_number = Number(min_value);
-				if (!Number.isNaN(min_value_number) && prop.minExclusive !== min_value_number) {
-					propertydata.minExclusive = min_value_number;
+				else {
+					const min_value_number = Number(min_value);
+					if (!Number.isNaN(min_value_number) && prop.minExclusive !== min_value_number) {
+						propertydata.minExclusive = min_value_number;
+					}
 				}
 
-				if (prop?.minInclusive && min_value?.length === 0) {
+				if (prop?.minInclusive && !min_value) {
 					propertydata.minInclusive = null;
 				}
-				if (!Number.isNaN(min_value_number) && prop.minInclusive !== min_value_number) {
-					propertydata.minInclusive = min_value_number;
+				else {
+					const min_value_number = Number(min_value);
+					if (!Number.isNaN(min_value_number) && prop.minInclusive !== min_value_number) {
+						propertydata.minInclusive = min_value_number;
+					}
 				}
 
-				if (prop?.maxExclusive && max_value?.length === 0) {
+				if (prop?.maxExclusive && !max_value) {
 					propertydata.maxExclusive = null;
 				}
-				const max_value_number = Number(max_value);
-				if (!Number.isNaN(max_value_number) && prop.maxExclusive !== max_value_number) {
-					propertydata.maxExclusive = max_value_number;
+				else {
+					const max_value_number = Number(max_value);
+					if (!Number.isNaN(max_value_number) && prop.maxExclusive !== max_value_number) {
+						propertydata.maxExclusive = max_value_number;
+					}
 				}
 
-				if (prop?.maxInclusive && max_value?.length === 0) {
+				if (prop?.maxInclusive && !max_value) {
 					propertydata.maxInclusive = null;
 				}
-				if (!Number.isNaN(max_value_number) && prop.maxInclusive !== max_value_number) {
-					propertydata.maxInclusive = max_value_number;
+				else {
+					const max_value_number = Number(max_value);
+					if (!Number.isNaN(max_value_number) && prop.maxInclusive !== max_value_number) {
+						propertydata.maxInclusive = max_value_number;
+					}
 				}
 			}
 		} else if (proptype === PropType.LINK || proptype === PropType.LIST) {
@@ -630,35 +667,44 @@ in relation with a resource class.
 			else {
 				propertydataWithResiri.property = undefined;
 			}
-			if (hasprop?.minCount && minCount?.length === 0) {
+
+			if (hasprop?.minCount && !minCount) {
 				propertydataWithResiri.minCount = null;
 			}
-			const minCount_number = Number(minCount);
-			if (!isNaN(minCount_number) && hasprop?.minCount !== minCount_number) {
-				propertydataWithResiri.minCount = minCount_number;
+			else {
+				const minCount_number = Number(minCount);
+				if (!isNaN(minCount_number) && hasprop?.minCount !== minCount_number) {
+					propertydataWithResiri.minCount = minCount_number;
+				}
 			}
 
-			if (hasprop?.maxCount && maxCount?.length === 0) {
+			if (hasprop?.maxCount && !maxCount) {
 				propertydataWithResiri.maxCount = null;
 			}
-			const maxCount_number = Number(maxCount);
-			if (!isNaN(maxCount_number) && hasprop?.maxCount !== maxCount_number) {
-				propertydataWithResiri.maxCount = maxCount_number;
+			else {
+				const maxCount_number = Number(maxCount);
+				if (!isNaN(maxCount_number) && hasprop?.maxCount !== maxCount_number) {
+					propertydataWithResiri.maxCount = maxCount_number;
+				}
 			}
 
-			if (hasprop?.order && order?.length === 0) {
+			if (hasprop?.order && !order) {
 				propertydataWithResiri.order = null;
 			}
-			const order_number = Number(order);
-			if (!isNaN(order_number) && hasprop?.order !== order_number) {
-				propertydataWithResiri.order = order_number;
+			else {
+				const order_number = Number(order);
+				if (!isNaN(order_number) && hasprop?.order !== order_number) {
+					propertydataWithResiri.order = order_number;
+				}
 			}
 
-			if (hasprop?.editor && editor?.length === 0) {
+			if (hasprop?.editor && !editor) {
 				propertydataWithResiri.editor = null;
 			}
-			if (hasprop?.editor !== editor) {
-				propertydataWithResiri.editor = editor;
+			else {
+				if (hasprop?.editor !== editor) {
+					propertydataWithResiri.editor = editor;
+				}
 			}
 		}
 

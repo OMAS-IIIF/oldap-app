@@ -3,7 +3,7 @@
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { api_config, api_get_config } from '$lib/helpers/api_config';
 	import { apiClient } from '$lib/shared/apiClient';
-	import { PUBLIC_API_URL } from '$env/static/public';
+	import { env as publicEnv } from '$env/dynamic/public';
 	import { OldapList } from '$lib/oldap/classes/list';
 	import * as m from '$lib/paraglide/messages';
 	import { Pencil, Trash2, Plus, Upload, Download } from '@lucide/svelte'
@@ -133,7 +133,9 @@
 		});
 		spinnerStore.set("Downloading...");
 
-		const url = `${PUBLIC_API_URL}/admin/hlist/${encodeURIComponent(project?.projectIri?.toString() || '')}/${hlist_id}/download?format=YAML`; // or JSON
+		const baseUrl = publicEnv.PUBLIC_API_URL;
+		if (!baseUrl) throw new Error('PUBLIC_API_URL is not set');
+		const url = `${baseUrl}/admin/hlist/${encodeURIComponent(project?.projectIri?.toString() || '')}/${hlist_id}/download?format=YAML`; // or JSON
 		fetch(url, {
 			method: config_download.method,
 			headers: config_download.headers
