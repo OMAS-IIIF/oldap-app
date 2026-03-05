@@ -7,6 +7,7 @@ help:
 	@echo ""
 	@echo "Available targets:"
 	@echo "  show version       Show the current version number"
+	@echo "  run         		Starts the webapp"
 	@echo "  init-multiarch     Enables building od multiple architecture docker images"
 	@echo "  bump-patch-level   Increments the patch level of the version number"
 	@echo "  bump-minor-level   Increments the minor number of the version number"
@@ -18,6 +19,10 @@ help:
 .PHONY: show-version
 show-version:
 	echo "VERSION=$(VERSION)"
+
+.PHONY: run
+run:
+	npm run dev
 
 .PHONY: init-multiarch
 init-multiarch:
