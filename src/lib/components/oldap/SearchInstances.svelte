@@ -22,6 +22,7 @@
 	import { extractLang, LangString } from '$lib/oldap/datatypes/langstring';
 	import { createWindow } from '$lib/stores/windows.svelte';
 	import InstanceEditor from '$lib/components/oldap/InstanceEditor.svelte';
+	import { is_mediaobject } from '$lib/helpers/is_mediaobject';
 
 	type Result = Record<string, Record<string, (string|number|boolean|null)[] | null>>;
 
@@ -112,8 +113,12 @@
 	function do_search(searchstring: string) {
 		if (!authinfo || !datamodel) return;
 		if (!project) return;
+		const mo = datamodel.resources.filter(r => is_mediaobject(r));
+		const is_mo = mo.length > 0;
+		console.log('----------> mo', mo);
 		if (searchstring) {
 			console.log('search for ', searchstring);
+			// TODO!!!!!!!!!!!!
 		} else {
 			const allofclass_count_config = api_config(authinfo,{
 				project: encodeURIComponent(project?.projectShortName?.toString())
@@ -138,14 +143,20 @@
 						...(selprops ? { includeProperties: Array.from(selprops) } : {})
 					}
 				);
-				console.log("allofclass_get_config", allofclass_get_config);
 				return apiClient.getDataofclassProject(allofclass_get_config)
 			}).then(data => {
-				console.log('data', data);
 				// The API returns ApiRes: Record<prop, primitive[]>[]
 				results = {};
 				for (const d of (data as Record<string, string[]>[]) || []) {
 					const iri = d['iri'][0];
+					if (is_mo) {
+						const get_mo_config = api_config(authinfo || new AuthInfo('unknown', ''),{
+							iri: encodeURIComponent(iri)
+						});
+						const mo_res = await apiClient.getDatamediaobjectiriIri(get_mo_config);
+						console.log("******>", d);
+					}
+
 					results[iri] = {};
 					for (const [prop, values] of Object.entries(d)) {
 						if (prop === 'iri') continue;
@@ -162,9 +173,7 @@
 						}
 					}
 				}
-
-			})
-
+			});
 		}
 	}
 
