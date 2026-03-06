@@ -7,7 +7,7 @@
 	import { authInfoStore } from '$lib/stores/authinfo';
 	import { projectStore } from '$lib/stores/project';
 	import RadioButton from '$lib/components/basic_gui/buttons/RadioButton.svelte';
-	import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { OldapRole } from '$lib/oldap/classes/role';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
@@ -19,6 +19,9 @@
 	import { api_config } from '$lib/helpers/api_config';
 	import { browser } from '$app/environment';
 	import { env as publicEnv } from '$env/dynamic/public';
+  import { datamodelStore } from '$lib/stores/datamodel';
+  import { Iri } from '$lib/oldap/datatypes/xsd_iri';
+  import { is_mediaobject } from '$lib/helpers/is_mediaobject';
 
 	type SuccessHandler = (result: unknown) => void;
   type ErrorHandler = (error: unknown) => void;
@@ -27,14 +30,12 @@
 	const MEDIA_LABEL: Record<MediaType, string> = { image: 'Image', audio: 'Audio', video: 'Video' };
 
   let {
-    uploadUrl = '',
     fieldName = 'file',
     headers = {} as Record<string, string>,
     onSuccess,
     onError,
     buttonLabel = 'Upload',
     placeholderUrl = 'https://example.com/upload',
-		resourceClass: resourceClassProp = 'shared:MediaObject',
 		path: pathProp = '',
 		identifier: identifierProp = '',
 		mediaType: mediaTypeProp = 'image',
@@ -43,18 +44,15 @@
 		showStoragePreview = true,
 		metaFieldsCollapsible = true,
 		metaFieldsInitiallyOpen: metaFieldsInitiallyOpenProp = false,
-		resourceClassEditable = true,
 		pathEditable = true,
 		identifierEditable = true,
   }: {
-    uploadUrl?: string;
     fieldName?: string;
     headers?: Record<string, string>;
     onSuccess?: SuccessHandler;
     onError?: ErrorHandler;
     buttonLabel?: string;
     placeholderUrl?: string;
-		resourceClass?: string;
 		path?: string;
 		identifier?: string;
 		mediaType?: MediaType;
@@ -63,7 +61,6 @@
 		showStoragePreview?: boolean;
 		metaFieldsCollapsible?: boolean;
 		metaFieldsInitiallyOpen?: boolean;
-		resourceClassEditable?: boolean;
 		pathEditable?: boolean;
 		identifierEditable?: boolean;
   } = $props();
@@ -81,13 +78,13 @@
   let uploadProgress = $state<number>(0);
   let statusMsg: string | null = $state(null);
 
-	let resourceClass = $state<string>(resourceClassProp);
+	let resourceClass = $state<string>('shared:MediaObject');
 	let path = $state<string>(pathProp);
 	let identifier = $state<string>(identifierProp);
 
-let mediaType = $state<MediaType>(initialMediaType);
-let targetfileformat = $state<string>('TIFF');
-let metaOpen = $state<boolean>(initialMetaOpen);
+  let mediaType = $state<MediaType>(initialMediaType);
+  let targetfileformat = $state<string>('TIFF');
+  let metaOpen = $state<boolean>(initialMetaOpen);
 
 	function normalizeSubpath(input: string, proj: string, mt: MediaType): string {
 		let p = (input || '').trim();
@@ -137,6 +134,7 @@ let metaOpen = $state<boolean>(initialMetaOpen);
 			return fallback;
 		}
 	}
+
 	function detectMediaTypeFromFile(f: File): MediaType {
 		if (f.type.startsWith('image/')) return 'image';
 		if (f.type.startsWith('audio/')) return 'audio';
@@ -170,18 +168,23 @@ let metaOpen = $state<boolean>(initialMetaOpen);
 				return 'video/*';
 		}
 	}
+
 	function clearResourceClass() {
 		resourceClass = 'shared:MediaObject';
 	}
+
 	function clearPath() {
 		path = '';
 	}
+
 	function clearIdentifier() {
 		identifier = '';
 	}
+
 	function clearFile() {
 		selectFile(null);
 	}
+
 	let authinfo = $state<AuthInfo | null>($authInfoStore);
 
 	let roles = $state<Record<string, OldapRole>>({});
@@ -189,6 +192,7 @@ let metaOpen = $state<boolean>(initialMetaOpen);
 	let role_selectables = $state<Set<{key: string, label?: string}> | undefined>();
 	let roles_selected = $state<Set<string>>(new Set());
 
+  let resource_class_list = $state<string[]>([]);
 
 	authInfoStore.subscribe(data => {
 		authinfo = data;
@@ -226,6 +230,21 @@ let metaOpen = $state<boolean>(initialMetaOpen);
     return () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
+  });
+
+  $effect(() => {
+    //
+    // get all the descendents of 'shared:MediaObject' that can be used to upload assets for this project
+    //
+    if ($datamodelStore?.resources) {
+      untrack(() => {
+        const tmp = $datamodelStore?.resources.filter((r) => is_mediaobject(r)).map((r) => r.iri.toString());
+        resource_class_list = [...tmp];
+        if (resource_class_list.length > 0) {
+          resourceClass = resource_class_list[0];
+        }
+      });
+    }
   });
 
   function selectFile(f: File | null) {
@@ -284,7 +303,7 @@ let metaOpen = $state<boolean>(initialMetaOpen);
     }
 		if (!browser) return;
 
-		const url = publicEnv.PUBLIC_UPLOAD_URL;
+    const url = `${publicEnv.PUBLIC_MEDIASERVER_URL}/upload`;
 		uploading = true;
 		uploadProgress = 0;
 		statusMsg = null;
@@ -389,20 +408,15 @@ let metaOpen = $state<boolean>(initialMetaOpen);
             <div class="flex flex-col gap-1">
               <label class="text-sm" for="resourceClass">Resource class</label>
               <div class="flex items-center gap-2">
-                <input
+                <select
                   id="resourceClass"
                   class="flex-1 px-2 py-1 border rounded text-sm"
                   bind:value={resourceClass}
-                  placeholder="e.g. shared:MediaObject"
-                  disabled={!resourceClassEditable}
-                />
-                <button
-                  type="button"
-                  class="px-2 py-1 text-xs border rounded disabled:opacity-50"
-                  onclick={clearResourceClass}
-                  disabled={!resourceClassEditable}
-                  title="Reset to default"
-                >↺</button>
+                >
+                  {#each resource_class_list as rc (rc)}
+                    <option value={rc}>{rc}</option>
+                  {/each}
+                </select>
               </div>
               <div class="text-xs opacity-70">SHACL/OWL class for the created MediaObject.</div>
             </div>
@@ -467,20 +481,15 @@ let metaOpen = $state<boolean>(initialMetaOpen);
         <div class="flex flex-col gap-1">
           <label class="text-sm" for="resourceClass">Resource class</label>
           <div class="flex items-center gap-2">
-            <input
+            <select
               id="resourceClass"
               class="flex-1 px-2 py-1 border rounded text-sm"
               bind:value={resourceClass}
-              placeholder="e.g. shared:MediaObject"
-              disabled={!resourceClassEditable}
-            />
-            <button
-              type="button"
-              class="px-2 py-1 text-xs border rounded disabled:opacity-50"
-              onclick={clearResourceClass}
-              disabled={!resourceClassEditable}
-              title="Reset to default"
-            >↺</button>
+            >
+              {#each resource_class_list as rc (rc)}
+                <option value={rc}>{rc}</option>
+              {/each}
+            </select>
           </div>
         </div>
         <div class="flex flex-col gap-1">
@@ -621,4 +630,3 @@ let metaOpen = $state<boolean>(initialMetaOpen);
     {/if}
   </div>
 </div>
-

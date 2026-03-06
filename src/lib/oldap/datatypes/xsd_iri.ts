@@ -98,4 +98,8 @@ export class Iri {
 			return new Iri();
 		}
 	}
+
+	equals(other: Iri): boolean {
+		return this.toString() === other.toString();
+	}
 }

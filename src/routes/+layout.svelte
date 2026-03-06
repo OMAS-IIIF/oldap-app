@@ -54,7 +54,6 @@
 						datamodelOldapStore.set(dm);
 					}
 					else if (dm.projectid.toString() === 'shared') {
-						console.log('datamodelSharedStore:', dm);
 						datamodelSharedStore.set(dm);
 					}
 				});
