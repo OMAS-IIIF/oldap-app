@@ -84,7 +84,6 @@
 	}
 
 	function deleteInstance(iri: string) {
-		// TODO: wire to your real delete endpoint (and probably ask for confirmation)
 		const ok = window.confirm(`Do you really want to delete item ${iri}?`);
 		if (!ok) return;
 
@@ -99,6 +98,43 @@
 			window.alert('Error deleting instance: ' + err.message);
 		});
 		console.log('delete instance', iri);
+	}
+
+	async function deleteAsset(url: string, token?: string) {
+		const response = await fetch(url, {
+			method: 'DELETE',
+			headers: {
+				'Content-Type': 'application/json',
+				...(token ? { Authorization: `Bearer ${token}` } : {})
+			}
+		});
+
+		if (!response.ok) {
+			throw new Error(`HTTP error ${response.status}`);
+		}
+
+		return response;
+	}
+
+	async function deleteMediaObject(iri: string) {
+		const ok = window.confirm(`Do you really want to delete item ${iri}?`);
+		if (!ok) return;
+
+		const mo = results[iri];
+
+		if (mo && mo instanceof MediaObject) {
+			const assetId = mo.assetId;
+			const token = authinfo?.token || '';
+			const url = `${publicEnv.PUBLIC_MEDIASERVER_URL}/upload/${assetId}`;
+			const response = await deleteAsset(url, token);
+			if (response.ok) {
+				delete results[iri];
+				window.alert('Instance deleted successfully');
+			}
+			else {
+				throw new Error(`HTTP error ${response.status}`);
+			}
+		}
 	}
 
 	async function do_search(searchstring: string) {
@@ -299,15 +335,27 @@
 									>
 										<Pencil size={16} />
 									</button>
-
-									<button
-										type="button"
-										class="rounded p-1 hover:bg-gray-100"
-										title="Delete"
-										onclick={() => deleteInstance(iri)}
-									>
-										<Trash2 size={16} />
-									</button>
+									{#if (row['mo'] && row['mo'] instanceof MediaObject)}
+										{@const may_delete = row['mo'].permval >= 5}
+										<button
+											type="button"
+											class="rounded p-1 hover:bg-gray-100"
+											title="Delete"
+											onclick={() => deleteMediaObject(iri)}
+											disabled={!may_delete}
+										>
+											<Trash2 size={16} />
+										</button>
+									{:else}
+										<button
+											type="button"
+											class="rounded p-1 hover:bg-gray-100"
+											title="Delete"
+											onclick={() => deleteInstance(iri)}
+										>
+											<Trash2 size={16} />
+										</button>
+									{/if}
 								</div>
 							</td>
 						</tr>
