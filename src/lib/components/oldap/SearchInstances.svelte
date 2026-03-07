@@ -100,40 +100,33 @@
 		console.log('delete instance', iri);
 	}
 
-	async function deleteAsset(url: string, token?: string) {
-		const response = await fetch(url, {
+	async function deleteAsset(url: string, token?: string): Promise<Response> {
+		return fetch(url, {
 			method: 'DELETE',
 			headers: {
 				'Content-Type': 'application/json',
 				...(token ? { Authorization: `Bearer ${token}` } : {})
 			}
 		});
-
-		if (!response.ok) {
-			throw new Error(`HTTP error ${response.status}`);
-		}
-
-		return response;
 	}
 
 	async function deleteMediaObject(iri: string) {
 		const ok = window.confirm(`Do you really want to delete item ${iri}?`);
 		if (!ok) return;
 
+		console.log('delete mediaobject', iri);
 		const mo = results[iri];
 
-		if (mo && mo instanceof MediaObject) {
-			const assetId = mo.assetId;
+		if (mo && mo['mo'] instanceof MediaObject) {
+			const assetId = mo['mo'].assetId;
 			const token = authinfo?.token || '';
 			const url = `${publicEnv.PUBLIC_MEDIASERVER_URL}/upload/${assetId}`;
-			const response = await deleteAsset(url, token);
-			if (response.ok) {
+			deleteAsset(url, token).then(() => {
 				delete results[iri];
-				window.alert('Instance deleted successfully');
-			}
-			else {
-				throw new Error(`HTTP error ${response.status}`);
-			}
+				window.alert('MediaObject deleted successfully');
+			}).catch(err => {
+				window.alert('Error deleting instance: ' + err.message);
+			});
 		}
 	}
 
