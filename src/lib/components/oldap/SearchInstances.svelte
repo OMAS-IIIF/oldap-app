@@ -18,11 +18,12 @@
 	import { apiClient } from '$lib/shared/apiClient';
 	import SelectMutiple from '$lib/components/basic_gui/inputs/SelectMutiple.svelte';
 	import { extractLang, LangString } from '$lib/oldap/datatypes/langstring';
-	import { createWindow } from '$lib/stores/windows.svelte';
+	import { createWindow } from '$lib/stores/windows.js';
 	import InstanceEditor from '$lib/components/oldap/InstanceEditor.svelte';
 	import { is_mediaobject } from '$lib/helpers/is_mediaobject';
 	import { env as publicEnv } from '$env/dynamic/public';
 	import { MediaObject } from '$lib/oldap/classes/mediaobject';
+	import IIIFViewer from '$lib/components/basic_gui/IIIFViewer.svelte';
 
 	type Values = (string|number|boolean|null)[];
 	type Result = Record<string, Record<string, Values | MediaObject | null>>;
@@ -49,7 +50,10 @@
 	let results = $state<Result>({});
 
 	let searchstring = $state('');
-	let edit_instiri = $state<string | undefined>(undefined);
+
+	let iiifviewer_base_url = $state<string | undefined>(undefined);
+	let iiiifviewer_token = $state<string | undefined>(undefined);
+
 	let is_mo = $derived(datamodel?.resources.some(r => is_mediaobject(r)) || false);
 
 	const mediaurl = publicEnv.PUBLIC_MEDIASERVER_URL;
@@ -78,9 +82,15 @@
 	}
 
 	function openEditor(iri: string) {
-		console.log('open editor for', iri);
 		edit_instiri = iri;
-		createWindow('Edit Instance', editInstance, { x: 220, y: 80, width: 400, height: 600 });
+		createWindow('Edit Instance', editInstance(iri), { x: 220, y: 80, width: 400, height: 600 });
+	}
+
+	function openIIIFViewer(iri: string) {
+		if (!results[iri]['mo'] || !(results[iri]['mo'] instanceof MediaObject)) return;
+		iiifviewer_base_url = `${mediaurl}/iiif/3/${results[iri]['mo']?.assetId}`;
+		iiiifviewer_token = results[iri]['mo']?.token;
+		createWindow(results[iri]['mo'].originalName, iiifViewer, { x: 50, y: 50, width: 600, height: 500 });
 	}
 
 	function deleteInstance(iri: string) {
@@ -304,8 +314,10 @@
 							{#if (row['mo'] && row['mo'] instanceof MediaObject)}
 								{@const iiifurl = safe_iiif_url(row['mo'].assetId, 'full', '!128,128', 0, 'default.jpg', row['mo'].token)}
 								<td class="px-2 py-2 align-top">
+									<button type="button" class="rounded p-1 hover:bg-gray-100" onclick={() => openIIIFViewer(iri)}>
 									<img src={iiifurl} alt="Preview" class="w-24 h-24 object-cover" />
-									{row['mo'].originalName}
+										{row['mo'].originalName}
+									</button>
 								</td>
 							{/if}
 							{#each Array.from(selprops) as prop (prop)}
@@ -359,6 +371,10 @@
 	{/if}
 </div>
 
-{#snippet editInstance()}
-	<InstanceEditor propertyIri={edit_instiri} />
+{#snippet editInstance(iri)}
+	<InstanceEditor propertyIri={iri} />
+{/snippet}
+
+{#snippet iiifViewer()}
+	<IIIFViewer baseUrl={iiifviewer_base_url || ''} token={iiiifviewer_token}></IIIFViewer>
 {/snippet}

@@ -50,6 +50,7 @@
 	"dependencies": {
 		"@thisux/sveltednd": "^0.0.20",
 		"@zodios/core": "^10.9.6",
-		"crypto-js": "^4.2.0"
+		"crypto-js": "^4.2.0",
+		"openseadragon": "^6.0.1"
 	}
 }

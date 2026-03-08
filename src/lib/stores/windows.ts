@@ -2,11 +2,15 @@
  * Copyright (©) 2026. This software is licenced under the GNU General Public License v3.0 (https://www.gnu.org/licenses/gpl-3.0.en.html)
  */
 
-import { writable, type Writable } from 'svelte/store';
+import { writable } from 'svelte/store';
 import type { WindowData, WindowGeometry } from '$lib/helpers/WindowData';
 import type { Snippet } from 'svelte';
 
-export const windowsStore: Writable<WindowData[]> = writable<WindowData[]>([]);
+export const windowsStore = writable<WindowData[]>([]);
+
+export function createWindowId() {
+	return crypto.randomUUID();
+}
 
 export function createWindow(
 	windowTitle: string,
@@ -18,10 +22,11 @@ export function createWindow(
 	minimizable: boolean = true,
 	icon?: string,
 	minWidth?: number,
-	minHeight?: number
+	minHeight?: number,
+	closer?: (wid: string) => void,
 ) {
 	const win: WindowData = {
-		windowId: crypto.randomUUID(),
+		windowId: createWindowId(),
 		windowTitle: windowTitle,
 		windowGeometry: windowGeometry,
 		movable: movable,
@@ -31,13 +36,50 @@ export function createWindow(
 		icon: icon,
 		minWidth: minWidth,
 		minHeight: minHeight,
-		content: content
+		content: content,
+		closer: closer
+	};
+	windowsStore.update((windows) => [...windows, win]);
+}
+
+export function createWindowWithId(
+	windowId: string,
+	windowTitle: string,
+	content: Snippet,
+	windowGeometry: WindowGeometry,
+	movable: boolean = true,
+	resizable: boolean = true,
+	closable: boolean = true,
+	minimizable: boolean = true,
+	icon?: string,
+	minWidth?: number,
+	minHeight?: number,
+	closer?: (wid: string) => void,
+) {
+	const win: WindowData = {
+		windowId: windowId,
+		windowTitle: windowTitle,
+		windowGeometry: windowGeometry,
+		movable: movable,
+		resizable: resizable,
+		closable: closable,
+		minimizable: minimizable,
+		icon: icon,
+		minWidth: minWidth,
+		minHeight: minHeight,
+		content: content,
+		closer: closer,
 	};
 	windowsStore.update((windows) => [...windows, win]);
 }
 
 export function closeWindow(id: string) {
-	windowsStore.update((ws) => ws.filter((w) => w.windowId !== id));
+	//windowsStore.update((ws) => ws.filter((w) => w.windowId !== id));
+	windowsStore.update((ws) => {
+		const win = ws.find((w) => w.windowId === id);
+		if (win?.closer) win.closer(id);
+		return ws.filter((w) => w.windowId !== id);
+	});
 }
 
 export function setActive(id: string) {

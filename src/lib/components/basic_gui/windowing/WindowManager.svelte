@@ -13,7 +13,7 @@
       updatePos,
       updateSize,
       windowsStore
-  } from '$lib/stores/windows.svelte';
+  } from '$lib/stores/windows.js';
   import { onMount, tick } from 'svelte';
 
 	let { config } = $props();

@@ -20,7 +20,7 @@ import { spinnerStore } from '$lib/stores/spinner';
 import { getLocale } from '$lib/paraglide/runtime';
 import { goto_page } from '$lib/helpers/goto_page';
 import { page } from '$app/state';
-import { createWindow } from '$lib/stores/windows.svelte';
+import { createWindow } from '$lib/stores/windows.js';
 import ImageUpload from '$lib/components/basic_gui/upload/ImageUpload.svelte';
 import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
 import Button from '$lib/components/basic_gui/buttons/Button.svelte';
