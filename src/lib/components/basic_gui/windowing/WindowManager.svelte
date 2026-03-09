@@ -15,6 +15,7 @@
       windowsStore
   } from '$lib/stores/windows.js';
   import { onMount, tick } from 'svelte';
+	import type { Snippet } from 'svelte';
 
 	let { config } = $props();
 
@@ -30,7 +31,7 @@
 
   onMount(async () => {
       await tick();
-      createWindow('Hello', helloSnippet, { x: 120, y: 120, width: 300, height: 200 });
+      createWindow('Hello', helloSnippet, [], { x: 120, y: 120, width: 300, height: 200 });
   });
 
 	$effect(() => {
@@ -69,7 +70,15 @@
                 onResize={(g) => updateSize(w.windowId, g)}
             >
                 {#snippet children()}
-                    {@render w.content?.()}
+					{#if !w.contentArgs || w.contentArgs.length === 0}
+						{@render (w.content as Snippet<[]>)()}
+					{:else if w.contentArgs.length === 1}
+						{@render (w.content as Snippet<[unknown]>)(w.contentArgs[0])}
+					{:else if w.contentArgs.length === 2}
+						{@render (w.content as Snippet<[unknown, unknown]>)(w.contentArgs[0], w.contentArgs[1])}
+					{:else}
+						{@render (w.content as Snippet<[unknown, unknown, unknown]>)(w.contentArgs[0], w.contentArgs[1], w.contentArgs[2])}
+					{/if}
                 {/snippet}
             </Window>
         {/each}

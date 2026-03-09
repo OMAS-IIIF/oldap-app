@@ -133,7 +133,12 @@
 				selres = data && data['rdf:type'] ? data['rdf:type'][0]?.toString() : '';
 				for (const prop of (resources[selres]?.hasProperty || [])) {
 					if (data[prop.property.propertyIri.toString()] === undefined) {
-						values[prop.property.propertyIri.toString()] = [];
+						if (prop.property.datatype === XsdDatatypes.langString) {
+							values[prop.property.propertyIri.toString()] = new LangString();
+						}
+						else {
+							values[prop.property.propertyIri.toString()] = [];
+						}
 						continue;
 					}
 					if (prop.property.propertyIri.toString() !== 'oldap:attachedToRole') {
@@ -150,7 +155,6 @@
 						}
 					}
 				}
-				console.log('VALUES', $state.snapshot(values));
 			}).catch(err => {console.error(err)});
 		}
 	});

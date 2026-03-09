@@ -3,8 +3,7 @@
  */
 
 import { writable } from 'svelte/store';
-import type { WindowData, WindowGeometry } from '$lib/helpers/WindowData';
-import type { Snippet } from 'svelte';
+import type { WindowData, WindowGeometry, WindowSnippet, WindowSnippetArgs } from '$lib/helpers/WindowData';
 
 export const windowsStore = writable<WindowData[]>([]);
 
@@ -14,7 +13,8 @@ export function createWindowId() {
 
 export function createWindow(
 	windowTitle: string,
-	content: Snippet,
+	content: WindowSnippet,
+	contentArgs: WindowSnippetArgs = [],
 	windowGeometry: WindowGeometry,
 	movable: boolean = true,
 	resizable: boolean = true,
@@ -37,6 +37,7 @@ export function createWindow(
 		minWidth: minWidth,
 		minHeight: minHeight,
 		content: content,
+		contentArgs: contentArgs,
 		closer: closer
 	};
 	windowsStore.update((windows) => [...windows, win]);
@@ -45,7 +46,8 @@ export function createWindow(
 export function createWindowWithId(
 	windowId: string,
 	windowTitle: string,
-	content: Snippet,
+	content: WindowSnippet,
+	contentArgs: WindowSnippetArgs = [],
 	windowGeometry: WindowGeometry,
 	movable: boolean = true,
 	resizable: boolean = true,
@@ -68,6 +70,7 @@ export function createWindowWithId(
 		minWidth: minWidth,
 		minHeight: minHeight,
 		content: content,
+		contentArgs: contentArgs,
 		closer: closer,
 	};
 	windowsStore.update((windows) => [...windows, win]);

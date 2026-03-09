@@ -51,9 +51,6 @@
 
 	let searchstring = $state('');
 
-	let iiifviewer_base_url = $state<string | undefined>(undefined);
-	let iiiifviewer_token = $state<string | undefined>(undefined);
-
 	let is_mo = $derived(datamodel?.resources.some(r => is_mediaobject(r)) || false);
 
 	const mediaurl = publicEnv.PUBLIC_MEDIASERVER_URL;
@@ -82,15 +79,14 @@
 	}
 
 	function openEditor(iri: string) {
-		edit_instiri = iri;
-		createWindow('Edit Instance', editInstance(iri), { x: 220, y: 80, width: 400, height: 600 });
+		createWindow('Edit Instance', editInstance, [iri] as [string], { x: 220, y: 80, width: 400, height: 600 });
 	}
 
 	function openIIIFViewer(iri: string) {
 		if (!results[iri]['mo'] || !(results[iri]['mo'] instanceof MediaObject)) return;
-		iiifviewer_base_url = `${mediaurl}/iiif/3/${results[iri]['mo']?.assetId}`;
-		iiiifviewer_token = results[iri]['mo']?.token;
-		createWindow(results[iri]['mo'].originalName, iiifViewer, { x: 50, y: 50, width: 600, height: 500 });
+		const base_url = `${mediaurl}/iiif/3/${results[iri]['mo']?.assetId}`;
+		const token = results[iri]['mo']?.token;
+		createWindow(results[iri]['mo'].originalName, iiifViewer, [base_url, token] as [string, string | undefined], { x: 50, y: 50, width: 600, height: 500 });
 	}
 
 	function deleteInstance(iri: string) {
@@ -371,10 +367,10 @@
 	{/if}
 </div>
 
-{#snippet editInstance(iri)}
+{#snippet editInstance(iri: string)}
 	<InstanceEditor propertyIri={iri} />
 {/snippet}
 
-{#snippet iiifViewer()}
-	<IIIFViewer baseUrl={iiifviewer_base_url || ''} token={iiiifviewer_token}></IIIFViewer>
+{#snippet iiifViewer(baseUrl: string, token: string | undefined)}
+	<IIIFViewer baseUrl={baseUrl} token={token}></IIIFViewer>
 {/snippet}

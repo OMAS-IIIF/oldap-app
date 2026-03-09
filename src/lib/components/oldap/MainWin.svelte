@@ -64,15 +64,15 @@ $effect(() => {
 
 
 function create_my_window() {
-	createWindow('Image upload', imageUpload, { x: 120, y: 120, width: 400, height: 600 });
+	createWindow('Image upload', imageUpload, [], { x: 120, y: 120, width: 400, height: 600 });
 }
 
 function create_instance_window() {
-	createWindow('Create Instance', createInstance, { x: 120, y: 120, width: 400, height: 600 });
+	createWindow('Create Instance', createInstance, [], { x: 120, y: 120, width: 400, height: 600 });
 }
 
 function create_search_window() {
-	createWindow('Search Instances', searchInstances, { x: 120, y: 120, width: 600, height: 600 });
+	createWindow('Search Instances', searchInstances, [], { x: 120, y: 120, width: 600, height: 600 });
 }
 
 
@@ -134,7 +134,7 @@ function create_search_window() {
 	</ContentArea>
 	<Footer>
 		<LeftFooter>
-			<div>© Lukas & Manuel Rosenthaler (2025)</div>
+			<div>© Lukas & Manuel Rosenthaler (2025, 2026)</div>
 		</LeftFooter>
 		<RightFooter>
 			Path: {page.url.pathname}
@@ -148,4 +148,3 @@ function create_search_window() {
 	<ErrorMsg></ErrorMsg>
 	<SuccessMsg></SuccessMsg>
 </div>
-

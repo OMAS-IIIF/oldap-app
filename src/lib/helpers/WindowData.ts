@@ -12,10 +12,23 @@ export type WindowGeometry = {
 	height: number;
 }
 
+export type WindowSnippet =
+	| Snippet<[]>
+	| Snippet<[any]>
+	| Snippet<[any, any]>
+	| Snippet<[any, any, any]>;
+
+export type WindowSnippetArgs =
+	| []
+	| [unknown]
+	| [unknown, unknown]
+	| [unknown, unknown, unknown];
+
 export type WindowData = {
 	windowId: string;
 	windowTitle: string;
-	content: Snippet
+	content: WindowSnippet;
+	contentArgs?: WindowSnippetArgs;
 	windowGeometry: WindowGeometry;
 	movable: boolean;
 	resizable: boolean;
