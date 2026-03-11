@@ -27,6 +27,7 @@ export type WindowSnippetArgs =
 export type WindowData = {
 	windowId: string;
 	windowTitle: string;
+	zIndex: number;
 	content: WindowSnippet;
 	contentArgs?: WindowSnippetArgs;
 	windowGeometry: WindowGeometry;

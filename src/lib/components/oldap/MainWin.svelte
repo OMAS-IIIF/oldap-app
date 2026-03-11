@@ -63,8 +63,8 @@ $effect(() => {
 });
 
 
-function create_my_window() {
-	createWindow('Image upload', imageUpload, [], { x: 120, y: 120, width: 400, height: 600 });
+function create_upload_window() {
+	createWindow('Image upload', imageUpload, [], { x: 80, y: 20, width: 500, height: 650 });
 }
 
 function create_instance_window() {
@@ -103,7 +103,7 @@ function create_search_window() {
 			{/if}
 			{#if create_resource }
 				<Tooltip text="UPLOAD MEDIA FILE">
-					<Button round={true} onclick={create_my_window}>
+					<Button round={true} onclick={create_upload_window}>
 						<Upload size="16" strokeWidth="1" />
 					</Button>
 				</Tooltip>

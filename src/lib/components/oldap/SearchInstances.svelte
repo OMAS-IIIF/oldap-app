@@ -117,6 +117,7 @@
 	}
 
 	async function deleteMediaObject(iri: string) {
+		console.log('===========================> delete mediaobject', iri);
 		const ok = window.confirm(`Do you really want to delete item ${iri}?`);
 		if (!ok) return;
 
@@ -338,9 +339,10 @@
 									</button>
 									{#if (row['mo'] && row['mo'] instanceof MediaObject)}
 										{@const may_delete = row['mo'].permval >= 5}
+										{row['mo'].permval}
 										<button
 											type="button"
-											class="rounded p-1 hover:bg-gray-100"
+											class="rounded p-1 hover:bg-gray-100 {may_delete ? '' : 'opacity-50 cursor-not-allowed'}"
 											title="Delete"
 											onclick={() => deleteMediaObject(iri)}
 											disabled={!may_delete}

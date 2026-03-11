@@ -7,9 +7,6 @@
 	import type { Snippet } from 'svelte';
 	import type { WindowGeometry } from '$lib/helpers/WindowData';
 
-	// Module-scoped z-index counter shared by all window instances
-	let nextZIndex = 1000;
-
 	// ---- Event API (now callbacks passed via props) ----
 	type WindowCallbacks = {
 		onClose?: () => void;
@@ -32,6 +29,9 @@
 		/** Window title */
 		title = 'Window',
 
+		/** z-index controlled by WindowManager/store order */
+		zIndex = 1000,
+
 		/** Behavior toggles */
 		movable = true,
 		resizable = true,
@@ -48,6 +48,7 @@
 		minWidth?: number;
 		minHeight?: number;
 		title?: string;
+		zIndex?: number;
 		movable?: boolean;
 		resizable?: boolean;
 		closable?: boolean;
@@ -58,7 +59,6 @@
 	let posY = $derived(windowGeometry.y);
 	let w = $derived(windowGeometry.width);
 	let h = $derived(windowGeometry.height);
-	let z = $state(++nextZIndex);
 	let active = $state(false);
 	let rootEl: HTMLDivElement | null = null;
 
@@ -76,7 +76,6 @@
 	});
 
 	function bringToFront() {
-		z = ++nextZIndex;
 		active = true;
 		onActivate?.();
 	}
@@ -178,11 +177,7 @@
 		resizeCorner = null;
 	}
 
-	function onActivateSelf(e: PointerEvent) {
-		// Activate the window only when clicking on non-interactive areas.
-		// Interactive elements handle their own pointer events.
-		const targetEl = e.target as HTMLElement | null;
-		if (targetEl?.closest('button, a, input, select, textarea, [role="button"]')) return;
+	function onActivateSelf() {
 		bringToFront();
 		rootEl?.focus?.();
 	}
@@ -213,8 +208,8 @@
 	class:shadow-2xl={active}
 	class:border-[color:var(--window-border-active,#7aa7ff)]={active}
 	bind:this={rootEl}
-	onpointerdown={(e) => onActivateSelf(e)}
-	style="left: {posX}px; top: {posY}px; width: {w}px; height: {h}px; z-index: {z};"
+	onpointerdown={() => onActivateSelf()}
+	style="left: {posX}px; top: {posY}px; width: {w}px; height: {h}px; z-index: {zIndex}; isolation: isolate; contain: layout paint; transform: translateZ(0);"
 	role="dialog"
 	tabindex="0"
 	aria-label={title}
@@ -235,8 +230,10 @@
 			>×</button>
 		{/if}
 	</div>
-	<div class="w-full h-[calc(100%-36px)] overflow-auto">
-		{@render children?.()}
+	<div class="relative w-full h-[calc(100%-36px)] overflow-hidden">
+		<div class="h-full overflow-auto [transform:translateZ(0)]">
+			{@render children?.()}
+		</div>
 	</div>
 
 	{#if resizable}

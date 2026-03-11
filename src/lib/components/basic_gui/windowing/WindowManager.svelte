@@ -59,6 +59,7 @@
             <Window
                 title={w.windowTitle}
                 windowGeometry={w.windowGeometry}
+				zIndex={w.zIndex}
                 minWidth={w.minWidth}
                 minHeight={w.minHeight}
                 movable={w.movable}

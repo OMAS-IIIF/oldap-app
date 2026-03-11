@@ -11,9 +11,8 @@ export async function fetchRolesForProject(
 	authinfo: AuthInfo,
 	projectIri: string,
 	projectShortName: string,
-): Promise<Record<string, OldapRole>> {
+): Promise<OldapRole[]> {
 	const rolesearch = api_get_config(authinfo, { definedByProject: projectIri });
-
 	const psdata = await apiClient.getAdminrolesearch(rolesearch);
 
 	const roles: Record<string, OldapRole> = {};
@@ -25,11 +24,7 @@ export async function fetchRolesForProject(
 		})
 	);
 
-	for (const roledata of results) {
-		const role = OldapRole.fromOldapJson(roledata);
-		const roleid = role.roleId.toString();
-		roles[`${projectShortName}:${roleid}`] = role;
-	}
+	const _roles = results.map(r => OldapRole.fromOldapJson(r));
+	return _roles
 
-	return roles;
 }

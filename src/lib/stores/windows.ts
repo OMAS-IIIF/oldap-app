@@ -6,6 +6,7 @@ import { writable } from 'svelte/store';
 import type { WindowData, WindowGeometry, WindowSnippet, WindowSnippetArgs } from '$lib/helpers/WindowData';
 
 export const windowsStore = writable<WindowData[]>([]);
+let nextWindowZ = 1000;
 
 export function createWindowId() {
 	return crypto.randomUUID();
@@ -28,6 +29,7 @@ export function createWindow(
 	const win: WindowData = {
 		windowId: createWindowId(),
 		windowTitle: windowTitle,
+		zIndex: ++nextWindowZ,
 		windowGeometry: windowGeometry,
 		movable: movable,
 		resizable: resizable,
@@ -61,6 +63,7 @@ export function createWindowWithId(
 	const win: WindowData = {
 		windowId: windowId,
 		windowTitle: windowTitle,
+		zIndex: ++nextWindowZ,
 		windowGeometry: windowGeometry,
 		movable: movable,
 		resizable: resizable,
@@ -87,10 +90,14 @@ export function closeWindow(id: string) {
 
 export function setActive(id: string) {
 	windowsStore.update((ws) => {
-		const idx = ws.findIndex((w) => w.windowId === id);
-		if (idx === -1) return ws;
-		const w = ws[idx];
-		return [...ws.slice(0, idx), ...ws.slice(idx + 1), w];
+		const target = ws.find((w) => w.windowId === id);
+		if (!target) return ws;
+		const maxZ = ws.reduce((acc, w) => (w.zIndex > acc ? w.zIndex : acc), Number.NEGATIVE_INFINITY);
+		// Already topmost: avoid needless store updates/re-renders
+		if (target.zIndex >= maxZ) return ws;
+		const newZ = ++nextWindowZ;
+		if (target.zIndex === newZ) return ws;
+		return ws.map((w) => (w.windowId === id ? { ...w, zIndex: newZ } : w));
 	});
 }
 
