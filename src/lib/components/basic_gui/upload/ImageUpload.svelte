@@ -15,7 +15,7 @@
 	import { convertToLanguage, getLanguageShortname, Language } from '$lib/oldap/enums/language';
 	import { fetchRolesForProject } from '$lib/helpers/get_roles';
 	import { apiClient } from '$lib/shared/apiClient';
-	import { api_config } from '$lib/helpers/api_config';
+	import { api_config, api_get_config } from '$lib/helpers/api_config';
 	import { browser } from '$app/environment';
 	import { env as publicEnv } from '$env/dynamic/public';
 	import { datamodelStore } from '$lib/stores/datamodel';
@@ -37,6 +37,8 @@
 	import TextFieldData from '$lib/components/basic_gui/inputs/TextFieldData.svelte';
 	import DatePickerData from '$lib/components/basic_gui/inputs/DatePickerData.svelte';
 	import LangstringfieldNew from '$lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
+	import { OldapList } from '$lib/oldap/classes/list';
+	import HlistSelectorData from '$lib/components/basic_gui/inputs/HlistSelectorData.svelte';
 
 	type SuccessHandler = (result: unknown) => void;
 	type ErrorHandler = (error: unknown) => void;
@@ -50,7 +52,9 @@
 
 	const MEDIA_LABEL: Record<MediaType, string> = { image: 'Image', audio: 'Audio', video: 'Video' };
 
-	const languages = Array.from(locales).map(lang => convertToLanguage(lang));
+	const languages = Array.from(locales)
+		.map((lang) => convertToLanguage(lang))
+		.filter((lang): lang is Language => lang !== undefined);
 
 	let {
 		fieldName = 'file',
@@ -114,10 +118,11 @@
 	let authinfo = $state<AuthInfo | null>($authInfoStore);
 	let resource_class_list = $state<string[]>([]);
 
-	let values = $state<Record<string, DataTypes[] | LangString>>({});
+	let values = $state<Record<string, any>>({});
 	let input_fields = $state<Record<string, InputFieldInstance | undefined>>({});
+	let hlists = $state<Record<string, OldapList>>({});
 
-	const data_permission_list: string[] = ["None", ...Object.keys(DataPermission)] as const;
+	const data_permission_list: string[] = ['None', ...Object.keys(DataPermission)] as const;
 
 	//let role_list = $state<string[]>([]);
 	//let role_selectables = $state<Set<{ key: string; label?: string }> | undefined>();
@@ -168,8 +173,9 @@
 			for (const prop of props) {
 				if (prop.property.datatype === XsdDatatypes.langString) {
 					values[prop.property.propertyIri.toString()] = new LangString();
-				}
-				else {
+				} else if (prop.property.datatype == XsdDatatypes.date) {
+					values[prop.property.propertyIri.toString()] = [new XsdDate()];
+				} else {
 					values[prop.property.propertyIri.toString()] = [];
 				}
 				input_fields[prop.property.propertyIri.toString()] = undefined;
@@ -240,13 +246,60 @@
 	}
 
 	function get_props(): HasProperty[] {
-		const r = $datamodelStore?.resources.find(r => r.iri.toString() === resourceClass);
+		const r = $datamodelStore?.resources.find((r) => r.iri.toString() === resourceClass);
 		if (r) {
 			return r?.hasProperty || [];
-		}
-		else {
+		} else {
 			return [];
 		}
+	}
+
+	function normalizeHlistPayload(raw: any): any {
+		if (!raw || typeof raw !== 'object') return raw;
+
+		const normalizeNode = (node: any): any => {
+			if (!node || typeof node !== 'object') return node;
+			const n = { ...node };
+			if (n.oldapListNodeId === undefined && n.nodeid !== undefined) {
+				n.oldapListNodeId = n.nodeid;
+			}
+			if (Array.isArray(n.nodes)) {
+				n.nodes = n.nodes.map((child: any) => normalizeNode(child));
+			}
+			return n;
+		};
+
+		const out = { ...raw };
+		if (out.oldapListId === undefined && out.hlistId !== undefined) {
+			out.oldapListId = out.hlistId;
+		}
+		if (out.hlist === undefined && out.oldapListId !== undefined) {
+			out.hlist = out.oldapListId;
+		}
+		if (Array.isArray(out.nodes)) {
+			out.nodes = out.nodes.map((node: any) => normalizeNode(node));
+		}
+		return out;
+	}
+
+	async function resolveHlistId(rawResult: string): Promise<string | null> {
+		const token = (rawResult || '').trim();
+		if (!token) return null;
+		if (!token.includes(':') && !token.includes('/')) {
+			return token;
+		}
+
+		try {
+			const cfg = api_get_config(authinfo || new AuthInfo('', ''), { iri: token });
+			const meta = await apiClient.getAdminhlistget(cfg);
+			const hlistId = (meta as any)?.hlistId || (meta as any)?.oldapListId;
+			if (hlistId) return hlistId.toString();
+		} catch {
+			// fallback below
+		}
+
+		const tail = token.split('/').pop() || token.split(':').pop() || '';
+		return tail.trim().length > 0 ? tail.trim() : null;
 	}
 
 	authInfoStore.subscribe((data) => {
@@ -267,22 +320,49 @@
 				//
 				const roles1 = await fetchRolesForProject(authinfo, projectIri, projectShortName);
 				const roles2 = await fetchRolesForProject(authinfo, 'oldap:SystemProject', 'SystemProject');
-				roles = [...roles1, ...roles2 ];
+				roles = [...roles1, ...roles2];
 				let userHasRoles: string[] = [];
 				if ($userStore?.hasRole) {
-					userHasRoles = Object.keys($userStore?.hasRole).map(iri => iri.toString()) || [];
+					userHasRoles = Object.keys($userStore?.hasRole).map((iri) => iri.toString()) || [];
 				}
 				roles.forEach((role) => {
 					user_roles[role.roleIriAsString] = userHasRoles.includes(role.roleIriAsString);
 					if (user_roles[role.roleIriAsString]) {
-						const v = ($userStore?.hasRole as any)?.[role.roleIriAsString] as string | null | undefined; // e.g. "oldap:DATA_VIEW"
+						const v = ($userStore?.hasRole as any)?.[role.roleIriAsString] as
+							| string
+							| null
+							| undefined; // e.g. "oldap:DATA_VIEW"
 						selected_dperm[role.roleIriAsString] = v ? v.split(':')[1] : 'None';
-					}
-					else {
+					} else {
 						selected_dperm[role.roleIriAsString] = 'None';
 					}
 				});
 
+				//
+				// load hierarchical lists for this project (for toClass/list properties)
+				//
+				const config_hlist_search = api_get_config(authinfo || new AuthInfo('', ''), {
+					project: projectShortName
+				});
+				const hlist_search_results = await apiClient.getAdminhlistsearch(config_hlist_search);
+				const hlist_promises = (hlist_search_results || []).map(async (rawResult: string) => {
+					const hlistId = await resolveHlistId(rawResult);
+					if (!hlistId) return null;
+					const config_hlist_full = api_config(authinfo || new AuthInfo('', ''), {
+						project: projectShortName,
+						hlistid: hlistId
+					});
+					const hlist_data = await apiClient.getAdminhlistProjectHlistid(config_hlist_full);
+					return OldapList.fromOldapJson(normalizeHlistPayload(hlist_data), false);
+				});
+				const hlist_results = await Promise.all(hlist_promises);
+				let tmp_hlists: Record<string, OldapList> = {};
+				for (const hlist of hlist_results) {
+					if (hlist) {
+						tmp_hlists[hlist.nodeClassIri.toString()] = hlist;
+					}
+				}
+				hlists = tmp_hlists;
 			} catch (err) {
 				errorInfoStore.set(process_api_error(err as Error));
 			}
@@ -435,26 +515,46 @@
 			form.append(fieldName, file);
 
 			get_props().forEach((hasprop) => {
-				const propname = hasprop.property.propertyIri.toString()
-				switch(hasprop.property.datatype) {
+				const propname = hasprop.property.propertyIri.toString();
+				const propValue = values[propname];
+
+				switch (hasprop.property.datatype) {
 					case XsdDatatypes.xsdString:
-						if (typeof values[propname] === 'string') {
-							form.append(propname, values[propname]);
-						}
-						break;
-					case XsdDatatypes.date:
-						if (values[propname] instanceof XsdDate) {
-							form.append(propname, values[propname].toString());
-						}
-						break;
-					case XsdDatatypes.langString:
-						if (values[propname] instanceof LangString) {
-							values[propname].forEach((text, lang) => {
-								const langstr = getLanguageShortname(lang);
-								form.append(propname, `${text}@${langstr}`);
+						if (Array.isArray(propValue)) {
+							propValue.forEach((v) => {
+								if (typeof v === 'string' && v.trim().length > 0) {
+									form.append(propname, v);
+								}
 							});
 						}
 						break;
+					case XsdDatatypes.date:
+						if (Array.isArray(propValue)) {
+							propValue.forEach((v) => {
+								if (v instanceof XsdDate) {
+									form.append(propname, v.toApi());
+								}
+							});
+						}
+						break;
+					case XsdDatatypes.langString:
+						if (propValue instanceof LangString) {
+							propValue.forEach((text, lang) => {
+								const langstr = getLanguageShortname(lang);
+								if (langstr) {
+									form.append(propname, `${text}@${langstr}`);
+								}
+							});
+						}
+						break;
+					default:
+						if (Array.isArray(propValue)) {
+							propValue.forEach((v) => {
+								if (typeof v === 'string' && v.trim().length > 0) {
+									form.append(propname, v);
+								}
+							});
+						}
 				}
 			});
 
@@ -785,7 +885,13 @@
 			{/if}
 		</div>
 	</div>
-	<Table label="User Roles and data permissions" description="List of roles assigned to the user and their default data permissions" padding={false} >
+	{#snippet no_actions()}{/snippet}
+	<Table
+		label="User Roles and data permissions"
+		description="List of roles assigned to the user and their default data permissions"
+		padding={false}
+		action_elements={no_actions}
+	>
 		<TableHeader>
 			<TableColumnTitle>Role</TableColumnTitle>
 			<TableColumnTitle>Data Permissions</TableColumnTitle>
@@ -795,7 +901,11 @@
 				{@const txt = `${role?.label ? role?.label.get(langobj) : ''} (${m.fromproj()} "${role?.projectShortName}")`}
 				<TableRow>
 					<TableItem>
-						<Checkbox label={txt} position="right" bind:checked={user_roles[role?.roleIri.toString()]}></Checkbox>
+						<Checkbox
+							label={txt}
+							position="right"
+							bind:checked={user_roles[role?.roleIri.toString()]}
+						></Checkbox>
 					</TableItem>
 					<TableItem>
 						<!-- {user_roles[role?.roleIri.toString()] ? user?.hasRole[role?.roleIri] : '-'} -->
@@ -821,14 +931,14 @@
 				values={values[propname]}
 				bind:this={input_fields[hasprop.property.propertyIri.toString()]}
 			/>
-		{:else if hasprop.property?.datatype === XsdDatatypes.date}
+		{:else if hasprop.property?.datatype === XsdDatatypes.date && values[propname]}
 			<DatePickerData
 				id={hasprop.property?.propertyIri?.fragment?.toString() || 'prop_id'}
 				name="prop_name"
 				label={hasprop.property?.name?.get(langobj) || hasprop.property?.propertyIri.toString()}
 				minCount={hasprop?.minCount || 0}
 				maxCount={hasprop?.maxCount || Infinity}
-				bind:values={(values[propname])}
+				bind:values={values[propname]}
 				bind:this={input_fields[hasprop.property.propertyIri.toString()]}
 			/>
 		{:else if hasprop.property?.datatype === XsdDatatypes.langString}
@@ -840,6 +950,17 @@
 				input_type={hasprop.editor === 'dash:TextFieldWithLangEditor' ? 'input' : 'textarea'}
 				label={hasprop.property?.name?.get(langobj) || hasprop.property?.propertyIri.toString()}
 				bind:value={values[propname]}
+			/>
+		{:else if hasprop.property?.toClass && hlists[hasprop.property.toClass.toString()]}
+			<HlistSelectorData
+				id={hasprop.property?.propertyIri?.fragment?.toString() || 'prop_id'}
+				name="prop_name"
+				label={hasprop.property?.name?.get(langobj) || hasprop.property?.propertyIri.toString()}
+				minCount={hasprop?.minCount || 0}
+				maxCount={hasprop?.maxCount || Infinity}
+				hlist={hlists[hasprop.property.toClass.toString()]}
+				bind:values={values[propname]}
+				bind:this={input_fields[hasprop.property.propertyIri.toString()]}
 			/>
 		{/if}
 	{/each}
