@@ -52,6 +52,7 @@
 	let selected_resource = $state<string>('');
 
 	let selres = $state<string>('');
+	let hasprops = $state<HasProperty[]>([]);
 
 	const text_dtypes = [XsdDatatypes.xsdString, XsdDatatypes.NCName];
 	const langstr_dtypes = [XsdDatatypes.langString];
@@ -270,7 +271,7 @@
 		if (propertyIri) return;
 		untrack(() => {
 			if (resources[selres]?.hasProperty !== undefined) {
-				const hasprops = (resources[selres].hasProperty || []).sort(
+				hasprops = (resources[selres].hasProperty || []).sort(
 					(a: HasProperty, b: HasProperty) => (a.order ?? 9999) - (b.order ?? 9999)
 				);
 				values = {};
@@ -380,7 +381,7 @@
 			bind:selectedItem={selres}
 		/>
 
-		{#each resources[selres] ? resources[selres].hasProperty : [] as hasprop (hasprop.property.propertyIri.toString())}
+		{#each hasprops as hasprop (hasprop.property.propertyIri.toString())}
 			{@const propname = hasprop.property.propertyIri.toString()}
 			{#if values[propname]}
 				{#if hasprop.property?.datatype === XsdDatatypes.xsdString}
