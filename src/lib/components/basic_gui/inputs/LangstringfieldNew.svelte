@@ -5,7 +5,7 @@
 	import { LangString } from '$lib/oldap/datatypes/langstring';
 	import { type Snippet } from 'svelte';
 
-	type InputType = "input" | "textarea";
+	type InputType = 'input' | 'textarea';
 
 	let {
 		/** @param {string} label */
@@ -46,7 +46,7 @@
 		readonly?: boolean;
 		input_type?: InputType;
 		rows?: number;
-		additional_snippet?: Snippet,
+		additional_snippet?: Snippet;
 		class?: string;
 	} = $props();
 
@@ -60,18 +60,19 @@
 	});
 
 	$effect(() => {
-		for (const lang of languages) {
-			has_value[lang] = hasLangValue(lang);
+		const next: Partial<Record<Language, boolean>> = {};
+		for (const lang of languages || []) {
+			next[lang] = hasLangValue(lang);
 		}
+		has_value = next;
 	});
 
 	// $effect(() => {
 	// 	value.set(selected, buffer);
 	// });
 
-
 	function hasLangValue(lang: Language): boolean {
-		return (value.getraw(lang) || '').length > 0;
+		return (value?.getraw(lang) || '').length > 0;
 	}
 
 	function langKey(lang: Language): string {
@@ -108,6 +109,9 @@
 	}
 
 	function onInput(e: Event) {
+		if (!value) {
+			value = new LangString();
+		}
 		value.set(selected, buffer);
 		has_value[selected] = hasLangValue(selected);
 		//console.log('INPUT CHANGED:', value.get(selected));
@@ -121,14 +125,19 @@
 	//
 	// 	}
 	// });
-
 </script>
 
 <div class="mt-3">
-	<label for={id} class="{required ? 'underline' : ''} block text-xs/4 font-medium text-input-label-fg dark:text-input-label-fg-dark">{label}:</label>
+	<label
+		for={id}
+		class="{required
+			? 'underline'
+			: ''} text-input-label-fg dark:text-input-label-fg-dark block text-xs/4 font-medium"
+		>{label}:</label
+	>
 
 	<!-- Grid mit Snippet und Input auf derselben Zeile -->
-	<div class="{additional_snippet ? 'mt-2 grid grid-cols-[auto_1fr] gap-2 items-start' : 'mt-2'}">
+	<div class={additional_snippet ? 'mt-2 grid grid-cols-[auto_1fr] items-start gap-2' : 'mt-2'}>
 		{#if additional_snippet}
 			<div class="flex-shrink-0">
 				{@render additional_snippet()}
@@ -136,26 +145,43 @@
 		{/if}
 		<div class="relative">
 			{#if input_type === 'input'}
-				<input name={name} id={id} {disabled} {required} {readonly}
-							 class="w-full py-1.0 oldap-textfield-common {disabled ? 'oldap-textfield-disabled' : (invalid ? 'oldap-textfield-invalid' : 'oldap-textfield-valid')} {userClass}"
-							 placeholder={placeholder} aria-invalid={invalid} aria-describedby={id ? `${id}-error` : undefined}
-							 bind:value={buffer}
-							 oninput={onInput}
-				>
+				<input
+					{name}
+					{id}
+					{disabled}
+					{required}
+					{readonly}
+					class="py-1.0 oldap-textfield-common w-full {disabled
+						? 'oldap-textfield-disabled'
+						: invalid
+							? 'oldap-textfield-invalid'
+							: 'oldap-textfield-valid'} {userClass}"
+					{placeholder}
+					aria-invalid={invalid}
+					aria-describedby={id ? `${id}-error` : undefined}
+					bind:value={buffer}
+					oninput={onInput}
+				/>
 			{:else}
-				<textarea name={name} id={id} {rows} {disabled} {required} {readonly}
-							class="block w-full rounded-md border px-2 py-1.5 text-sm leading-5 shadow-sm resize-y
-								bg-white text-neutral-900 placeholder-neutral-400
-								dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder-neutral-500
-								focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:border-neutral-500
-								disabled:opacity-50 disabled:cursor-not-allowed
+				<textarea
+					{name}
+					{id}
+					{rows}
+					{disabled}
+					{required}
+					{readonly}
+					class="block w-full resize-y rounded-md border bg-white px-2 py-1.5 text-sm leading-5
+								text-neutral-900 placeholder-neutral-400 shadow-sm
+								focus:border-neutral-500 focus:ring-2 focus:ring-neutral-500
+								focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-900
+								dark:text-neutral-100 dark:placeholder-neutral-500
 								{invalid ? 'border-rose-500 dark:border-rose-400' : 'border-neutral-300 dark:border-neutral-700'}
 								{userClass}"
-							placeholder={placeholder}
-							aria-invalid={invalid}
-							aria-describedby={id ? `${id}-error` : undefined}
-							bind:value={buffer}
-							oninput={onInput}
+					{placeholder}
+					aria-invalid={invalid}
+					aria-describedby={id ? `${id}-error` : undefined}
+					bind:value={buffer}
+					oninput={onInput}
 				></textarea>
 			{/if}
 		</div>
@@ -165,9 +191,9 @@
 					{@const k = langKey(lang)}
 					<button
 						type="button"
-						disabled={disabled}
+						{disabled}
 						onclick={() => language_selected(k)}
-						class="px-2 py-1 text-xs font-semibold rounded-md border select-none transition shadow-sm
+						class="rounded-md border px-2 py-1 text-xs font-semibold shadow-sm transition select-none
 							focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 focus-visible:ring-offset-2"
 						class:cursor-not-allowed={disabled}
 						class:opacity-50={disabled}
@@ -191,6 +217,5 @@
 				{/each}
 			</div>
 		</div>
-
 	</div>
 </div>

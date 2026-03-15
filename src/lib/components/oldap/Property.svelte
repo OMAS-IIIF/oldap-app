@@ -224,11 +224,13 @@ in relation with a resource class.
 		if (!authinfo) return;
 
 		// first we check if are trying to modify a standalone property from within a resource. That not allowed!
-		if (resiri && propiri !== 'new') {
-			const tmp = datamodel?.standaloneProperties.find(p => p.propertyIri.toString() === propiri) ||
-				$datamodelSharedStore?.standaloneProperties.find(p => p.propertyIri.toString() === propiri);
-			if (tmp !== undefined) {
-				add_standalone_prop = true;
+		if (resiri) {
+			if (propiri !== 'new') {
+				const tmp = datamodel?.standaloneProperties.find(p => p.propertyIri.toString() === propiri) ||
+					$datamodelSharedStore?.standaloneProperties.find(p => p.propertyIri.toString() === propiri);
+				if (tmp !== undefined) {
+					add_standalone_prop = true;
+				}
 			}
 		}
 
@@ -413,6 +415,7 @@ in relation with a resource class.
 	});
 
 	const add_property = async () => {
+		console.log("========================>>>>>>>>> add_property");
 		confirmation_title = m.add_property();
 		confirmation_message = m.confirm_property_add({propiri: prefix + ":" + fragment});
 		const ok = await confirmation_dialog.open();
@@ -540,6 +543,7 @@ in relation with a resource class.
 	}
 
 	const modify_property = async () => {
+		console.log("========================>>>>>>>>> modify_property");
 		if (!prop) return;
 		confirmation_title = m.mod_property();
 		confirmation_message = m.confirm_prop_mod({property: prefix + ":" + fragment});
@@ -852,19 +856,20 @@ and the actual property id (which is a xs:NCName
 			<Numberfield label="maxCount" bind:value={maxCount} min={0.0} step={1.0} name="maxCount" placeholder="undefined"/>
 			<Numberfield label="order" bind:value={order} name="order" min={0.0} step={0.1} placeholder="undefined"/>
 		{/if}
-		<LabeledDivider>OWL STUFF</LabeledDivider>
-		<DropdownField items={all_prop_list} id="allprops_id2" name="allprops" label="INVERSE OF" bind:selectedItem={inverseOf} />
-		<DropdownField items={all_prop_list} id="allprops_id3" name="allprops" label="EQUIVALEND_PROPERTY" bind:selectedItem={equivalentProperty} />
-		<Checkbox label="Statement property" position="right" bind:checked={statementProperty} name="statementProperty"/>
-		<Checkbox label="Transitive property" position="right" bind:checked={transitiveProperty} name="transitiveProperty"/>
-		<Checkbox label="Symmetric property" position="right" bind:checked={symmetricProperty} name="symmetricProperty"/>
-		<Checkbox label="Reflexive property" position="right" bind:checked={reflexiveProperty} name="reflexiveProperty"/>
-		<Checkbox label="Irreflexive property" position="right" bind:checked={irreflexiveProperty} name="irreflexiveProperty"/>
-		<Checkbox label="Functional property" position="right" bind:checked={functionalProperty} name="functionalProperty"/>
-		<Checkbox label="Inverse functional property" position="right" bind:checked={inverseFunctionalProperty} name="inverseFunctionalProperty"/>
-		{#if gui_editor_hints.length > 0}
+		{#if resiri === undefined || !add_standalone_prop}
+			<LabeledDivider>OWL STUFF</LabeledDivider>
+			<DropdownField items={all_prop_list} id="allprops_id2" name="allprops" label="INVERSE OF" bind:selectedItem={inverseOf} />
+			<DropdownField items={all_prop_list} id="allprops_id3" name="allprops" label="EQUIVALEND_PROPERTY" bind:selectedItem={equivalentProperty} />
+			<Checkbox label="Statement property" position="right" bind:checked={statementProperty} name="statementProperty"/>
+			<Checkbox label="Transitive property" position="right" bind:checked={transitiveProperty} name="transitiveProperty"/>
+			<Checkbox label="Symmetric property" position="right" bind:checked={symmetricProperty} name="symmetricProperty"/>
+			<Checkbox label="Reflexive property" position="right" bind:checked={reflexiveProperty} name="reflexiveProperty"/>
+			<Checkbox label="Irreflexive property" position="right" bind:checked={irreflexiveProperty} name="irreflexiveProperty"/>
+			<Checkbox label="Functional property" position="right" bind:checked={functionalProperty} name="functionalProperty"/>
+			<Checkbox label="Inverse functional property" position="right" bind:checked={inverseFunctionalProperty} name="inverseFunctionalProperty"/>
+		{/if}
+		{#if gui_editor_hints.length > 0 && resiri}
 			<LabeledDivider>GUI HINTS</LabeledDivider>
-			{editor}
 			<DropdownField items={gui_editor_hints} label="GUI_HINTS" id="gui_hints" name="gui_hints" bind:selectedItem={editor}/>
 		{/if}
 

@@ -391,7 +391,7 @@
 						label={hasprop.property?.name?.get(langobj) || hasprop.property?.propertyIri.toString()}
 						minCount={hasprop?.minCount || 0}
 						maxCount={hasprop?.maxCount || Infinity}
-						values={values[propname]}
+						bind:values={values[propname]}
 						bind:this={input_fields[hasprop.property.propertyIri.toString()]}
 					/>
 				{:else if hasprop.property?.datatype === XsdDatatypes.date}

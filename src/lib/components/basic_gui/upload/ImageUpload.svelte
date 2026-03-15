@@ -176,7 +176,7 @@
 				} else if (prop.property.datatype == XsdDatatypes.date) {
 					values[prop.property.propertyIri.toString()] = [new XsdDate()];
 				} else {
-					values[prop.property.propertyIri.toString()] = [];
+					values[prop.property.propertyIri.toString()] = [''];
 				}
 				input_fields[prop.property.propertyIri.toString()] = undefined;
 			}
@@ -928,7 +928,7 @@
 				label={hasprop.property?.name?.get(langobj) || hasprop.property?.propertyIri.toString()}
 				minCount={hasprop?.minCount || 0}
 				maxCount={hasprop?.maxCount || Infinity}
-				values={values[propname]}
+				bind:values={values[propname]}
 				bind:this={input_fields[hasprop.property.propertyIri.toString()]}
 			/>
 		{:else if hasprop.property?.datatype === XsdDatatypes.date && values[propname]}
@@ -941,7 +941,7 @@
 				bind:values={values[propname]}
 				bind:this={input_fields[hasprop.property.propertyIri.toString()]}
 			/>
-		{:else if hasprop.property?.datatype === XsdDatatypes.langString}
+		{:else if hasprop.property?.datatype === XsdDatatypes.langString && values[propname]}
 			<LangstringfieldNew
 				id={hasprop.property?.propertyIri?.fragment?.toString() || 'prop_id'}
 				name="prop_name"

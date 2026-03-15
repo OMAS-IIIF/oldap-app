@@ -31,7 +31,7 @@
 		placeholder = '',
 
 		/** Bindable array value */
-		values,
+		values = $bindable<string[] | undefined>(),
 
 		/** Optional validation function per field */
 		validate = undefined,
@@ -56,7 +56,7 @@
 		maxCount = Infinity,
 
 		/** Optional CSS class for input element */
-		class: userClass = ""
+		class: userClass = ''
 	}: {
 		label: string;
 		name: string;
@@ -80,7 +80,10 @@
 	const allowed_types = ['text', 'password', 'email', 'number', 'search', 'tel', 'url'];
 	$effect(() => {
 		if (!allowed_types.includes(type)) {
-			throw error(400, `Internal error: invalid type "${type}" for Input-field. must be "text", "password", "email", "number", "search", "tel" or "url"`);
+			throw error(
+				400,
+				`Internal error: invalid type "${type}" for Input-field. must be "text", "password", "email", "number", "search", "tel" or "url"`
+			);
 		}
 	});
 
@@ -94,7 +97,7 @@
 		if (maxCount === undefined) {
 			maxCount = Infinity;
 		} else {
-			maxCount = (maxCount === Infinity) ? Infinity : Math.max(minCount, Math.floor(maxCount));
+			maxCount = maxCount === Infinity ? Infinity : Math.max(minCount, Math.floor(maxCount));
 		}
 	})();
 
@@ -104,7 +107,7 @@
 
 	onMount(() => {
 		ensureCardinality();
-	})
+	});
 
 	function ensureCardinality() {
 		const current = Array.isArray(values) ? values : [];
@@ -117,11 +120,9 @@
 		if (maxCount !== Infinity && next.length > maxCount) next = next.slice(0, maxCount);
 
 		// Apply if changed
-/*
 		if (next.length !== current.length || next.some((v, i) => v !== current[i])) {
 			values = next;
 		}
-*/
 		internal_values = next;
 
 		// Keep error arrays aligned
@@ -131,10 +132,14 @@
 		if (errortext.length > next.length) errortext = errortext.slice(0, next.length);
 	}
 
-	// Initial + whenever props change (e.g. parent sets minCount/maxCount/value)
-	// $effect(() => {
-	// 	ensureCardinality();
-	// });
+	// Keep internal list synced when parent updates values.
+	$effect(() => {
+		const incoming = Array.isArray(values) ? values : [];
+		const next = [...incoming];
+		internal_values = next;
+		invalid = Array(next.length).fill(false);
+		errortext = Array(next.length).fill('');
+	});
 
 	function canAdd() {
 		return maxCount === Infinity ? true : internal_values.length < maxCount;
@@ -146,7 +151,10 @@
 
 	function addField(atIndex?: number) {
 		if (!canAdd()) return;
-		const idx = (atIndex === undefined) ? internal_values.length : Math.min(Math.max(0, atIndex + 1), internal_values.length);
+		const idx =
+			atIndex === undefined
+				? internal_values.length
+				: Math.min(Math.max(0, atIndex + 1), internal_values.length);
 		values = [...internal_values.slice(0, idx), '', ...internal_values.slice(idx)];
 		invalid = [...invalid.slice(0, idx), false, ...invalid.slice(idx)];
 		errortext = [...errortext.slice(0, idx), '', ...errortext.slice(idx)];
@@ -162,7 +170,9 @@
 	}
 
 	function setValueAt(index: number, newVal: string) {
-		internal_values = internal_values.map((v, i) => (i === index ? newVal : v));
+		const next = internal_values.map((v, i) => (i === index ? newVal : v));
+		internal_values = next;
+		values = next;
 	}
 
 	function loose_focus(index: number) {
@@ -179,7 +189,8 @@
 			inv = !(pattern as RegExp).test(v);
 			if (inv) {
 				if (type === 'password') {
-					e += 'Password must have at least 8 characters, whereof at least one lowercase, one uppercase letter, one digit and one special character.';
+					e +=
+						'Password must have at least 8 characters, whereof at least one lowercase, one uppercase letter, one digit and one special character.';
 				} else {
 					e += `Text "${v}" does not match required pattern "${pattern.toString()}"!`;
 				}
@@ -200,17 +211,21 @@
 	}
 
 	export const get_value = (): (string | null)[] => internal_values || [];
-
 </script>
 
 <div class="mt-3">
-	<label for={id} class="{required ? 'underline' : ''} block text-xs/4 font-medium text-input-label-fg dark:text-input-label-fg-dark">
+	<label
+		for={id}
+		class="{required
+			? 'underline'
+			: ''} text-input-label-fg dark:text-input-label-fg-dark block text-xs/4 font-medium"
+	>
 		{label}:
 	</label>
 
 	<div class="mt-2">
 		<!-- Optional leading snippet aligned to first row -->
-		<div class="{additional_snippet ? 'grid grid-cols-[auto_1fr] gap-2 items-start' : ''}">
+		<div class={additional_snippet ? 'grid grid-cols-[auto_1fr] items-start gap-2' : ''}>
 			{#if additional_snippet}
 				<div class="flex-shrink-0 pt-1">
 					{@render additional_snippet()}
@@ -218,57 +233,86 @@
 			{/if}
 
 			<div class="space-y-2">
-				{#each internal_values as v, i (i)}
-					<div class="grid grid-cols-[1fr_auto] gap-2 items-center">
-						<div class="relative">
-							<input
-								type={type}
-								name={`${name}[${i}]`}
-								id={id ? `${id}-${i}` : undefined}
-								placeholder={placeholder}
-								bind:value={internal_values[i]}
-								oninput={(e) => setValueAt(i, (e.currentTarget as HTMLInputElement).value)}
-								onblur={() => loose_focus(i)}
-								{disabled}
-								{required}
-								{readonly}
-								class="w-full py-1.0 oldap-textfield-common {disabled ? 'oldap-textfield-disabled' : (invalid[i] ? 'oldap-textfield-invalid' : 'oldap-textfield-valid')} {userClass}"
-								aria-invalid={invalid[i] ? 'true' : 'false'}
-								aria-describedby={id ? `${id}-${i}-error` : undefined}
-							/>
-
-							{#if invalid[i]}
-								<svg class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none size-5 text-red-500 sm:size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" data-slot="icon">
-									<path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14ZM8 4a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0v-3A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
-								</svg>
-							{/if}
-						</div>
-
-						<div class="flex gap-1">
-							<button
-								type="button"
-								class="px-2 py-1 rounded-md border text-sm disabled:opacity-40"
-								onclick={() => addField(i)}
-								disabled={disabled || !canAdd()}
-								aria-label="Add value"
-								title="Add"
-							>+</button>
-
-							<button
-								type="button"
-								class="px-2 py-1 rounded-md border text-sm disabled:opacity-40"
-								onclick={() => removeField(i)}
-								disabled={disabled || !canRemove()}
-								aria-label="Remove value"
-								title="Remove"
-							>-</button>
-						</div>
+				{#if internal_values.length === 0}
+					<div class="flex justify-end">
+						<button
+							type="button"
+							class="rounded-md border px-2 py-1 text-sm disabled:opacity-40"
+							onclick={() => addField()}
+							disabled={disabled || !canAdd()}
+							aria-label="Add value"
+							title="Add">+</button
+						>
 					</div>
+				{:else}
+					{#each internal_values as v, i (i)}
+						<div class="grid grid-cols-[1fr_auto] items-center gap-2">
+							<div class="relative">
+								<input
+									{type}
+									name={`${name}[${i}]`}
+									id={id ? `${id}-${i}` : undefined}
+									{placeholder}
+									bind:value={internal_values[i]}
+									oninput={(e) => setValueAt(i, (e.currentTarget as HTMLInputElement).value)}
+									onblur={() => loose_focus(i)}
+									{disabled}
+									{required}
+									{readonly}
+									class="py-1.0 oldap-textfield-common w-full {disabled
+										? 'oldap-textfield-disabled'
+										: invalid[i]
+											? 'oldap-textfield-invalid'
+											: 'oldap-textfield-valid'} {userClass}"
+									aria-invalid={invalid[i] ? 'true' : 'false'}
+									aria-describedby={id ? `${id}-${i}-error` : undefined}
+								/>
 
-					{#if invalid[i]}
-						<span class="mt-0 text-[8px]/2 text-red-600" id={id ? `${id}-${i}-error` : undefined}>{errortext[i]}</span>
-					{/if}
-				{/each}
+								{#if invalid[i]}
+									<svg
+										class="pointer-events-none absolute top-1/2 right-3 size-5 -translate-y-1/2 transform text-red-500 sm:size-4"
+										viewBox="0 0 16 16"
+										fill="currentColor"
+										aria-hidden="true"
+										data-slot="icon"
+									>
+										<path
+											fill-rule="evenodd"
+											d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14ZM8 4a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0v-3A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+											clip-rule="evenodd"
+										/>
+									</svg>
+								{/if}
+							</div>
+
+							<div class="flex gap-1">
+								<button
+									type="button"
+									class="rounded-md border px-2 py-1 text-sm disabled:opacity-40"
+									onclick={() => addField(i)}
+									disabled={disabled || !canAdd()}
+									aria-label="Add value"
+									title="Add">+</button
+								>
+
+								<button
+									type="button"
+									class="rounded-md border px-2 py-1 text-sm disabled:opacity-40"
+									onclick={() => removeField(i)}
+									disabled={disabled || !canRemove()}
+									aria-label="Remove value"
+									title="Remove">-</button
+								>
+							</div>
+						</div>
+
+						{#if invalid[i]}
+							<span class="mt-0 text-[8px]/2 text-red-600" id={id ? `${id}-${i}-error` : undefined}
+								>{errortext[i]}</span
+							>
+						{/if}
+					{/each}
+				{/if}
 			</div>
 		</div>
 	</div>
