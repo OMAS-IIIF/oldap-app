@@ -7,7 +7,8 @@ import type { ResourceClass } from '$lib/oldap/classes/resource';
 //
 // TODO: This should work recursively, but at the moment only one level of "inheritance" is supported!!!
 //
-export function is_mediaobject(res: ResourceClass): boolean {
+export function is_mediaobject(res?: ResourceClass): boolean {
+	if (!res) return false;
 	if (res.iri.toString() === 'shared:MediaObject') return true;
 	if (res.superclass) {
 		const gaga = [...res.superclass].map((s) => s.toString()) || [];

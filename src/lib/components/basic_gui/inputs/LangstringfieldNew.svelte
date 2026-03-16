@@ -54,9 +54,17 @@
 	let buffer = $state('');
 	let has_value = $state<Partial<Record<Language, boolean>>>({});
 
+	function ensureLangString(): LangString {
+		if (!(value instanceof LangString)) {
+			value = new LangString();
+		}
+		return value;
+	}
+
 	// whenever selected language changes, load exact (non-fallback) text
 	$effect(() => {
-		buffer = value?.getraw(selected) ?? '';
+		const ls = ensureLangString();
+		buffer = ls.getraw(selected) ?? '';
 	});
 
 	$effect(() => {
@@ -72,7 +80,7 @@
 	// });
 
 	function hasLangValue(lang: Language): boolean {
-		return (value?.getraw(lang) || '').length > 0;
+		return (ensureLangString().getraw(lang) || '').length > 0;
 	}
 
 	function langKey(lang: Language): string {
@@ -109,10 +117,8 @@
 	}
 
 	function onInput(e: Event) {
-		if (!value) {
-			value = new LangString();
-		}
-		value.set(selected, buffer);
+		const ls = ensureLangString();
+		ls.set(selected, buffer);
 		has_value[selected] = hasLangValue(selected);
 		//console.log('INPUT CHANGED:', value.get(selected));
 	}

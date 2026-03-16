@@ -221,7 +221,10 @@
 				.getDataProjectInstiri(get_data)
 				.then((data) => {
 					selres = data && data['rdf:type'] ? data['rdf:type'][0]?.toString() : '';
-					for (const prop of resources[selres]?.hasProperty || []) {
+					hasprops = (resources[selres]?.hasProperty || []).sort(
+						(a: HasProperty, b: HasProperty) => (a.order ?? 9999) - (b.order ?? 9999)
+					);
+					for (const prop of hasprops) {
 						if (data[prop.property.propertyIri.toString()] === undefined) {
 							if (prop.property.datatype === XsdDatatypes.langString) {
 								values[prop.property.propertyIri.toString()] = new LangString();
@@ -266,57 +269,41 @@
 		selres = selected_resource;
 	});
 
-	$effect(() => {
-		const _ = selres; // effect must run if selres changes
-		if (propertyIri) return;
-		untrack(() => {
-			if (resources[selres]?.hasProperty !== undefined) {
+		$effect(() => {
+			const _ = selres; // effect must run if selres changes
+			if (propertyIri) return;
+			untrack(() => {
+				if (resources[selres]?.hasProperty !== undefined) {
 				hasprops = (resources[selres].hasProperty || []).sort(
 					(a: HasProperty, b: HasProperty) => (a.order ?? 9999) - (b.order ?? 9999)
 				);
-				values = {};
-				hasprops.forEach((hasprop) => {
-					input_fields[hasprop.property.propertyIri.toString()] = undefined;
-					if (propertyIri === undefined) {
-						// we create a new instance...
-						values[hasprop.property.propertyIri.toString()] = [];
-						if (hasprop?.minCount && hasprop.minCount > 0) {
-							switch (hasprop.property.datatype) {
-								case XsdDatatypes.xsdString:
-									for (let j = 0; j < hasprop.minCount; j++) {
-										values[hasprop.property.propertyIri.toString()] = [
-											...(values[hasprop.property.propertyIri.toString()] as []),
-											''
-										];
-									}
-									break;
-								case XsdDatatypes.date:
-									for (let j = 0; j < hasprop.minCount; j++) {
-										values[hasprop.property.propertyIri.toString()] = [
-											...(values[hasprop.property.propertyIri.toString()] as []),
-											new XsdDate()
-										];
-									}
-									break;
-								case XsdDatatypes.langString:
-									values[hasprop.property.propertyIri.toString()] = new LangString();
-									break;
-								default:
-									values[hasprop.property.propertyIri.toString()] = [
-										...(values[hasprop.property.propertyIri.toString()] as []),
-										''
-									];
-							}
-							// TODO: Deal with more datatypes
+					values = {};
+					hasprops.forEach((hasprop) => {
+						const propIri = hasprop.property.propertyIri.toString();
+						const min = hasprop?.minCount && hasprop.minCount > 0 ? hasprop.minCount : 0;
+						input_fields[propIri] = undefined;
+
+						switch (hasprop.property.datatype) {
+							case XsdDatatypes.langString:
+								values[propIri] = new LangString();
+								break;
+							case XsdDatatypes.date:
+								values[propIri] = [];
+								for (let j = 0; j < min; j++) {
+									values[propIri] = [...(values[propIri] as []), new XsdDate()];
+								}
+								break;
+							case XsdDatatypes.xsdString:
+							default:
+								values[propIri] = [];
+								for (let j = 0; j < min; j++) {
+									values[propIri] = [...(values[propIri] as []), ''];
+								}
 						}
-						// else {
-						// 	values[hasprop.property.propertyIri.toString()].push('');
-						// }
-					}
-				});
-			}
+					});
+				}
+			});
 		});
-	});
 
 	function add_resource() {
 		let data: Record<string, (string | null)[]> = {};
@@ -404,7 +391,7 @@
 						bind:values={values[propname]}
 						bind:this={input_fields[hasprop.property.propertyIri.toString()]}
 					/>
-				{:else if hasprop.property?.datatype === XsdDatatypes.langString}
+				{:else if hasprop.property?.datatype === XsdDatatypes.langString && values[propname] instanceof LangString}
 					<LangstringfieldNew
 						id={hasprop.property?.propertyIri?.fragment?.toString() || 'prop_id'}
 						name="prop_name"

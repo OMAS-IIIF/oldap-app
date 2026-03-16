@@ -165,13 +165,23 @@ export class PropertyClass extends OldapObject {
 		const modified = new Date(json.modified);
 		const projectId = new NCName(json.projectid);
 		const propertyIri = new Iri(json.iri);
-		const ptype = new Set<OwlPropertyType>(json?.ptype?.map((x) => stringToOwlPropertyType(x))); // TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		const ptype = new Set<OwlPropertyType>(
+			(json?.ptype ?? [])
+				.map((x: string) => stringToOwlPropertyType(x))
+				.filter((x: OwlPropertyType | undefined): x is OwlPropertyType => x !== undefined)
+		); // TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		const subPropertyOf: Iri = new Iri(json?.subPropertyOf);
 		const toClass = new Iri(json?.toClass);
 		const datatype = xsdDatatypeFromString(json?.datatype);
 		const name = LangString.fromJson(json?.name);
 		const description = LangString.fromJson(json?.description);
-		const languageIn = json?.languageIn ? new Set<Language>(json.languageIn.map((x) => convertToLanguage(x))) : undefined;
+		const languageIn = json?.languageIn
+			? new Set<Language>(
+					json.languageIn
+						.map((x: string) => convertToLanguage(x))
+						.filter((x: Language | undefined): x is Language => x !== undefined)
+				)
+			: undefined;
 		const uniqueLang = json?.uniqueLang;
 		const inSet = new Set<string | number>(json?.inSet);
 		const minLength = parseInt(json?.minLength);

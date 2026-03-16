@@ -941,7 +941,7 @@
 				bind:values={values[propname]}
 				bind:this={input_fields[hasprop.property.propertyIri.toString()]}
 			/>
-		{:else if hasprop.property?.datatype === XsdDatatypes.langString && values[propname]}
+		{:else if hasprop.property?.datatype === XsdDatatypes.langString && values[propname] instanceof LangString}
 			<LangstringfieldNew
 				id={hasprop.property?.propertyIri?.fragment?.toString() || 'prop_id'}
 				name="prop_name"

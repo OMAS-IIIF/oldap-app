@@ -211,14 +211,14 @@
 		>
 			<DropdownMenu bind:isOpen={list_is_open} position="left" name="listlink">
 				{#each all_lists_list as list}
-					{#if hlists[list]}
-						<DropdownLinkItem bind:isOpen={list_is_open}
-															value={hlists[list].nodeClassIri.toString()}
-															onclick={(val) => {toClass = val}}
-															selected={hlists[list].nodeClassIri.toString() === toClass}>
-							{hlists[list]?.prefLabel?.get(langobj) || hlists[list]?.oldapListId || list}
-						</DropdownLinkItem>
-					{/if}
+						{#if hlists[list]}
+							<DropdownLinkItem bind:isOpen={list_is_open}
+																value={hlists[list].nodeClassIri.toString()}
+																onclick={() => {toClass = hlists[list].nodeClassIri.toString()}}
+																selected={hlists[list].nodeClassIri.toString() === toClass}>
+								{hlists[list]?.prefLabel?.get(langobj) || hlists[list]?.oldapListId || list}
+							</DropdownLinkItem>
+						{/if}
 				{/each}
 			</DropdownMenu>
 		</DropdownButton>

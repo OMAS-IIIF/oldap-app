@@ -145,6 +145,11 @@
 			// TODO!!!!!!!!!!!!
 		} else {
 			try {
+				//
+				// first we get all the instances of the selected resource as Iri's.
+				//   - the count in order to know how many results we have to show.
+				//   - then the actual results (as Iri's.
+				//
 				const allofclass_count_config = api_config(authinfo,{
 					project: encodeURIComponent(project?.projectShortName?.toString())
 				}, {
@@ -167,27 +172,30 @@
 						...(selprops ? { includeProperties: Array.from(selprops) } : {})
 					}
 				);
+				//
+				// data now is a Record<"iri", "propvalues"[]
+				//
 				const data = await apiClient.getDataofclassProject(allofclass_get_config);
 
-					// The API returns ApiRes: Record<prop, primitive[]>[]
-					results = {};
-					for (const d of (data as Record<string, string[]>[]) || []) {
-						const iri = d['iri'][0];
-						let mediaobject: MediaObject | null = null;
-						if (is_mo) {
-							const get_mo_config = api_config(authinfo || new AuthInfo('unknown', ''),{
-								iri: encodeURIComponent(iri)
-							});
-							try {
-								const tmp = await apiClient.getDatamediaobjectiriIri(get_mo_config);
-								console.log('mediaobject', tmp);
-								mediaobject = MediaObject.fromOldapJson(tmp);
-							}
-							catch (err) {
-								console.error(`Could not load mediaobject details for "${iri}"`, err);
-								mediaobject = null;
-							}
+				// The API returns ApiRes: Record<prop, primitive[]>[]
+				results = {};
+				for (const d of (data as Record<string, string[]>[]) || []) {
+					const iri = d['iri'][0];
+					let mediaobject: MediaObject | null = null;
+					if (is_mediaobject(datamodel?.resources.find((r) => r.iri.toString() === selres))) {
+						const get_mo_config = api_config(authinfo || new AuthInfo('unknown', ''),{
+							iri: encodeURIComponent(iri)
+						});
+						try {
+							const tmp = await apiClient.getDatamediaobjectiriIri(get_mo_config);
+							console.log('mediaobject', tmp);
+							mediaobject = MediaObject.fromOldapJson(tmp);
 						}
+						catch (err) {
+							console.error(`Could not load mediaobject details for "${iri}"`, err);
+							mediaobject = null;
+						}
+					}
 
 					results[iri] = {};
 					for (const [prop, values] of Object.entries(d)) {
@@ -316,6 +324,8 @@
 										{row['mo'].originalName}
 									</button>
 								</td>
+							{:else}
+								<td class="px-2 py-2 align-top">&nbsp;</td>
 							{/if}
 							{#each Array.from(selprops) as prop (prop)}
 								<td class="px-2 py-2 align-top">

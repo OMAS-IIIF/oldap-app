@@ -6,44 +6,31 @@
 
 <script lang="ts">
 	import { Language } from '$lib/oldap/enums/language';
-	import type { LangString } from '$lib/oldap/datatypes/langstring';
+	import { LangString } from '$lib/oldap/datatypes/langstring';
 
-	type InputMode = "input" | "textarea";
+	type InputMode = 'input' | 'textarea';
 
 	let {
-		/** Label shown above the whole group */
 		label,
-
-		/** Base name (used to build ids) */
 		name,
-
-		/** Optional base id; each picker will use `${id}-${i}` */
 		id,
-
-		// bindable value
 		value = $bindable<LangString[]>([]),
-
-		// UI config
-		languages= [Language.DE, Language.FR, Language.IT, Language.EN],
-		mode = "input" as InputMode,
-
-		// cardinality
+		languages = [Language.DE, Language.FR, Language.IT, Language.EN],
+		mode = 'input' as InputMode,
+		rows = 3,
 		minCount = 0,
 		maxCount = Infinity,
-
-		// optional UX
-		placeholder = "",
+		placeholder = '',
 		disabled = false,
-
-		// styling hook
-		class: userClass = ""
-	} : {
+		class: userClass = ''
+	}: {
 		label: string;
 		name: string;
 		id?: string;
 		value?: LangString[];
 		languages?: Language[];
 		mode?: InputMode;
+		rows?: number;
 		minCount?: number;
 		maxCount?: number;
 		placeholder?: string;
@@ -51,64 +38,78 @@
 		class?: string;
 	} = $props();
 
+	let selectedLang = $state<Language[]>([]);
 
-
-	// per-row selected language
-	let selectedLang = $state<string[]>([]);
-
-	const defaultLang = $derived<string>(languages[0] ?? "en");
-
-	// We render at least `minCount` rows, even if `value` has fewer entries.
+	const defaultLang = $derived<Language>(languages[0] ?? Language.EN);
 	const rowCount = $derived(Math.max(value?.length ?? 0, minCount));
 	const rowIndexes = $derived([...Array(rowCount).keys()]);
 
-	function getSelected(i: number) {
-		return selectedLang[i] && languages.includes(selectedLang[i]) ? selectedLang[i] : defaultLang;
+	(() => {
+		if (minCount === undefined) {
+			minCount = 0;
+		} else {
+			minCount = Math.max(0, Math.floor(minCount));
+		}
+
+		if (maxCount === undefined) {
+			maxCount = Infinity;
+		} else {
+			maxCount = maxCount === Infinity ? Infinity : Math.max(minCount, Math.floor(maxCount));
+		}
+	})();
+
+	function getSelected(i: number): Language {
+		const lang = selectedLang[i];
+		return lang && languages.includes(lang) ? lang : defaultLang;
 	}
 
-	function isEmptyLangString(ls: LangString | undefined) {
+	function getRow(i: number): LangString | undefined {
+		return value?.[i];
+	}
+
+	function getText(i: number, lang: Language): string {
+		return getRow(i)?.getraw(lang) ?? '';
+	}
+
+	function isEmptyLangString(ls: LangString | undefined): boolean {
 		if (!ls) return true;
-		for (const k in ls) {
-			if ((ls[k] ?? "").trim() !== "") return false;
+		for (const [, text] of ls.entries()) {
+			if (text.trim().length > 0) return false;
 		}
 		return true;
 	}
 
-	function trimTrailingEmptyRows(arr: LangStringData) {
-		// remove trailing empty rows but never go below minCount
+	function trimTrailingEmptyRows(arr: LangString[]): LangString[] {
 		let end = arr.length;
 		while (end > minCount && isEmptyLangString(arr[end - 1])) end--;
 		return end === arr.length ? arr : arr.slice(0, end);
 	}
 
-	function hasText(ls: LangString, lang: string) {
-		const t = (ls?.[lang] ?? "").trim();
-		return t.length > 0;
+	function hasText(ls: LangString | undefined, lang: Language): boolean {
+		return (ls?.getraw(lang) ?? '').trim().length > 0;
 	}
 
-	function setSelected(i: number, lang: string) {
+	function setSelected(i: number, lang: Language) {
 		const next = selectedLang.slice();
 		next[i] = lang;
 		selectedLang = next;
 	}
 
-	function updateText(i: number, lang: string, text: string) {
-		const base = value ?? [];
-		const next = base.slice();
+	function updateText(i: number, lang: Language, text: string) {
+		const next = (value ?? []).slice();
+		while (next.length <= i) next.push(new LangString());
 
-		// ensure row exists
-		while (next.length <= i) next.push({});
+		const current = next[i] ?? new LangString();
+		const updated = current.clone();
 
-		const ls = { ...(next[i] ?? {}) };
-		const trimmed = text.trim();
-
-		if (trimmed === "") {
-			delete ls[lang]; // treat empty as "not set"
+		if (text.trim().length === 0) {
+			updated.set(lang, '');
+			updated.removeEmpty();
 		} else {
-			ls[lang] = text;
+			updated.set(lang, text);
 		}
 
-		next[i] = ls;
+		next[i] = updated;
 		value = trimTrailingEmptyRows(next);
 	}
 
@@ -117,21 +118,24 @@
 		if (base.length >= maxCount) return;
 
 		const next = base.slice();
-		// if user clicks + on a virtual row (afterIndex >= next.length), just append
 		const insertAt = Math.min(afterIndex + 1, next.length);
-		next.splice(insertAt, 0, {});
+		next.splice(insertAt, 0, new LangString());
 		value = next;
 	}
 
 	function removeRow(i: number) {
 		const base = value ?? [];
-		if ((base.length) <= minCount) return;
+		if (base.length <= minCount) return;
 		if (i < 0 || i >= base.length) return;
 
 		const next = base.slice();
 		next.splice(i, 1);
 		value = trimTrailingEmptyRows(next);
 	}
+
+	export const get_value = (): (LangString | null)[] => {
+		return (value ?? []).map((ls) => (isEmptyLangString(ls) ? null : ls));
+	};
 </script>
 
 <div class="mt-3">
@@ -143,31 +147,33 @@
 	</label>
 
 	{#each rowIndexes as i (i)}
-		{@const ls = (value?.[i] ?? {})}
+		{@const ls = getRow(i)}
 		<div class="space-y-2">
 			<div class="flex items-start gap-2">
-				<!-- input/textarea area -->
 				<div class="flex-1">
-					{#if mode === "textarea"}
+					{#if mode === 'textarea'}
 						<textarea
-							class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:opacity-60"
-							rows={rows}
-							placeholder={placeholder}
-							disabled={disabled}
-							bind:value={ls[getSelected(i)]}
+							class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:opacity-60 {userClass}"
+							{rows}
+							{placeholder}
+							{disabled}
+							value={getText(i, getSelected(i))}
+							oninput={(e) =>
+								updateText(i, getSelected(i), (e.currentTarget as HTMLTextAreaElement).value)}
 						></textarea>
 					{:else}
 						<input
-							class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:opacity-60"
+							class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:opacity-60 {userClass}"
 							type="text"
-							placeholder={placeholder}
-							disabled={disabled}
-							bind:value={ls[getSelected(i)]}
+							{placeholder}
+							{disabled}
+							value={getText(i, getSelected(i))}
+							oninput={(e) =>
+								updateText(i, getSelected(i), (e.currentTarget as HTMLInputElement).value)}
 						/>
 					{/if}
 				</div>
 
-				<!-- - / + buttons -->
 				<div class="flex flex-col gap-2 pt-0.5">
 					<button
 						type="button"
@@ -176,7 +182,7 @@
 						disabled={disabled || (value?.length ?? 0) <= minCount}
 						onclick={() => removeRow(i)}
 					>
-						−
+						-
 					</button>
 
 					<button
@@ -191,7 +197,6 @@
 				</div>
 			</div>
 
-			<!-- language buttons under the field -->
 			<div class="flex flex-wrap gap-2">
 				{#each languages as lang (lang)}
 					{@const ok = hasText(ls, lang)}
@@ -199,16 +204,17 @@
 
 					<button
 						type="button"
-						disabled={disabled}
+						{disabled}
 						onclick={() => setSelected(i, lang)}
 						class={[
-              "px-2.5 py-1 rounded-md border text-xs font-medium shadow-sm transition",
-              active ? "ring-2 ring-blue-200" : "",
-              ok ? "bg-green-100 border-green-300 text-green-900 hover:bg-green-200"
-                 : "bg-red-100 border-red-300 text-red-900 hover:bg-red-200",
-              disabled ? "opacity-60" : ""
-            ].join(" ")}
-						title={ok ? "Value set" : "Empty"}
+							'px-2.5 py-1 rounded-md border text-xs font-medium shadow-sm transition',
+							active ? 'ring-2 ring-blue-200' : '',
+							ok
+								? 'bg-green-100 border-green-300 text-green-900 hover:bg-green-200'
+								: 'bg-red-100 border-red-300 text-red-900 hover:bg-red-200',
+							disabled ? 'opacity-60' : ''
+						].join(' ')}
+						title={ok ? 'Value set' : 'Empty'}
 					>
 						{lang}
 					</button>
