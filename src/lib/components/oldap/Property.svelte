@@ -773,13 +773,17 @@ and the actual property id (which is a xs:NCName
 	</DropdownButton>
 {/snippet}
 
+{#snippet proj_prefix()}
+	<span class="text-xs">{$projectStore?.projectShortName.toString() || ''}:</span>
+{/snippet}
+
 <div>
 	<div>{propiri === 'new' ?  m.add_prop() : m.edit_prop()} <span class="italic">{propiri}</span> </div>
 	<form class="max-w-128 min-w-64">
 		<LabeledDivider>{m.basic_attr()}:</LabeledDivider>
 		<Textfield type='text' label={m.prop_iri()} name="fragment" id="fragment" placeholder="property ID" required={true}
 							 bind:value={fragment} pattern={ncname_pattern} disabled={propiri !== 'new' || add_standalone_prop}
-							 additional_snippet={prefixes}
+							 additional_snippet={resiri ? proj_prefix : prefixes}
 		/>
 		{#if !add_standalone_prop}
 			<DropdownField items={all_prop_list} id="allprops_id" name="allprops" label={m.subprop_of()} bind:selectedItem={subPropertyOf} />
