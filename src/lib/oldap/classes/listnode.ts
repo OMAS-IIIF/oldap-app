@@ -73,7 +73,7 @@ export class OldapListNode extends OldapObject {
 		);
 
 		if (json.nodes && json.nodes.length > 0) {
-			node.nodes = json.nodes.map(subnode => {
+			node.nodes = json.nodes.map((subnode: any) => {
 				return OldapListNode.fromOldapJson(subnode, oldapList);
 			})
 		}

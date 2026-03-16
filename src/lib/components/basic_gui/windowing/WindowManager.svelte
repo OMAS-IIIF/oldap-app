@@ -17,7 +17,7 @@
   import { onMount, tick } from 'svelte';
 	import type { Snippet } from 'svelte';
 
-	let { config } = $props();
+	let { config = undefined } = $props();
 
 	let project = $state<OldapProject | null>(null);
 	let user = $state<OldapUser | null>(null);

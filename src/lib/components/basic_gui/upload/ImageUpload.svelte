@@ -90,9 +90,6 @@
 		identifierEditable?: boolean;
 	} = $props();
 
-	const initialMediaType: MediaType = mediaTypeProp;
-	const initialMetaOpen: boolean = metaFieldsInitiallyOpenProp;
-
 	let lang = $state(getLocale());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
 
@@ -105,12 +102,12 @@
 	let statusMsg: string | null = $state(null);
 
 	let resourceClass = $state<string>('shared:MediaObject');
-	let path = $state<string>(pathProp);
-	let identifier = $state<string>(identifierProp);
+	let path = $state<string>(untrack(() => pathProp));
+	let identifier = $state<string>(untrack(() => identifierProp));
 
-	let mediaType = $state<MediaType>(initialMediaType);
+	let mediaType = $state<MediaType>(untrack(() => mediaTypeProp));
 	let targetfileformat = $state<string>('TIFF');
-	let metaOpen = $state<boolean>(initialMetaOpen);
+	let metaOpen = $state<boolean>(untrack(() => metaFieldsInitiallyOpenProp));
 
 	let roles = $state<OldapRole[]>([]);
 	let user_roles = $state<Record<string, boolean>>({});

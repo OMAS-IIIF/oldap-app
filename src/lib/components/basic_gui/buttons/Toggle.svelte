@@ -7,7 +7,17 @@ This PageServer opens a confirmation dialog...
 -->
 <script lang="ts">
 
-	let { toggle_state = $bindable(), onclick = undefined, id = undefined, class: userClass = "" }: { toggle_state: boolean, onclick: ((on: boolean, id: string) => Promise<boolean>) | undefined, id?: string | undefined, class?: string  } = $props()
+	let {
+		toggle_state = $bindable(),
+		onclick = undefined,
+		id = undefined,
+		class: userClass = ""
+	}: {
+		toggle_state: boolean,
+		onclick?: ((on: boolean, id: string) => Promise<boolean>) | undefined,
+		id?: string | undefined,
+		class?: string
+	} = $props()
 
 	let clicked = async () => {
 

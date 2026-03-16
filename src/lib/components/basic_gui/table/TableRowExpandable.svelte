@@ -19,10 +19,10 @@
 	{@render children()}
 </tr>
 
-{#if isExpanded && expandedRow}
-	<tr class="bg-gray-50 dark:bg-gray-800">
-		<td colspan="100%" class="px-4 py-3 text-xs">
-			{@render expandedRow()}
-		</td>
-	</tr>
-{/if}
+	{#if isExpanded && expandedRow}
+		<tr class="bg-gray-50 dark:bg-gray-800">
+			<td colspan={100} class="px-4 py-3 text-xs">
+				{@render expandedRow()}
+			</td>
+		</tr>
+	{/if}

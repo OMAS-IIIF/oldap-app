@@ -95,11 +95,10 @@ export class OldapList extends OldapObject {
 			return hlist;
 		}
 		if (json.nodes && json.nodes.length > 0) {
-			hlist.nodes = json.nodes.map(node => {
+			hlist.nodes = json.nodes.map((node: any) => {
 				return OldapListNode.fromOldapJson(node, json.hlist);
 			})
 		}
 		return hlist;
 	}
 }
-

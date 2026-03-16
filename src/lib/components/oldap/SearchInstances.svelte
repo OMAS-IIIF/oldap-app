@@ -74,8 +74,12 @@
 		return String(v);
 	}
 
-	function cellValues(row: Record<string, (string | number | boolean | null)[]> | undefined, prop: string): (string | number | boolean | null)[] {
-		return row?.[prop] ?? [];
+	function cellValues(
+		row: Record<string, Values | MediaObject | null> | undefined,
+		prop: string
+	): (string | number | boolean | null)[] {
+		const value = row?.[prop];
+		return Array.isArray(value) ? value : [];
 	}
 
 	function openEditor(iri: string) {
@@ -157,7 +161,11 @@
 					countOnly: true
 				});
 				const count_res = await apiClient.getDataofclassProject(allofclass_count_config);
-				count = Number(count_res.count) || 0;
+				if (count_res && !Array.isArray(count_res) && 'count' in count_res) {
+					count = Number(count_res.count) || 0;
+				} else {
+					count = 0;
+				}
 
 				if (selprops.size == 0) {
 					selprops.add('oldap:creationDate');

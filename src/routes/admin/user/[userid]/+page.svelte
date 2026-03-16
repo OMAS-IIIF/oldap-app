@@ -548,6 +548,8 @@
 	</div>
 {/snippet}
 
+{#snippet no_actions()}{/snippet}
+
 <div class="absolute top-0 left-0 right-0 bottom-0 overflow-auto flex flex-col justify-center items-center" bind:this={topwin}>
 	<div>{data.userid !== 'new' ? m.edit()  : m.add()} {m.user()} </div>
 	<form class="max-w-128">
@@ -674,7 +676,7 @@
 			<Checkbox label={txt} position="right" bind:checked={user_roles[role?.roleIri.toString()]}></Checkbox>
 		{/each}
 		-->
-		<Table label="User Roles and data permissions" description="List of roles assigned to the user and their default data permissions" padding={false} >
+		<Table label="User Roles and data permissions" description="List of roles assigned to the user and their default data permissions" padding={false} action_elements={no_actions}>
 			<TableHeader>
 				<TableColumnTitle>Role</TableColumnTitle>
 				<TableColumnTitle>Data Permissions</TableColumnTitle>
@@ -714,4 +716,3 @@
 <Confirmation bind:this={confirmation_dialog} title={confirmation_title}>
 	{confirmation_message}
 </Confirmation>
-

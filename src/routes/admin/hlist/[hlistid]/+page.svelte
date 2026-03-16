@@ -133,7 +133,8 @@
 		//confirmation_title = m.modify_project();
 		//confirmation_message = m.confirm_project_modify({sname: project?.projectShortName.toString() || ''});
 		confirmation_title = m.mod_hlist();
-		confirmation_message = m.mod_hlist2({hlist: hlist?.prefLabel?.get(langobj) || ''});
+		const hlistName = hlist?.prefLabel?.get(langobj) || '';
+		confirmation_message = m.mod_hlist2({ hlist: hlistName, liste: hlistName });
 
 		const ok = await confirmation_dialog.open();
 		if (!ok) return;
@@ -151,11 +152,12 @@
 				project: current_project?.projectShortName.toString() || '',
 				hlistid: data.hlistid
 			});
-			apiClient.postAdminhlistProjectHlistid(hlistdata, hlist_post).then((res) => {
-				successInfoStore.set(m.mod_hlist3({hlist: hlist?.oldapListId?.toString() || ''}));
-			}).catch((error) => {
-				errorInfoStore.set(process_api_error(error as Error));
-			});
+				apiClient.postAdminhlistProjectHlistid(hlistdata, hlist_post).then((res) => {
+					const hlistName = hlist?.oldapListId?.toString() || '';
+					successInfoStore.set(m.mod_hlist3({ hlist: hlistName, liste: hlistName, lista: hlistName }));
+				}).catch((error) => {
+					errorInfoStore.set(process_api_error(error as Error));
+				});
 		}
 	}
 
@@ -190,7 +192,7 @@
 		<LangstringField bind:this={definition_field} label={m.comment()} name="comment" id="comment" placeholder="comment"
 										 value={definition} />
 		-->
-		<Button class="mx-4 my-2" onclick={(event: Event) => {modify_hlist(event)}}>{m.modify()}</Button>
+		<Button class="mx-4 my-2" onclick={() => {modify_hlist()}}>{m.modify()}</Button>
 
 	</form>
 	<form class="max-w-128 min-w-96">
@@ -216,4 +218,3 @@
 <Confirmation bind:this={confirmation_dialog} title={confirmation_title}>
 	{confirmation_message}
 </Confirmation>
-

@@ -3,7 +3,7 @@
 
 	let { children, isOpen = $bindable(), labelText, name = "", id = null, class: userClass = ''} = $props();
 
-	function toggleDropdown(event) {
+	function toggleDropdown(event: MouseEvent) {
 		event.preventDefault();
 		isOpen = !isOpen;
 	}

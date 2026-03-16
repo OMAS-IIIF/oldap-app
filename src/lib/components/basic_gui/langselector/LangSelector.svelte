@@ -56,7 +56,7 @@
 		// IMPORTANT: SvelteKit resolve()
 		console.log('localizedPath', localizedPath);
 		console.log('window.location.pathname BEFORE', window.location.pathname);
-		await goto(resolve(localizedPath));
+			await goto(resolve(localizedPath as any));
 		console.log('window.location.pathname AFTER', window.location.pathname);
 
 		// force a reactive signal (optional but helps)

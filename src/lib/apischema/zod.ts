@@ -296,7 +296,7 @@ const putAdminhlistProjectHlistidNodeid_Body = z.union([z.object({ prefLabel: La
 const postAdminhlistProjectHlistidNodeidmove_Body = z.union([z.object({ leftOf: z.string() }).passthrough(), z.object({ rightOf: z.string() }).passthrough(), z.object({ belowOf: z.string() }).passthrough()]);
 const ValueArray = z.array(z.union([z.string(), z.number(), z.number(), z.boolean(), z.null()]));
 const AttachedToRoleMap: z.ZodType<AttachedToRoleMap> = z.record(DataPermission);
-const InstanceData: z.ZodType<InstanceData> = z.record(z.union([ValueArray, AttachedToRoleMap]));
+const InstanceData = z.record(z.union([ValueArray, AttachedToRoleMap])) as unknown as z.ZodType<InstanceData>;
 
 export const schemas = {
 	Error,

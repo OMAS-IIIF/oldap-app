@@ -12,7 +12,9 @@
 		if (!enclosingEl) return;
 
 		showTimeout = setTimeout(() => {
-			const rect = enclosingEl.getBoundingClientRect();
+			const el = enclosingEl;
+			if (!el) return;
+			const rect = el.getBoundingClientRect();
 			let top = rect.bottom + window.scrollY;
 			let bottom = document.documentElement.clientHeight - top;
 			let left = rect.left + window.scrollX;
