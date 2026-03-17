@@ -296,7 +296,7 @@ const putAdminhlistProjectHlistidNodeid_Body = z.union([z.object({ prefLabel: La
 const postAdminhlistProjectHlistidNodeidmove_Body = z.union([z.object({ leftOf: z.string() }).passthrough(), z.object({ rightOf: z.string() }).passthrough(), z.object({ belowOf: z.string() }).passthrough()]);
 const ValueArray = z.array(z.union([z.string(), z.number(), z.number(), z.boolean(), z.null()]));
 const AttachedToRoleMap: z.ZodType<AttachedToRoleMap> = z.record(DataPermission);
-const InstanceData = z.record(z.union([ValueArray, AttachedToRoleMap])) as unknown as z.ZodType<InstanceData>;
+const InstanceData: z.ZodType<InstanceData> = z.record(z.union([ValueArray, AttachedToRoleMap]));
 
 export const schemas = {
 	Error,
@@ -2700,7 +2700,7 @@ The user must be authenticated with a Bearer token.
 				schema: z.string()
 			},
 		],
-		response: z.object({ iri: z.string(), graph: z.unknown(), permval: z.unknown(), "oldap:createdBy": z.unknown(), "oldap:creationDate": z.unknown(), "oldap:lastModifiedBy": z.unknown(), "oldap:lastModificationDate": z.unknown(), "shared:imageId": z.unknown(), "shared:originalName": z.unknown(), "dcterms:type": z.unknown(), description: z.unknown(), "shared:originalMimeType": z.string(), "shared:serverUrl": z.string(), "shared:path": z.string(), "shared:protocol": z.enum(["iiif", "http", "custom"]) }).partial().passthrough(),
+		response: z.object({ iri: z.string(), graph: z.unknown(), permval: z.unknown(), "oldap:createdBy": z.unknown(), "oldap:creationDate": z.unknown(), "oldap:lastModifiedBy": z.unknown(), "oldap:lastModificationDate": z.unknown(), "shared:assetId": z.unknown(), "shared:originalName": z.unknown(), "dcterms:type": z.unknown(), description: z.unknown(), "shared:originalMimeType": z.string(), "shared:serverUrl": z.string(), "shared:path": z.string(), "shared:protocol": z.enum(["iiif", "http", "custom"]) }).partial().passthrough(),
 		errors: [
 			{
 				status: 400,
@@ -2736,7 +2736,7 @@ The user must be authenticated with a Bearer token.
 				schema: z.string()
 			},
 		],
-		response: z.object({ "oldap:createdBy": z.string(), "oldap:creationDate": z.string().datetime({ offset: true }), "oldap:lastModifiedBy": z.string(), "oldap:lastModificationDate": z.string().datetime({ offset: true }), "shared:imageId": z.string(), "shared:originalName": z.string(), "dcterms:type": z.enum(["dcmitype:Collection", "dcmitype:Dataset", "dcmitype:StillImage", "dcmitype:Image", "dcmitype:MovingImage", "dcmitype:Sound", "dcmitype:Text"]), "shared:originalMimeType": z.string(), "shared:serverUrl": z.string(), "shared:path": z.string(), "shared:protocol": z.enum(["iiif", "http", "custom"]) }).partial().passthrough(),
+		response: z.object({ "oldap:createdBy": z.string(), "oldap:creationDate": z.string().datetime({ offset: true }), "oldap:lastModifiedBy": z.string(), "oldap:lastModificationDate": z.string().datetime({ offset: true }), "shared:asssetId": z.string(), "shared:originalName": z.string(), "dcterms:type": z.enum(["dcmitype:Collection", "dcmitype:Dataset", "dcmitype:StillImage", "dcmitype:Image", "dcmitype:MovingImage", "dcmitype:Sound", "dcmitype:Text"]), "shared:originalMimeType": z.string(), "shared:serverUrl": z.string(), "shared:path": z.string(), "shared:protocol": z.enum(["iiif", "http", "custom"]) }).partial().passthrough(),
 		errors: [
 			{
 				status: 400,
@@ -2869,7 +2869,7 @@ The user must be authenticated with a Bearer token.
 				schema: z.number().int().optional()
 			},
 		],
-		response: z.record(z.object({}).partial().passthrough()),
+		response: z.union([z.record(z.object({}).partial().passthrough()), z.object({ count: z.number().int() }).passthrough()]),
 		errors: [
 			{
 				status: 400,

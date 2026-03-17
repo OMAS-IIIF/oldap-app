@@ -13,7 +13,7 @@
 	import { datamodelStore } from '$lib/stores/datamodel';
 	import { projectStore } from '$lib/stores/project';
 	import DropdownField from '$lib/components/basic_gui/inputs/DropdownField.svelte';
-	import { Search, Pencil, Trash2 } from '@lucide/svelte';
+	import { Search, Pencil, Trash2, List } from '@lucide/svelte';
 	import { api_config } from '$lib/helpers/api_config';
 	import { apiClient } from '$lib/shared/apiClient';
 	import SelectMutiple from '$lib/components/basic_gui/inputs/SelectMutiple.svelte';
@@ -24,6 +24,7 @@
 	import { env as publicEnv } from '$env/dynamic/public';
 	import { MediaObject } from '$lib/oldap/classes/mediaobject';
 	import IIIFViewer from '$lib/components/basic_gui/IIIFViewer.svelte';
+	import { DateTime } from "luxon";
 
 	type Values = (string|number|boolean|null)[];
 	type Result = Record<string, Record<string, Values | MediaObject | null>>;
@@ -43,7 +44,7 @@
 	let selected_resource = $state<string>('');
 
 	let selres = $state<string>('');
-
+	let is_mo = $state(false);
 	let all_props = $state<Set<{key: string, label?: string}>>();
 	let selprops = $state<Set<string>>(new Set());
 	let count = $state(0);
@@ -66,9 +67,22 @@
 		return url.toString();
 	}
 
+	function isIsoDateTime(value: string): boolean {
+		const dt = DateTime.fromISO(value);
+		return dt.isValid;
+	}
+
+	function toDateOnly(value: string): string {
+		return new Date(value).toISOString().slice(0, 10);
+	}
+
 	function formatCellValue(v: string | number | boolean | null): string {
+		console.log('formatCellValue', typeof v, v);
 		if (v === null) return '';
 		if (typeof v === 'boolean') return v ? 'true' : 'false';
+		if (isIsoDateTime(v)) {
+			return toDateOnly(v);
+		}
 		return String(v);
 	}
 
@@ -141,120 +155,87 @@
 	async function do_search(searchstring: string) {
 		if (!authinfo || !datamodel) return;
 		if (!project) return;
-		if (searchstring) {
-			// TODO!!!!!!!!!!!!
-			const searchstring_count_config = api_config(authinfo,{
+
+		try {
+			//
+			// first we get all the instances of the selected resource as Iri's.
+			//   - the count in order to know how many results we have to show.
+			//   - then the actual results (as Iri's.
+			//
+			const allofclass_count_config = api_config(authinfo,{
 				project: encodeURIComponent(project?.projectShortName?.toString())
 			}, {
-				resclass: selres,
-				searchString: encodeURIComponent(searchstring),
+				resClass: selres,
 				countOnly: true
 			});
-			const count_res = await apiClient.getDatatextsearchProject(searchstring_count_config);
+			const count_res = await apiClient.getDataofclassProject(allofclass_count_config);
 			if (count_res && !Array.isArray(count_res) && 'count' in count_res) {
 				count = Number(count_res.count) || 0;
 			} else {
 				count = 0;
 			}
-			console.log('search count', count, count_res);
-			const searchstring_config = api_config(authinfo,{
-				project: encodeURIComponent(project?.projectShortName?.toString())
-			}, {
-				resclass: selres,
-				searchString: encodeURIComponent(searchstring),
-			});
-			const data = await apiClient.getDatatextsearchProject(searchstring_config);
-			console.log(data);
-			results = {};
-			for (const [iri, d] of Object.entries(data)) {
-				results[iri] = {}
-				for (const [key, val] of Object.entries(d as Record<string, string>)) {
-					if (key === 'owl:Class') continue;
-					console.log("==================>", key, val);
-					results[iri][key] = [val]
-				}
+
+			if (selprops.size == 0) {
+				selprops.add('oldap:creationDate');
 			}
-		} else {
-			try {
-				//
-				// first we get all the instances of the selected resource as Iri's.
-				//   - the count in order to know how many results we have to show.
-				//   - then the actual results (as Iri's.
-				//
-				const allofclass_count_config = api_config(authinfo,{
+			const allofclass_get_config = api_config(
+				authinfo,
+				{
 					project: encodeURIComponent(project?.projectShortName?.toString())
-				}, {
+				},
+				{
 					resClass: selres,
-					countOnly: true
-				});
-				const count_res = await apiClient.getDataofclassProject(allofclass_count_config);
-				if (count_res && !Array.isArray(count_res) && 'count' in count_res) {
-					count = Number(count_res.count) || 0;
-				} else {
-					count = 0;
+					...(selprops ? { includeProperties: Array.from(selprops) } : {}),
+					//sortBy: ['oldap:creationDate|DESC'],
+				}
+			);
+			//
+			// data now is a Record<"iri", "propvalues"[]
+			//
+			const data = await apiClient.getDataofclassProject(allofclass_get_config);
+
+			// The API returns ApiRes: Record<prop, primitive[]>[]
+			results = {};
+			for (const d of (data as Record<string, string[]>[]) || []) {
+				const iri = d['iri'][0];
+				let mediaobject: MediaObject | null = null;
+				if (is_mo) {
+					const get_mo_config = api_config(authinfo || new AuthInfo('unknown', ''),{
+						iri: encodeURIComponent(iri)
+					});
+					try {
+						const tmp = await apiClient.getDatamediaobjectiriIri(get_mo_config);
+						console.log('mediaobject', tmp);
+						mediaobject = MediaObject.fromOldapJson(tmp);
+					}
+					catch (err) {
+						console.error(`Could not load mediaobject details for "${iri}"`, err);
+						mediaobject = null;
+					}
 				}
 
-				if (selprops.size == 0) {
-					selprops.add('oldap:creationDate');
-				}
-				const allofclass_get_config = api_config(
-					authinfo,
-					{
-						project: encodeURIComponent(project?.projectShortName?.toString())
-					},
-					{
-						resClass: selres,
-						...(selprops ? { includeProperties: Array.from(selprops) } : {})
+				results[iri] = {};
+				for (const [prop, values] of Object.entries(d)) {
+					if (prop === 'iri') continue;
+
+					let is_langstring = true;
+					for (const v of values) {
+						if (!extractLang(v)) is_langstring = false;
 					}
-				);
-				//
-				// data now is a Record<"iri", "propvalues"[]
-				//
-				const data = await apiClient.getDataofclassProject(allofclass_get_config);
-
-				// The API returns ApiRes: Record<prop, primitive[]>[]
-				results = {};
-				for (const d of (data as Record<string, string[]>[]) || []) {
-					const iri = d['iri'][0];
-					let mediaobject: MediaObject | null = null;
-					if (is_mediaobject(datamodel?.resources.find((r) => r.iri.toString() === selres))) {
-						const get_mo_config = api_config(authinfo || new AuthInfo('unknown', ''),{
-							iri: encodeURIComponent(iri)
-						});
-						try {
-							const tmp = await apiClient.getDatamediaobjectiriIri(get_mo_config);
-							console.log('mediaobject', tmp);
-							mediaobject = MediaObject.fromOldapJson(tmp);
-						}
-						catch (err) {
-							console.error(`Could not load mediaobject details for "${iri}"`, err);
-							mediaobject = null;
-						}
+					if (is_langstring) {
+						results[iri][prop] = [LangString.fromStringArray(values).get(langobj)];
 					}
-
-					results[iri] = {};
-					for (const [prop, values] of Object.entries(d)) {
-						if (prop === 'iri') continue;
-
-						let is_langstring = true;
-						for (const v of values) {
-							if (!extractLang(v)) is_langstring = false;
-						}
-						if (is_langstring) {
-							results[iri][prop] = [LangString.fromStringArray(values).get(langobj)];
-						}
-						else {
-							results[iri][prop] = values.map(v => v.toString());
-						}
-						if (mediaobject) {
-							results[iri]['mo'] = mediaobject;
-						}
+					else {
+						results[iri][prop] = values.map(v => v.toString());
+					}
+					if (mediaobject) {
+						results[iri]['mo'] = mediaobject;
 					}
 				}
 			}
-			catch (err) {
-				console.error('Error loading instances:', err);
-			}
+		}
+		catch (err) {
+			console.error('Error loading instances:', err);
 		}
 	}
 
@@ -277,6 +258,7 @@
 		}
 		res_list = tmp_list
 		selected_resource = tmp_list[0];
+		is_mo = is_mediaobject(datamodel?.resources.find((r) => r.iri.toString() === selres));
 	});
 
 	$effect(() => {
@@ -311,21 +293,13 @@
 		/>
 
 		<div class="mt-4 flex items-center gap-2">
-			<input
-				type="text"
-				placeholder="Search…"
-				class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-				bind:value={searchstring}
-				onkeydown={(e) => e.key === 'Enter' && do_search(searchstring)}
-			/>
-
 			<button
 				type="button"
 				class="flex items-center gap-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
 				onclick={() => do_search(searchstring)}
 			>
-				<Search size={16} />
-				Search
+				<List size={16} />
+				Retrieve
 			</button>
 		</div>
 	</form>
@@ -337,7 +311,9 @@
 			<table class="min-w-full table-auto border-collapse text-sm">
 				<thead>
 					<tr class="border-b">
-						<th class="px-2 py-2 text-left font-medium">Preview</th>
+						{#if is_mo}
+							<th class="px-2 py-2 text-left font-medium">Preview</th>
+						{/if}
 						{#each Array.from(selprops) as prop (prop)}
 							<th class="px-2 py-2 text-left font-medium">{Array.from(all_props || []).find(x => x.key === prop)?.label || prop}</th>
 						{/each}
@@ -349,16 +325,18 @@
 					{#each Object.entries(results) as [iri, row] (iri)}
 						<tr class="border-b align-top">
 
-							{#if (row['mo'] && row['mo'] instanceof MediaObject)}
-								{@const iiifurl = safe_iiif_url(row['mo'].assetId, 'full', '!128,128', 0, 'default.jpg', row['mo'].token)}
-								<td class="px-2 py-2 align-top">
-									<button type="button" class="rounded p-1 hover:bg-gray-100" onclick={() => openIIIFViewer(iri)}>
-									<img src={iiifurl} alt="Preview" class="w-24 h-24 object-cover" />
-										{row['mo'].originalName}
-									</button>
-								</td>
-							{:else}
-								<td class="px-2 py-2 align-top">&nbsp;</td>
+							{#if is_mo}
+								{#if (row['mo'] && row['mo'] instanceof MediaObject)}
+									{@const iiifurl = safe_iiif_url(row['mo'].assetId, 'full', '!128,128', 0, 'default.jpg', row['mo'].token)}
+									<td class="px-2 py-2 align-top">
+										<button type="button" class="rounded p-1 hover:bg-gray-100" onclick={() => openIIIFViewer(iri)}>
+										<img src={iiifurl} alt="Preview" class="w-24 h-24 object-cover" />
+											{row['mo'].originalName}
+										</button>
+									</td>
+								{:else}
+									<td class="px-2 py-2 align-top">&nbsp;</td>
+								{/if}
 							{/if}
 							{#each Array.from(selprops) as prop (prop)}
 								<td class="px-2 py-2 align-top">
