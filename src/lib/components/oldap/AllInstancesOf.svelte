@@ -2,18 +2,16 @@
   - Copyright (©) 2026. This software is licenced under the GNU General Public License v3.0 (https://www.gnu.org/licenses/gpl-3.0.en.html)
   -->
 <script lang="ts">
-	import { locales, getLocale } from '$lib/paraglide/runtime';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
-	import type { OldapUser } from '$lib/oldap/classes/user';
 	import type { OldapProject } from '$lib/oldap/classes/project';
 	import { authInfoStore } from '$lib/stores/authinfo';
-	import { userStore } from '$lib/stores/user';
 	import { datamodelStore } from '$lib/stores/datamodel';
 	import { projectStore } from '$lib/stores/project';
 	import DropdownField from '$lib/components/basic_gui/inputs/DropdownField.svelte';
-	import { Search, Pencil, Trash2, List } from '@lucide/svelte';
+	import { Pencil, Trash2, List } from '@lucide/svelte';
 	import { api_config } from '$lib/helpers/api_config';
 	import { apiClient } from '$lib/shared/apiClient';
 	import SelectMutiple from '$lib/components/basic_gui/inputs/SelectMutiple.svelte';
@@ -24,9 +22,9 @@
 	import { env as publicEnv } from '$env/dynamic/public';
 	import { MediaObject } from '$lib/oldap/classes/mediaobject';
 	import IIIFViewer from '$lib/components/basic_gui/IIIFViewer.svelte';
-	import { DateTime } from "luxon";
+	import VideoViewer from '$lib/components/basic_gui/VideoViewer.svelte';
 
-	type Values = (string|number|boolean|null)[];
+	type Values = (string | number | boolean | null)[];
 	type Result = Record<string, Record<string, Values | MediaObject | null>>;
 
 	let lang = $state(getLocale());
@@ -34,10 +32,7 @@
 
 	let authinfo = $state<AuthInfo | null>(null);
 	let datamodel = $state<DatamodelClass | null>(null);
-	let user = $state<OldapUser | null>(null);
 	let project = $state<OldapProject | null>(null);
-
-	const languages = Array.from(locales).map(lang => convertToLanguage(lang));
 
 	let res_list = $state<string[]>([]);
 	//let resources = $state<Record<string, ResourceClass>>({});
@@ -45,31 +40,53 @@
 
 	let selres = $state<string>('');
 	let is_mo = $state(false);
-	let all_props = $state<Set<{key: string, label?: string}>>();
+	let all_props = $state<Set<{ key: string; label?: string }>>();
 	let selprops = $state<Set<string>>(new Set());
 	let count = $state(0);
 	let results = $state<Result>({});
 
-	let searchstring = $state('');
-
 	const mediaurl = publicEnv.PUBLIC_MEDIASERVER_URL;
 
-	function safe_iiif_url(assetId: string,
-												 region: string,
-												 size: string,
-												 angle: number,
-												 format: string,
-												 token?: string): string {
-		const url = new URL(`${mediaurl}/iiif/3/${assetId}/${region}/${size}/${Math.round(angle)}/${format}`);
+	function safe_iiif_url(
+		assetId: string,
+		region: string,
+		size: string,
+		angle: number,
+		format: string,
+		token?: string
+	): string {
+		const url = new URL(
+			`${mediaurl}/iiif/3/${assetId}/${region}/${size}/${Math.round(angle)}/${format}`
+		);
 		if (token) {
-			url.searchParams.set("token", token);
+			url.searchParams.set('token', token);
+		}
+		return url.toString();
+	}
+
+	function safe_videothumb_url(assetId: string, size: '128' | '256', token?: string): string {
+		const url = new URL(`${mediaurl}/asset/${assetId}/derived`);
+		if (size === '128') {
+			url.searchParams.set('derivative', 'thumb128.jpg');
+		} else {
+			url.searchParams.set('derivative', 'thumb256.jpg');
+		}
+		if (token) {
+			url.searchParams.set('token', token);
+		}
+		return url.toString();
+	}
+
+	function safe_video_url(assetId: string, token?: string): string {
+		const url = new URL(`${mediaurl}/asset/${assetId}`);
+		if (token) {
+			url.searchParams.set('token', token);
 		}
 		return url.toString();
 	}
 
 	function isIsoDateTime(value: string): boolean {
-		const dt = DateTime.fromISO(value);
-		return dt.isValid;
+		return !Number.isNaN(Date.parse(value));
 	}
 
 	function toDateOnly(value: string): string {
@@ -80,7 +97,7 @@
 		console.log('formatCellValue', typeof v, v);
 		if (v === null) return '';
 		if (typeof v === 'boolean') return v ? 'true' : 'false';
-		if (isIsoDateTime(v)) {
+		if (typeof v === 'string' && isIsoDateTime(v)) {
 			return toDateOnly(v);
 		}
 		return String(v);
@@ -95,14 +112,50 @@
 	}
 
 	function openEditor(iri: string) {
-		createWindow('Edit Instance', editInstance, [iri] as [string], { x: 220, y: 80, width: 400, height: 600 });
+		createWindow('Edit Instance', editInstance, [iri] as [string], {
+			x: 220,
+			y: 80,
+			width: 400,
+			height: 600
+		});
 	}
 
 	function openIIIFViewer(iri: string) {
-		if (!results[iri]['mo'] || !(results[iri]['mo'] instanceof MediaObject)) return;
+		if (
+			!(
+				results[iri]['mo'] &&
+				results[iri]['mo'] instanceof MediaObject &&
+				results[iri]['mo']?.type == 'dcmitype:StillImage'
+			)
+		)
+			return;
 		const base_url = `${mediaurl}/iiif/3/${results[iri]['mo']?.assetId}`;
 		const token = results[iri]['mo']?.token;
-		createWindow(results[iri]['mo'].originalName, iiifViewer, [base_url, token] as [string, string | undefined], { x: 50, y: 50, width: 600, height: 500 });
+		createWindow(
+			results[iri]['mo'].originalName,
+			iiifViewer,
+			[base_url, token] as [string, string | undefined],
+			{ x: 50, y: 50, width: 600, height: 500 }
+		);
+	}
+
+	function openVideoViewer(iri: string) {
+		if (
+			!(
+				results[iri]['mo'] &&
+				results[iri]['mo'] instanceof MediaObject &&
+				results[iri]['mo']?.type == 'dcmitype:MovingImage'
+			)
+		)
+			return;
+		const video_url = safe_video_url(results[iri]['mo']?.assetId, results[iri]['mo']?.token);
+		const token = results[iri]['mo']?.token;
+		createWindow(
+			results[iri]['mo'].originalName,
+			videoViewer,
+			[video_url, token, results[iri]['mo'].originalName] as [string, string | undefined, string],
+			{ x: 50, y: 50, width: 820, height: 620 }
+		);
 	}
 
 	function deleteInstance(iri: string) {
@@ -112,13 +165,16 @@
 		const delete_data = api_config(authinfo || new AuthInfo('unknown', ''), {
 			project: encodeURIComponent(project?.projectShortName?.toString() || ''),
 			instiri: encodeURIComponent(iri)
-		})
-		apiClient.deleteDataProjectInstiri(undefined, delete_data).then(() => {
-			delete results[iri];
-			window.alert('Instance deleted successfully');
-		}).catch(err => {
-			window.alert('Error deleting instance: ' + err.message);
 		});
+		apiClient
+			.deleteDataProjectInstiri(undefined, delete_data)
+			.then(() => {
+				delete results[iri];
+				window.alert('Instance deleted successfully');
+			})
+			.catch((err) => {
+				window.alert('Error deleting instance: ' + err.message);
+			});
 		console.log('delete instance', iri);
 	}
 
@@ -143,16 +199,18 @@
 			const assetId = mo['mo'].assetId;
 			const token = authinfo?.token || '';
 			const url = `${publicEnv.PUBLIC_MEDIASERVER_URL}/upload/${assetId}`;
-			deleteAsset(url, token).then(() => {
-				delete results[iri];
-				window.alert('MediaObject deleted successfully');
-			}).catch(err => {
-				window.alert('Error deleting instance: ' + err.message);
-			});
+			deleteAsset(url, token)
+				.then(() => {
+					delete results[iri];
+					window.alert('MediaObject deleted successfully');
+				})
+				.catch((err) => {
+					window.alert('Error deleting instance: ' + err.message);
+				});
 		}
 	}
 
-	async function do_search(searchstring: string) {
+	async function do_search() {
 		if (!authinfo || !datamodel) return;
 		if (!project) return;
 
@@ -162,12 +220,16 @@
 			//   - the count in order to know how many results we have to show.
 			//   - then the actual results (as Iri's.
 			//
-			const allofclass_count_config = api_config(authinfo,{
-				project: encodeURIComponent(project?.projectShortName?.toString())
-			}, {
-				resClass: selres,
-				countOnly: true
-			});
+			const allofclass_count_config = api_config(
+				authinfo,
+				{
+					project: encodeURIComponent(project?.projectShortName?.toString())
+				},
+				{
+					resClass: selres,
+					countOnly: true
+				}
+			);
 			const count_res = await apiClient.getDataofclassProject(allofclass_count_config);
 			if (count_res && !Array.isArray(count_res) && 'count' in count_res) {
 				count = Number(count_res.count) || 0;
@@ -185,7 +247,7 @@
 				},
 				{
 					resClass: selres,
-					...(selprops ? { includeProperties: Array.from(selprops) } : {}),
+					...(selprops ? { includeProperties: Array.from(selprops) } : {})
 					//sortBy: ['oldap:creationDate|DESC'],
 				}
 			);
@@ -200,15 +262,14 @@
 				const iri = d['iri'][0];
 				let mediaobject: MediaObject | null = null;
 				if (is_mo) {
-					const get_mo_config = api_config(authinfo || new AuthInfo('unknown', ''),{
+					const get_mo_config = api_config(authinfo || new AuthInfo('unknown', ''), {
 						iri: encodeURIComponent(iri)
 					});
 					try {
 						const tmp = await apiClient.getDatamediaobjectiriIri(get_mo_config);
 						console.log('mediaobject', tmp);
 						mediaobject = MediaObject.fromOldapJson(tmp);
-					}
-					catch (err) {
+					} catch (err) {
 						console.error(`Could not load mediaobject details for "${iri}"`, err);
 						mediaobject = null;
 					}
@@ -224,17 +285,15 @@
 					}
 					if (is_langstring) {
 						results[iri][prop] = [LangString.fromStringArray(values).get(langobj)];
-					}
-					else {
-						results[iri][prop] = values.map(v => v.toString());
+					} else {
+						results[iri][prop] = values.map((v) => v.toString());
 					}
 					if (mediaobject) {
 						results[iri]['mo'] = mediaobject;
 					}
 				}
 			}
-		}
-		catch (err) {
+		} catch (err) {
 			console.error('Error loading instances:', err);
 		}
 	}
@@ -242,21 +301,27 @@
 	//
 	// setup all necessary stores...
 	//
-	authInfoStore.subscribe(ai => {authinfo = ai as AuthInfo | null});
-	userStore.subscribe((u) => { user = u as OldapUser | null});
-	datamodelStore.subscribe(data => { datamodel = data });
-	projectStore.subscribe(proj => { project = proj });
+	authInfoStore.subscribe((ai) => {
+		authinfo = ai as AuthInfo | null;
+	});
+	datamodelStore.subscribe((data) => {
+		datamodel = data;
+	});
+	projectStore.subscribe((proj) => {
+		project = proj;
+	});
 
 	$effect(() => {
-		const tmp_res = datamodel?.resources.filter(x => {
-			const gaga = x?.superclass ? [...x.superclass].map(s => s.toString()) : [];
-			return !gaga.includes('oldap:OldapListNode');
-		}) || [];
+		const tmp_res =
+			datamodel?.resources.filter((x) => {
+				const gaga = x?.superclass ? [...x.superclass].map((s) => s.toString()) : [];
+				return !gaga.includes('oldap:OldapListNode');
+			}) || [];
 		let tmp_list = [];
 		for (const res of tmp_res) {
 			tmp_list.push(res.iri.toString() || 'XXXX');
 		}
-		res_list = tmp_list
+		res_list = tmp_list;
 		selected_resource = tmp_list[0];
 		is_mo = is_mediaobject(datamodel?.resources.find((r) => r.iri.toString() === selres));
 	});
@@ -267,12 +332,16 @@
 	});
 
 	$effect(() => {
-		let resdata = datamodel?.resources.find(x => x.iri.toString() === selres);
+		let resdata = datamodel?.resources.find((x) => x.iri.toString() === selres);
 		if (resdata?.hasProperty) {
-			all_props = new Set(resdata.hasProperty.sort((a, b) => (a.order || 9999) - (b.order || 9999)).map((hp) => ({
-				key: hp.property.propertyIri.toString(),
-				label: hp.property.name?.get(langobj)
-			})));
+			all_props = new Set(
+				resdata.hasProperty
+					.sort((a, b) => (a.order || 9999) - (b.order || 9999))
+					.map((hp) => ({
+						key: hp.property.propertyIri.toString(),
+						label: hp.property.name?.get(langobj)
+					}))
+			);
 		}
 	});
 </script>
@@ -286,17 +355,13 @@
 			label="FROM RESOURCE TYPE"
 			bind:selectedItem={selres}
 		/>
-		<SelectMutiple
-			selectables={all_props}
-			label="SHOW PROPERTIES"
-			bind:values={selprops}
-		/>
+		<SelectMutiple selectables={all_props} label="SHOW PROPERTIES" bind:values={selprops} />
 
 		<div class="mt-4 flex items-center gap-2">
 			<button
 				type="button"
 				class="flex items-center gap-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
-				onclick={() => do_search(searchstring)}
+				onclick={do_search}
 			>
 				<List size={16} />
 				Retrieve
@@ -315,7 +380,9 @@
 							<th class="px-2 py-2 text-left font-medium">Preview</th>
 						{/if}
 						{#each Array.from(selprops) as prop (prop)}
-							<th class="px-2 py-2 text-left font-medium">{Array.from(all_props || []).find(x => x.key === prop)?.label || prop}</th>
+							<th class="px-2 py-2 text-left font-medium"
+								>{Array.from(all_props || []).find((x) => x.key === prop)?.label || prop}</th
+							>
 						{/each}
 						<th class="px-2 py-2 text-left font-medium">Actions</th>
 					</tr>
@@ -324,15 +391,41 @@
 				<tbody>
 					{#each Object.entries(results) as [iri, row] (iri)}
 						<tr class="border-b align-top">
-
 							{#if is_mo}
-								{#if (row['mo'] && row['mo'] instanceof MediaObject)}
-									{@const iiifurl = safe_iiif_url(row['mo'].assetId, 'full', '!128,128', 0, 'default.jpg', row['mo'].token)}
+								{#if row['mo'] && row['mo'] instanceof MediaObject}
 									<td class="px-2 py-2 align-top">
-										<button type="button" class="rounded p-1 hover:bg-gray-100" onclick={() => openIIIFViewer(iri)}>
-										<img src={iiifurl} alt="Preview" class="w-24 h-24 object-cover" />
-											{row['mo'].originalName}
-										</button>
+										{#if row['mo'].type == 'dcmitype:StillImage'}
+											{@const iiifurl = safe_iiif_url(
+												row['mo'].assetId,
+												'full',
+												'!128,128',
+												0,
+												'default.jpg',
+												row['mo'].token
+											)}
+											<button
+												type="button"
+												class="rounded p-1 hover:bg-gray-100"
+												onclick={() => openIIIFViewer(iri)}
+											>
+												<img src={iiifurl} alt="Preview" class="h-24 w-24 object-cover" />
+												{row['mo'].originalName}
+											</button>
+										{:else if row['mo'].type == 'dcmitype:MovingImage'}
+											{@const thumburl = safe_videothumb_url(
+												row['mo'].assetId,
+												'128',
+												row['mo'].token
+											)}
+											<button
+												type="button"
+												class="rounded p-1 hover:bg-gray-100"
+												onclick={() => openVideoViewer(iri)}
+											>
+												<img src={thumburl} alt="Preview" class="h-24 w-24 object-cover" />
+												{row['mo'].originalName}
+											</button>
+										{/if}
 									</td>
 								{:else}
 									<td class="px-2 py-2 align-top">&nbsp;</td>
@@ -342,7 +435,7 @@
 								<td class="px-2 py-2 align-top">
 									<div class="flex flex-col gap-1">
 										{#each cellValues(row, prop) as v (formatCellValue(v))}
-											<div class="whitespace-pre-wrap break-words">{formatCellValue(v)}</div>
+											<div class="break-words whitespace-pre-wrap">{formatCellValue(v)}</div>
 										{/each}
 									</div>
 								</td>
@@ -358,12 +451,14 @@
 									>
 										<Pencil size={16} />
 									</button>
-									{#if (row['mo'] && row['mo'] instanceof MediaObject)}
+									{#if row['mo'] && row['mo'] instanceof MediaObject}
 										{@const may_delete = row['mo'].permval >= 5}
 										{row['mo'].permval}
 										<button
 											type="button"
-											class="rounded p-1 hover:bg-gray-100 {may_delete ? '' : 'opacity-50 cursor-not-allowed'}"
+											class="rounded p-1 hover:bg-gray-100 {may_delete
+												? ''
+												: 'cursor-not-allowed opacity-50'}"
 											title="Delete"
 											onclick={() => deleteMediaObject(iri)}
 											disabled={!may_delete}
@@ -395,5 +490,9 @@
 {/snippet}
 
 {#snippet iiifViewer(baseUrl: string, token: string | undefined)}
-	<IIIFViewer baseUrl={baseUrl} token={token}></IIIFViewer>
+	<IIIFViewer {baseUrl} {token}></IIIFViewer>
+{/snippet}
+
+{#snippet videoViewer(src: string, token: string | undefined, title: string)}
+	<VideoViewer {src} {token} {title}></VideoViewer>
 {/snippet}

@@ -170,7 +170,6 @@
 				results[iri] = {}
 				for (const [key, val] of Object.entries(d as Record<string, string>)) {
 					if (key === 'owl:Class') continue;
-					console.log("==================>", key, val);
 					results[iri][key] = [val]
 				}
 			}
@@ -296,39 +295,6 @@
 </script>
 
 <div>
-	<form>
-		<DropdownField
-			items={res_list}
-			id="allres_id"
-			name="allres"
-			label="FROM RESOURCE TYPE"
-			bind:selectedItem={selres}
-		/>
-		<SelectMutiple
-			selectables={all_props}
-			label="SHOW PROPERTIES"
-			bind:values={selprops}
-		/>
-
-		<div class="mt-4 flex items-center gap-2">
-			<input
-				type="text"
-				placeholder="Search…"
-				class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-				bind:value={searchstring}
-				onkeydown={(e) => e.key === 'Enter' && do_search(searchstring)}
-			/>
-
-			<button
-				type="button"
-				class="flex items-center gap-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
-				onclick={() => do_search(searchstring)}
-			>
-				<Search size={16} />
-				Search
-			</button>
-		</div>
-	</form>
 	<hr />
 	{#if count > 0}
 		<div class="mt-2">Found {count} instances</div>
