@@ -76,161 +76,6 @@ Array<string> | /**
  * @example "A page of a book@en"
  */
 string | null;;
-type Property = Partial<{
-    creator: string;
-    created: string;
-    contributor: string;
-    modified: string;
-    type: OwlPropertyType | Partial<{
-        add: OwlPropertyType;
-        del: OwlPropertyType;
-    }> | null;
-    /**
-     * ID of project the property is defined in
-     */
-    projectid: string;
-    /**
-     * Iri of property
-     */
-    iri: string;
-    subPropertyOf: Iri;
-    /**
-     * An Iri() that describes the class of the instance on which this property must point e.g. "myproj:Book" means that the property points on book.
-     *
-     * @example "xml:Date"
-     */
-    class: Iri | null;
-    /**
-     * xsd_datatype if the property is represented via a literal
-     *
-     * @example "rdf:langString"
-     */
-    datatype: string | null;
-    /**
-     * Human readable Name.
-     */
-    name: LangString | Partial<{
-        add: LangString;
-        del: LangString;
-    }> | null;
-    /**
-     * A description of the property.
-     */
-    description: LangString | Partial<{
-        add: LangString;
-        del: LangString;
-    }> | null;
-    languageIn: /**
-     * The languages that are allowed in the property
-     *
-     * @example ["en","fr","it","de"]
-     */
-    Array<string> | null;
-    /**
-     * Describes if each language must be present only once. This field is only applicable if the property is of datatype langstring.
-     *
-     * @example true
-     */
-    uniqueLang: boolean;
-    inSet: /**
-     * @example ["Renault","Opel","BMW","Mercedes"]
-     */
-    Array<string | number | number> | null;
-    /**
-     * Only applicable in xsd:string and rdf:langString. Denotes the minimal length of the string.
-     */
-    minLength: /**
-     * @example 1
-     */
-    number | /**
-     * @example 1.1
-     */
-    number | null;
-    /**
-     * Only applicable in xsd:string and rdf:langString. Denotes the maximal length of the string.
-     */
-    maxLength: /**
-     * @example 1
-     */
-    number | /**
-     * @example 1.1
-     */
-    number | null;
-    /**
-     * Tells if the string must follow a certain regex pattern. Only applicable in xsd:string and rdf:langString.
-     */
-    pattern: /**
-     * @example "r\"^[a-zA-Z0-9._-]+@[a-zA-Z0-9-]+(\\.[a-zA-Z0-9-]+)*\\.[a-zA-Z]{2,}$\""
-     */
-    string | null;
-    /**
-     * Minimal value (exclusive the value itself) for a numerical datatype of the property like xsd:date/xsd:int/xsd:float...
-     */
-    minExclusive: /**
-     * @example 5.5
-     */
-    number | /**
-     * @example 5
-     */
-    number | null;
-    /**
-     * Minimal value (inclusive the value itself) for a numerical datatype of the property like xsd:date/xsd:int/xsd:float...
-     */
-    minInclusive: /**
-     * @example 5.5
-     */
-    number | /**
-     * @example 5
-     */
-    number | null;
-    /**
-     * Maximal value (exclusive the value itself) for a numerical datatype of the property like xsd:date/xsd:int/xsd:float...
-     */
-    maxExclusive: /**
-     * @example 5.5
-     */
-    number | /**
-     * @example 5
-     */
-    number | null;
-    /**
-     * Maximal value (inclusive the value itself) for a numerical datatype of the property like xsd:date/xsd:int/xsd:float...
-     */
-    maxInclusive: /**
-     * @example 5.5
-     */
-    number | /**
-     * @example 5
-     */
-    number | null;
-    /**
-     * The given numerical value must be smaller than the value of the given reverenced IRI property e.g. Iri("myproj:deathDate")
-     */
-    lessThan: Iri | null;
-    /**
-     * The given numerical value must be smaller or equal compared to the value of the given reverenced IRI property e.g. Iri("myproj:deathDate")
-     */
-    lessThanOrEquals: Iri | null;
-    /**
-     * The inverse property of the current property. This is used to define the inverse relationship between two properties.
-     */
-    inverseOf: Iri | null;
-    /**
-     * The equivalent property of the current property. This is used to define the equivalence between two properties.
-     */
-    equivalentProperty: Iri | null;
-}>;;
-type OwlPropertyType = Array</**
- * @enum StatementProperty, TransitiveProperty, SymmetricProperty, ReflexiveProperty, IrreflexiveProperty, FunctionalProperty, InverseFunctionalProperty
- */
-"StatementProperty" | "TransitiveProperty" | "SymmetricProperty" | "ReflexiveProperty" | "IrreflexiveProperty" | "FunctionalProperty" | "InverseFunctionalProperty">;;
-type Iri = /**
- * IRI in the format 'project:object', where 'project' is the project name and 'object' is the object name.
- *
- * @example "myproj:pageOf"
- * @pattern ^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$
- */
-string;;
 type Resource = Partial<{
     creator: string;
     created: string;
@@ -269,6 +114,14 @@ type Resource = Partial<{
         order: number;
     }>>;
 }>;;
+type Iri = /**
+ * IRI in the format 'project:object', where 'project' is the project name and 'object' is the object name.
+ *
+ * @example "myproj:pageOf"
+ * @pattern ^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$
+ */
+string;;
+type Property = unknown | unknown;;
 
 const Error = z.object({ message: z.string(), error: z.string().optional(), details: z.object({}).partial().passthrough().optional() }).passthrough();
 const DataPermission = z.enum(["DATA_RESTRICTED", "DATA_VIEW", "DATA_EXTEND", "DATA_UPDATE", "DATA_DELETE", "DATA_PERMISSIONS"]);
@@ -281,11 +134,11 @@ const postAdminprojectProjectId_Body = z.object({ label: z.union([LangString, z.
 const putAdminroleDefinedByProjectRoleId_Body = z.object({ label: LangString, comment: LangString }).partial().passthrough();
 const postAdminroleDefinedByProjectRoleId_Body = z.object({ label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.unknown()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]) }).partial().passthrough();
 const ExternalOntology: z.ZodType<ExternalOntology> = z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), prefix: z.string(), namespaceIri: z.string(), label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]) }).partial();
-const OwlPropertyType = z.array(z.enum(["StatementProperty", "TransitiveProperty", "SymmetricProperty", "ReflexiveProperty", "IrreflexiveProperty", "FunctionalProperty", "InverseFunctionalProperty"]));
+const Property: z.ZodType<Property> = z.union([z.unknown(), z.unknown()]);
 const Iri = z.string();
-const Property: z.ZodType<Property> = z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), type: z.union([OwlPropertyType, z.object({ add: OwlPropertyType, del: OwlPropertyType }).partial().passthrough(), z.null()]), projectid: z.string(), iri: z.string(), subPropertyOf: Iri.regex(/^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$/), class: z.union([Iri, z.null()]), datatype: z.union([z.string(), z.null()]), name: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), description: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), languageIn: z.union([z.array(z.string()), z.null()]), uniqueLang: z.boolean(), inSet: z.union([z.array(z.union([z.string(), z.number(), z.number()])), z.null()]), minLength: z.union([z.number(), z.number(), z.null()]), maxLength: z.union([z.number(), z.number(), z.null()]), pattern: z.union([z.string(), z.null()]), minExclusive: z.union([z.number(), z.number(), z.null()]), minInclusive: z.union([z.number(), z.number(), z.null()]), maxExclusive: z.union([z.number(), z.number(), z.null()]), maxInclusive: z.union([z.number(), z.number(), z.null()]), lessThan: z.union([Iri, z.null()]), lessThanOrEquals: z.union([Iri, z.null()]), inverseOf: z.union([Iri, z.null()]), equivalentProperty: z.union([Iri, z.null()]) }).partial();
 const Resource: z.ZodType<Resource> = z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), label: LangString, superclass: z.union([z.array(z.string()), z.string()]), comment: LangString, closed: z.boolean(), hasProperty: z.array(z.object({ property: z.union([z.object({ iri: Iri.regex(/^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$/) }).partial().passthrough().and(Property), Iri]), maxCount: z.number(), minCount: z.number(), order: z.number() }).partial().passthrough()) }).partial().passthrough();
 const postAdmindatamodelProjectextontoPrefix_Body = z.object({ label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]) }).partial();
+const OwlPropertyType = z.array(z.enum(["StatementProperty", "TransitiveProperty", "SymmetricProperty", "ReflexiveProperty", "IrreflexiveProperty", "FunctionalProperty", "InverseFunctionalProperty"]));
 const postAdmindatamodelProjectpropertyProperty_Body = z.object({ type: z.union([OwlPropertyType, z.object({ add: OwlPropertyType, del: OwlPropertyType }).partial().passthrough(), z.null()]), datatype: z.union([z.string(), z.null()]), class: z.union([Iri, z.null()]), name: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), description: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), languageIn: z.union([z.array(z.string()), z.null()]), uniqueLang: z.boolean(), inSet: z.union([z.array(z.union([z.string(), z.number(), z.number()])), z.null()]), minLength: z.union([z.number(), z.number(), z.null()]), maxLength: z.union([z.number(), z.number(), z.null()]), pattern: z.union([z.string(), z.null()]), minExclusive: z.union([z.number(), z.number(), z.null()]), minInclusive: z.union([z.number(), z.number(), z.null()]), maxExclusive: z.union([z.number(), z.number(), z.null()]), maxInclusive: z.union([z.number(), z.number(), z.null()]), lessThan: z.union([Iri, z.null()]), lessThanOrEquals: z.union([Iri, z.null()]), inverseOf: z.union([Iri, z.null()]), equivalentProperty: z.union([Iri, z.null()]) }).partial();
 const postAdmindatamodelProjectResource_Body = z.object({ closed: z.boolean(), superclass: z.union([z.array(z.string()), z.object({ add: z.array(z.string()), del: z.array(z.string()) }).partial().passthrough(), z.null()]), label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]) }).partial().passthrough();
 const putAdmindatamodelProjectResourceProperty_Body = Property.and(z.object({ maxCount: z.union([z.number(), z.number()]), minCount: z.union([z.number(), z.number()]), order: z.union([z.number(), z.number()]) }).partial());
@@ -310,11 +163,11 @@ export const schemas = {
 	putAdminroleDefinedByProjectRoleId_Body,
 	postAdminroleDefinedByProjectRoleId_Body,
 	ExternalOntology,
-	OwlPropertyType,
-	Iri,
 	Property,
+	Iri,
 	Resource,
 	postAdmindatamodelProjectextontoPrefix_Body,
+	OwlPropertyType,
 	postAdmindatamodelProjectpropertyProperty_Body,
 	postAdmindatamodelProjectResource_Body,
 	putAdmindatamodelProjectResourceProperty_Body,
@@ -968,7 +821,7 @@ const endpoints = makeApi([
 			{
 				name: "body",
 				type: "Body",
-				schema: Property
+				schema: z.union([z.unknown(), z.unknown()])
 			},
 			{
 				name: "project",
