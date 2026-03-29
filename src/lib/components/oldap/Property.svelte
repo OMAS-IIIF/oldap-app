@@ -863,7 +863,7 @@ and the actual property id (which is a xs:NCName
 			bind:value={fragment}
 			pattern={ncname_pattern}
 			disabled={propiri !== 'new' || add_standalone_prop}
-			additional_snippet={resiri ? proj_prefix : prefixes}
+			additional_snippet={prefixes}
 		/>
 		{#if !add_standalone_prop}
 			<DropdownField
