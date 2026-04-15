@@ -57,12 +57,12 @@
 		const _b = $refreshProjectsList;
 		let tmp_list = [];
 		let tmp_properties: Record<string, PropertyClass> = {};
-		for (const property of (datamodel?.standaloneProperties || [])) {
+		for (const property of (datamodel?.annotationProperties || [])) {
 			tmp_properties[property.propertyIri.toString()] = property;
 			tmp_list.push(property.propertyIri.toString() || '');
 		}
 		if ((datamodel?.projectid.toString() !== 'shared') && (datamodel?.projectid.toString() !== 'oldap')) {
-			for (const property of ($datamodelSharedStore?.standaloneProperties || [])) {
+			for (const property of ($datamodelSharedStore?.annotationProperties || [])) {
 				tmp_properties[property.propertyIri.toString()] = property;
 				tmp_list.push(property.propertyIri.toString() || '');
 			}

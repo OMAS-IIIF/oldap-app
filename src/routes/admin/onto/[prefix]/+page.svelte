@@ -4,10 +4,8 @@
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { OldapUser } from '$lib/oldap/classes/user';
 	import { authInfoStore } from '$lib/stores/authinfo';
-	import { userStore } from '$lib/stores/user';
 	import * as m from '$lib/paraglide/messages';
 	import { goto_page } from '$lib/helpers/goto_page';
-	import DropdownField from '$lib/components/basic_gui/inputs/DropdownField.svelte';
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
 	import LangstringfieldNew from '$lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
@@ -21,7 +19,6 @@
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { process_api_error } from '$lib/helpers/process_api_error';
 	import { onMount, tick } from 'svelte';
-	import { getProjectsOfUser } from '$lib/helpers/get_projects_of_user';
 	import { getLocale, locales } from '$lib/paraglide/runtime';
 	import { page } from '$app/state';
 	import { projectStore } from '$lib/stores/project';
@@ -35,7 +32,6 @@
 	const namespace_pattern: RegExp = /^(https?|ftp|file|urn):[A-Za-z0-9._~:/?#@!$&'()*+,;=%-]+[#/]$/;
 
 	let authinfo: AuthInfo | null = $authInfoStore;
-	let administrator = $state<OldapUser | null>(null);
 	let project = $state<OldapProject | null>(null);
 	let datamodel = $state<DatamodelClass | null>(null);
 	let lang = $state(getLocale());
@@ -58,10 +54,6 @@
 
 	authInfoStore.subscribe(authdata => {
 		authinfo = authdata;
-	});
-
-	userStore.subscribe((admin) => {
-		administrator = admin;
 	});
 
 	projectStore.subscribe(proj => {
@@ -115,7 +107,7 @@
 			project: project?.projectShortName.toString() || '',
 			prefix: prefix,
 		});
-		apiClient.putAdmindatamodelProjectextontoPrefix(extontodata, extonto_put).then((res) => {
+		apiClient.putAdmindatamodelProjectextontoPrefix(extontodata, extonto_put).then(() => {
 			successInfoStore.set(`External Ontology "${prefix}" added successfully!`);
 		}).catch((error: unknown) => {
 			errorInfoStore.set(process_api_error(error as Error));
@@ -150,7 +142,7 @@
 				project: project?.projectShortName.toString() || '',
 				prefix: prefix,
 			});
-			apiClient.postAdmindatamodelProjectextontoPrefix(extontodata, extonto_post).then((res) => {
+			apiClient.postAdmindatamodelProjectextontoPrefix(extontodata, extonto_post).then(() => {
 				successInfoStore.set(`External Ontology modified successfully!`);
 			}).catch((error) => {
 				errorInfoStore.set(process_api_error(error as Error));

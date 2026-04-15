@@ -35,7 +35,7 @@
 	let selected_tab = $state(''); // the current tab that has been selected....
 
 	let tabs_height = $state(100); // just an arbitrary value
-	let table_height = $state(($contentAreaHeight || 200) - (() => tabs_height)() - 25);
+	let table_height = $derived(($contentAreaHeight || 200) - (() => tabs_height)() - 25);
 	let hlistIsOpen = $state(false);
 
 	let authinfo = $state<AuthInfo | null>($authInfoStore);

@@ -422,8 +422,9 @@ in relation with a resource class.
 	}
 
 	$effect(() => {
-		gui_editor_hints = getGuiEditorHints(datatype);
-		editor = untrack(() => prop?.editor?.toString()) || gui_editor_hints[0];
+		const hints = getGuiEditorHints(datatype);
+		gui_editor_hints = hints;
+		editor = untrack(() => prop?.editor?.toString()) || hints[0];
 	});
 
 	const add_property = async () => {
@@ -899,4 +900,3 @@ and the actual property id (which is a xs:NCName
 <Confirmation bind:this={confirmation_dialog} title={confirmation_title}>
 	{confirmation_message}
 </Confirmation>
-
