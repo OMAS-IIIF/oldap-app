@@ -4,29 +4,30 @@ import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
 import { PropertyClass } from '$lib/oldap/classes/property';
 import { ResourceClass } from '$lib/oldap/classes/resource';
 import { ExternalOntology } from '$lib/oldap/classes/extonto';
+import { XsdDateTime } from '$lib/oldap/datatypes/xsd_datetime';
 
 export type DatamodelClassOptions = {
-	creator: Iri,
-	created: Date,
-	contributor: Iri,
-	modified: Date,
-	projectid: NCName,
-	externalOntologies: ExternalOntology[],
-	standaloneProperties: PropertyClass[],
-	resources: ResourceClass[]
-}
+	creator: Iri;
+	created: XsdDateTime;
+	contributor: Iri;
+	modified: XsdDateTime;
+	projectid: NCName;
+	externalOntologies: ExternalOntology[];
+	annotationProperties: PropertyClass[];
+	resources: ResourceClass[];
+};
 
 export class DatamodelClass extends OldapObject {
 	#projectid: NCName;
 	#externalOntologies: ExternalOntology[];
-	#standaloneProperties: PropertyClass[];
+	#annotationProperties: PropertyClass[];
 	#resouces: ResourceClass[];
 
 	constructor(options: DatamodelClassOptions) {
 		super(options.creator, options.created, options.contributor, options.modified);
 		this.#projectid = options.projectid;
 		this.#externalOntologies = options.externalOntologies;
-		this.#standaloneProperties = options.standaloneProperties;
+		this.#annotationProperties = options.annotationProperties;
 		this.#resouces = options.resources;
 	}
 
@@ -38,31 +39,33 @@ export class DatamodelClass extends OldapObject {
 		return this.#externalOntologies;
 	}
 
-	get standaloneProperties() {
-		return this.#standaloneProperties;
+	get annotationProperties() {
+		return this.#annotationProperties;
 	}
 
 	get resources() {
 		return this.#resouces;
 	}
 
-	is_standalone_property(property: PropertyClass) {
-		const tmp = this.#standaloneProperties.filter(p => p.propertyIri.toString() === property.propertyIri.toString());
+	is_annotation_property(property: PropertyClass) {
+		const tmp = this.#annotationProperties.filter(p => p.propertyIri.toString() === property.propertyIri.toString());
 		return tmp.length > 0;
 	}
 
 	static fromOldapJson(json: any): DatamodelClass {
 		const creator = new Iri(json.creator);
-		const created = new Date(json.created);
+		const created = new XsdDateTime(json.created);
 		const contributor = new Iri(json.contributor);
-		const modified = new Date(json.modified);
+		const modified = new XsdDateTime(json.modified);
 		const projectid = new NCName(json.project);
 		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 		// @ts-expect-error
 		const externalOntologies = json.externalOntologies.map(ext => ExternalOntology.fromOldapJson(ext));
 		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 		// @ts-expect-error
-		const standaloneProperties = json.standaloneProperties.map(prop => PropertyClass.fromOldapJson(prop));
+		const annotationProperties = json.annotationProperties.map((prop) =>
+			PropertyClass.fromOldapJson(prop)
+		);
 		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 		// @ts-expect-error
 		const resources = json.resources.map(res => ResourceClass.fromOldapJson(res));
@@ -73,7 +76,7 @@ export class DatamodelClass extends OldapObject {
 			modified: modified,
 			projectid: projectid,
 			externalOntologies: externalOntologies,
-			standaloneProperties: standaloneProperties,
+			annotationProperties: annotationProperties,
 			resources: resources
 		});
 	}

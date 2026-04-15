@@ -6,42 +6,101 @@ import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
 import { DataPermission } from '$lib/oldap/enums/data_permissions';
 import { QName } from '$lib/oldap/datatypes/xsd_qname';
+import { XsdDateTime } from '$lib/oldap/datatypes/xsd_datetime';
 
 export enum OwlPropertyType {
-	OwlDataProperty = 'owl:DatatypeProperty',
-	OwlObjectProperty = 'owl:ObjectProperty',
-	StatementProperty = 'rdf:Property',
+	AnnotationProperty = 'owl:AnnotationProperty',
+	DataProperty = 'owl:DatatypeProperty',
+	ObjectProperty = 'owl:ObjectProperty',
 	TransitiveProperty = 'owl:TransitiveProperty',
 	SymmetricProperty = 'owl:SymmetricProperty',
 	ReflexiveProperty = 'owl:ReflexiveProperty',
 	IrreflexiveProperty = 'owl:IrreflexiveProperty',
 	FunctionalProperty = 'owl:FunctionalProperty',
-	InverseFunctionalProperty = 'owl:InverseFunctionalProperty'
+	InverseFunctionalProperty = 'owl:InverseFunctionalProperty',
 }
 
-export function stringToOwlPropertyType(value: string): OwlPropertyType | undefined {
-	return Object.entries(DataPermission).find(([_, v]) => v === value)?.[1] as
-		| OwlPropertyType
-		| undefined;
+export type OwlPropertyTypeApi =
+	| 'AnnotationProperty'
+	| 'DataProperty'
+	| 'ObjectProperty'
+	| 'TransitiveProperty'
+	| 'SymmetricProperty'
+	| 'ReflexiveProperty'
+	| 'IrreflexiveProperty'
+	| 'FunctionalProperty'
+	| 'InverseFunctionalProperty';
+
+export const owlPropertyTypeApi2OwlPropertyType: Record<OwlPropertyTypeApi, OwlPropertyType> = {
+	AnnotationProperty: OwlPropertyType.AnnotationProperty,
+	DataProperty: OwlPropertyType.DataProperty,
+	ObjectProperty: OwlPropertyType.ObjectProperty,
+	TransitiveProperty: OwlPropertyType.TransitiveProperty,
+	SymmetricProperty: OwlPropertyType.SymmetricProperty,
+	ReflexiveProperty: OwlPropertyType.ReflexiveProperty,
+	IrreflexiveProperty: OwlPropertyType.IrreflexiveProperty,
+	FunctionalProperty: OwlPropertyType.FunctionalProperty,
+	InverseFunctionalProperty: OwlPropertyType.InverseFunctionalProperty
+};
+
+export const owlPropertyType2OwlPropertyTypeApi: Record<OwlPropertyType, OwlPropertyTypeApi> = {
+	[OwlPropertyType.AnnotationProperty]: 'AnnotationProperty',
+	[OwlPropertyType.DataProperty]: 'DataProperty',
+	[OwlPropertyType.ObjectProperty]: 'ObjectProperty',
+	[OwlPropertyType.TransitiveProperty]: 'TransitiveProperty',
+	[OwlPropertyType.SymmetricProperty]: 'SymmetricProperty',
+	[OwlPropertyType.ReflexiveProperty]: 'ReflexiveProperty',
+	[OwlPropertyType.IrreflexiveProperty]: 'IrreflexiveProperty',
+	[OwlPropertyType.FunctionalProperty]: 'FunctionalProperty',
+	[OwlPropertyType.InverseFunctionalProperty]: 'InverseFunctionalProperty'
+};
+
+export function string2OwlPropertyType(value: string): OwlPropertyType | undefined {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	return Object.entries(DataPermission).find(([_, v]) => v === value)?.[1] as OwlPropertyType | undefined;
+}
+
+export function string2OwlPropertyTypeValue(value: string) {
+	const allowed: OwlPropertyTypeApi[] = [
+		'AnnotationProperty',
+		'DataProperty',
+		'ObjectProperty',
+		'TransitiveProperty',
+		'SymmetricProperty',
+		'ReflexiveProperty',
+		'IrreflexiveProperty',
+		'FunctionalProperty',
+		'InverseFunctionalProperty',
+	];
+
+	return (allowed.includes(value as OwlPropertyTypeApi)
+		? (value as OwlPropertyTypeApi)
+		: undefined);
+}
+
+export function owlPropertyTypeValue2string(value: OwlPropertyTypeApi) {
+	return value;
 }
 
 export function owlPropertyTypeAsString(value: OwlPropertyType) {
 	const name = Object.keys(OwlPropertyType).find(
-		(key) => OwlPropertyType[key as keyof typeof OwlPropertyType] === value
+		key => OwlPropertyType[key as keyof typeof OwlPropertyType] === value
 	);
 	return name;
 }
 
 export type PropertyClassOptions = {
+	creator?: Iri;
+	created?: XsdDateTime;
+	contributor?: Iri;
+	modified?: XsdDateTime;
 	projectId: NCName;
-	propertyIri: Iri;
-	ptype: Set<OwlPropertyType>;
-	creator: Iri;
-	created: Date;
-	contributor: Iri;
-	modified: Date;
-	subPropertyOf?: Iri;
-	toClass?: Iri;
+	propertyIri: QName;
+	appliedToProperty?: QName;
+	type: Set<OwlPropertyType>;
+	subPropertyOf?: QName;
+	toClass?: QName;
+	nodeKind?: QName;
 	datatype?: XsdDatatypes;
 	name?: LangString;
 	description?: LangString;
@@ -55,25 +114,31 @@ export type PropertyClassOptions = {
 	minInclusive?: number;
 	maxExclusive?: number;
 	maxInclusive?: number;
-	lessThan?: Iri;
-	lessThanOrEquals?: Iri;
-	inverseOf?: Iri;
-	equivalentProperty?: Iri;
+	lessThan?: QName;
+	lessThanOrEquals?: QName;
+	inverseOf?: QName;
+	equivalentProperty?: QName;
+	minCount?: number;
+	maxCount?: number;
+	order?: number;
 	editor?: QName;
+	group?: QName;
 };
 
 export class PropertyClass extends OldapObject {
 	#projectId: NCName;
-	#propertyIri: Iri;
-	ptype: Set<OwlPropertyType>;
-	subPropertyOf?: Iri;
-	toClass?: Iri;
+	#propertyIri: QName;
+	appliedToProperty?: QName;
+	type: Set<OwlPropertyType>;
+	subPropertyOf?: QName;
+	toClass?: QName;
+	nodeKind?: QName;
 	datatype?: XsdDatatypes;
 	name?: LangString;
 	description?: LangString;
 	languageIn?: Set<Language>;
 	uniqueLang?: boolean;
-	inSet?: Set<string | number>;
+	inSet?: Set<string | number>
 	minLength?: number;
 	maxLength?: number;
 	pattern?: string;
@@ -81,86 +146,71 @@ export class PropertyClass extends OldapObject {
 	minInclusive?: number;
 	maxExclusive?: number;
 	maxInclusive?: number;
-	lessThan?: Iri;
-	lessThanOrEquals?: Iri;
-	inverseOf?: Iri;
-	equivalentProperty?: Iri;
+	lessThan?: QName;
+	lessThanOrEquals?: QName;
+	inverseOf?: QName;
+	equivalentProperty?: QName;
+	minCount?: number;
+	maxCount?: number;
+	order?: number;
 	editor?: QName;
+	group?: QName;
 
-	constructor({
-		creator,
-		created,
-		contributor,
-		modified,
-		projectId,
-		propertyIri,
-		ptype,
-		subPropertyOf,
-		toClass,
-		datatype,
-		name,
-		description,
-		languageIn,
-		uniqueLang,
-		inSet,
-		minLength,
-		maxLength,
-		pattern,
-		minExclusive,
-		minInclusive,
-		maxExclusive,
-		maxInclusive,
-		lessThan,
-		lessThanOrEquals,
-		inverseOf,
-		equivalentProperty,
-		editor
-	}: PropertyClassOptions) {
-		super(creator, created, contributor, modified);
-		this.#projectId = projectId;
-		this.#propertyIri = propertyIri;
-		this.ptype = ptype;
-		this.subPropertyOf = subPropertyOf;
-		this.toClass = toClass;
-		this.datatype = datatype;
-		this.name = name;
-		this.description = description;
-		this.languageIn = languageIn;
-		this.uniqueLang = uniqueLang;
-		this.inSet = inSet;
-		this.minLength = minLength;
-		this.maxLength = maxLength;
-		this.pattern = pattern;
-		this.minExclusive = minExclusive;
-		this.minInclusive = minInclusive;
-		this.maxExclusive = maxExclusive;
-		this.maxInclusive = maxInclusive;
-		this.lessThan = lessThan;
-		this.lessThanOrEquals = lessThanOrEquals;
-		this.inverseOf = inverseOf;
-		this.equivalentProperty = equivalentProperty;
-		this.editor = editor;
+
+	constructor(options: PropertyClassOptions) {
+		super(options.creator, options.created, options.contributor, options.modified);
+		this.#projectId = options.projectId;
+		this.#propertyIri = options.propertyIri;
+		this.appliedToProperty = options.appliedToProperty;
+		this.type = options.type;
+		this.subPropertyOf = options.subPropertyOf;
+		this.toClass = options.toClass;
+		this.nodeKind = options.nodeKind;
+		this.datatype = options.datatype;
+		this.name = options.name;
+		this.description = options.description;
+		this.languageIn = options.languageIn;
+		this.uniqueLang = options.uniqueLang;
+		this.inSet = options.inSet;
+		this.minLength = options.minLength;
+		this.maxLength = options.maxLength;
+		this.pattern = options.pattern;
+		this.minExclusive = options.minExclusive;
+		this.minInclusive = options.minInclusive;
+		this.maxExclusive = options.maxExclusive;
+		this.maxInclusive = options.maxInclusive;
+		this.lessThan = options.lessThan;
+		this.lessThanOrEquals = options.lessThanOrEquals;
+		this.inverseOf = options.inverseOf;
+		this.equivalentProperty = options.equivalentProperty;
+		this.minCount = options.minCount;
+		this.maxCount = options.maxCount;
+		this.order = options.order;
+		this.editor = options.editor;
+		this.group = options.group;
 	}
 
 	get projectId(): NCName {
 		return this.#projectId;
 	}
 
-	get propertyIri(): Iri {
+	get propertyIri(): QName {
 		return this.#propertyIri;
 	}
 
 	clone(): PropertyClass {
 		return new PropertyClass({
-			creator: this.creator.clone(),
-			created: new Date(this.created.getTime()),
-			contributor: this.contributor.clone(),
-			modified: new Date(this.modified.getTime()),
+			creator: this.creator?.clone(),
+			created: this.created?.clone(),
+			contributor: this.contributor?.clone(),
+			modified: this.modified?.clone(),
 			projectId: this.projectId.clone(),
 			propertyIri: this.propertyIri.clone(),
-			ptype: this.ptype,
+			appliedToProperty: this.appliedToProperty?.clone(),
+			type: new Set<OwlPropertyType>([...this.type]),
 			subPropertyOf: this.subPropertyOf?.clone(),
 			toClass: this.toClass?.clone(),
+			nodeKind: this.nodeKind?.clone(),
 			datatype: this.datatype,
 			name: this.name?.clone(),
 			description: this.description?.clone(),
@@ -178,26 +228,31 @@ export class PropertyClass extends OldapObject {
 			lessThanOrEquals: this.lessThanOrEquals?.clone(),
 			inverseOf: this.inverseOf?.clone(),
 			equivalentProperty: this.equivalentProperty?.clone(),
-			editor: this.editor?.clone()
+			maxCount: this.maxCount,
+			minCount: this.minCount,
+			order: this.order,
+			editor: this.editor?.clone(),
+			group: this.group?.clone()
 		});
 	}
 
 	static fromOldapJson(json: any): PropertyClass {
-		const creator = new Iri(json.creator);
-		const created = new Date(json.created);
+		const creator = new Iri(json?.creator);
+		const created = new XsdDateTime(json.created);
 		const contributor = new Iri(json.contributor);
-		const modified = new Date(json.modified);
+		const modified = new XsdDateTime(json.modified);
 		const projectId = new NCName(json.projectid);
-		const propertyIri = new Iri(json.iri);
-		const ptype = new Set<OwlPropertyType>(
-			(json?.ptype ?? [])
-				.map((x: string) => stringToOwlPropertyType(x))
+		const propertyIri = new QName(json.iri);
+		const type = new Set<OwlPropertyType>(
+			(json?.type ?? [])
+				.map((x: string) => string2OwlPropertyType(x))
 				.filter((x: OwlPropertyType | undefined): x is OwlPropertyType => x !== undefined)
-		); // TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		const subPropertyOf = json?.subPropertyOf ? new Iri(json.subPropertyOf) : undefined;
-		const rawToClass = json?.toClass ?? json?.class;
-		const toClass = rawToClass ? new Iri(rawToClass) : undefined;
-		const datatype = json?.datatype ? xsdDatatypeFromString(json.datatype) : undefined;
+		);
+		const appliedToProperty = json?.appliedToProperty ? new QName(json.appliedToProperty) : undefined;
+		const subPropertyOf = new QName(json?.subPropertyOf);
+		const toClass = new QName(json?.toClass);
+		const nodeKind = new QName(json?.nodeKind);
+		const datatype = xsdDatatypeFromString(json?.datatype);
 		const name = LangString.fromJson(json?.name);
 		const description = LangString.fromJson(json?.description);
 		const languageIn = json?.languageIn
@@ -216,12 +271,14 @@ export class PropertyClass extends OldapObject {
 		const minInclusive = json?.minInclusive;
 		const maxExclusive = json?.maxExclusive;
 		const maxInclusive = json?.maxInclusive;
-		const lessThan = json?.lessThan ? new Iri(json.lessThan) : undefined;
-		const lessThanOrEquals = json?.lessThanOrEquals ? new Iri(json.lessThanOrEquals) : undefined;
-		const inverseOf = json?.inverseOf ? new Iri(json.inverseOf) : undefined;
-		const equivalentProperty = json?.equivalentProperty
-			? new Iri(json.equivalentProperty)
-			: undefined;
+		const lessThan = new QName(json?.lessThan);
+		const lessThanOrEquals = new QName(json?.lessThanOrEquals);
+		const inverseOf = new QName(json?.inverseOf);
+		const equivalentProperty = new QName(json?.equivalentProperty);
+		const maxCount = json?.maxCount;
+		const minCount = json?.minCount;
+		const order = json?.order;
+		const group = json?.group;
 		const editor = json?.editor ? QName.createQName(json?.editor) : undefined;
 
 		return new PropertyClass({
@@ -231,9 +288,11 @@ export class PropertyClass extends OldapObject {
 			modified: modified,
 			projectId: projectId,
 			propertyIri: propertyIri,
-			ptype: ptype, // TODO: !!!!!!!!!!!!!!!!!!!!!!!!!!
+			appliedToProperty: appliedToProperty,
+			type: type,
 			subPropertyOf: subPropertyOf,
 			toClass: toClass,
+			nodeKind: nodeKind,
 			datatype: datatype,
 			name: name,
 			description: description,
@@ -251,7 +310,11 @@ export class PropertyClass extends OldapObject {
 			lessThanOrEquals: lessThanOrEquals,
 			inverseOf: inverseOf,
 			equivalentProperty: equivalentProperty,
-			editor: editor
+			minCount: minCount,
+			maxCount: maxCount,
+			order: order,
+			editor: editor,
+			group: group,
 		});
 	}
 }

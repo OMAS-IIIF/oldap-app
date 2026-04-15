@@ -22,6 +22,10 @@ export class NCName {
 		return this.#ncname;
 	}
 
+	get isEmpty(): boolean {
+		return this.#ncname === null;
+	}
+
 	get ncname(): string {
 		return this.#ncname;
 	}

@@ -63,25 +63,29 @@ export class Iri {
 		}
 	}
 
+	get isEmpty(): boolean {
+		return this.#iri === null;
+	}
+
 	get iri() {
 		return this.#iri;
 	}
 
-	get prefix(): NCName | undefined {
+	get prefix(): NCName | null {
 		if (this.#representation === 'QNAME') {
 			const tmp = this.#iri as QName;
 			return tmp.prefix;
 		} else {
-			return undefined;
+			return null;
 		}
 	}
 
-	get fragment(): NCName | undefined {
+	get fragment(): NCName | null {
 		if (this.#representation === 'QNAME') {
 			const tmp = this.#iri as QName;
 			return tmp.fragment;
 		} else {
-			return undefined;
+			return null;
 		}
 	}
 

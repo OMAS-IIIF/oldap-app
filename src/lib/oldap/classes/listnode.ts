@@ -2,6 +2,7 @@ import { OldapObject } from '$lib/oldap/classes/object';
 import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
 import { LangString } from '$lib/oldap/datatypes/langstring';
 import { Iri } from '$lib/oldap/datatypes/xsd_iri';
+import { XsdDateTime } from '$lib/oldap/datatypes/xsd_datetime';
 
 export class OldapListNode extends OldapObject {
 	#listId: NCName;
@@ -13,9 +14,9 @@ export class OldapListNode extends OldapObject {
 
 	constructor(
 		creator: Iri,
-		created: Date,
+		created: XsdDateTime,
 		contributor: Iri,
-		modified: Date,
+		modified: XsdDateTime,
 		listId: NCName,
 		nodeId: NCName,
 		iri: Iri,
@@ -53,9 +54,9 @@ export class OldapListNode extends OldapObject {
 
 	static fromOldapJson(json: any, oldapList: NCName): OldapListNode {
 		const creator = new Iri(json.creator);
-		const created = new Date(json.created);
+		const created = new XsdDateTime(json.created);
 		const contributor = new Iri(json.contributor);
-		const modified = new Date(json.modified);
+		const modified = new XsdDateTime(json.modified);
 		const oldapListNodeId = new NCName(json.oldapListNodeId);
 		const iri = new Iri(json.iri);
 		const prefLabel = LangString.fromJson(json?.prefLabel);
@@ -75,7 +76,7 @@ export class OldapListNode extends OldapObject {
 		if (json.nodes && json.nodes.length > 0) {
 			node.nodes = json.nodes.map((subnode: any) => {
 				return OldapListNode.fromOldapJson(subnode, oldapList);
-			})
+			});
 		}
 
 		return node;

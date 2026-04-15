@@ -1,12 +1,9 @@
-import { OldapErrorInvalidValue } from '$lib/oldap/errors/OldapErrorInvalidValue';
 
 /**
  * xsd:date Implementation of an xsd:date class with a lot of checks...
  */
 export class XsdDate {
-	#year: number;
-	#month: number;
-	#day: number;
+	#ts_date: Date;
 
 	/**
 	 * Constructor for a new XsdDate instance
@@ -14,6 +11,32 @@ export class XsdDate {
 	 * @param datestr A string in the format YYYY-MM-DD, where YYYY is the year, MM is the month (01-12) and DD is the day.
 	 * @throws OldapErrorInvalidValue if the datestr is not in the correct format
 	 */
+
+	parseDateYYYYMMDD(s: string): Date {
+		const [y, m, d] = s.split("-").map(Number);
+		const date = new Date(y, m - 1, d);
+
+		if (
+			date.getFullYear() !== y ||
+			date.getMonth() !== m - 1 ||
+			date.getDate() !== d
+		) {
+			console.log("Y:", date.getFullYear(), y);
+			console.log('Y:', date.getMonth(), m - 1);
+			console.log('Y:', date.getDate(), d);
+			throw new Error(`Invalid date: ${s}`);
+		}
+
+		return date;
+	}
+
+	formatDateYYYYMMDD(date: Date): string {
+		const y = date.getFullYear();
+		const m = String(date.getMonth() + 1).padStart(2, "0");
+		const d = String(date.getDate()).padStart(2, "0");
+
+		return `${y}-${m}-${d}`;
+	}
 
 	/**
 	 * Constructor for a new XsdDate instance
@@ -23,58 +46,20 @@ export class XsdDate {
 	 * @param dd The day
 	 * @throws OldapErrorInvalidValue if the datestr is not in the correct format
 	 */
-	constructor(datestr?: string | number, mm?: number, dd?: number) {
-		let parts: number[];
+	constructor(datestr?: Date | string | number, mm?: number, dd?: number) {
 
-		if ((datestr === undefined) || (datestr === '')) {
-			const d = new Date();
-			const yyyy = d.getFullYear();
-			const mm = d.getMonth() + 1
-			const dd = d.getDate()
-
-			parts = [yyyy, mm, dd];
+		if (datestr instanceof Date) {
+			this.#ts_date = datestr;
+		}
+		else if (typeof datestr === "string") {
+			this.#ts_date = this.parseDateYYYYMMDD(datestr);
 		}
 		else if (typeof datestr === 'number' && typeof mm === 'number' && typeof dd === 'number') {
-			parts = [datestr, mm, dd];
-		}
-		else if (typeof datestr === 'string' && !mm && !dd) {
-			// Expect "YYYY-MM-DD"
-			if (!datestr) throw new OldapErrorInvalidValue(`Invalid xsd:date string: "${datestr}"`);
-			const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datestr);
-			if (!m) throw new OldapErrorInvalidValue(`Invalid xsd:date string: "${datestr}"`);
-
-			const year = Number(m[1]);
-			const month = Number(m[2]);
-			const day = Number(m[3]);
-
-			if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
-				throw new OldapErrorInvalidValue(`Invalid xsd:date string: "${datestr}"`);
-			}
-			if (month < 1 || month > 12) throw new OldapErrorInvalidValue(`Invalid xsd:date string: "${datestr}"`);
-			if (day < 1 || day > 31) throw new OldapErrorInvalidValue(`Invalid xsd:date string: "${datestr}"`);
-
-			// Optional: strict calendar validation (reject 2025-02-31, etc.)
-			const dt = new Date(year, month - 1, day);
-			if (dt.getFullYear() !== year || dt.getMonth() !== month - 1 || dt.getDate() !== day) {
-				throw new OldapErrorInvalidValue(`Invalid xsd:date string: "${datestr}"`);
-			}
-
-			parts = [year, month, day];
+			this.#ts_date = new Date(datestr, mm - 1, dd);
 		}
 		else {
-			throw new OldapErrorInvalidValue(`Invalid xsd:date string: "${datestr}"`);
+			this.#ts_date = new Date();
 		}
-
-		if (parts.length !== 3 || parts.some(isNaN)) {
-			throw new OldapErrorInvalidValue(`Invalid xsd:date string: "${datestr}"`);
-		}
-		const [year, month, day] = parts;
-		if (month < 1 || month > 12 || day < 1 || day > 31) {
-			throw new OldapErrorInvalidValue(`Invalid month/day in xsd:date: "${datestr}"`);
-		}
-		this.#year = year;
-		this.#month = month;
-		this.#day = day;
 	}
 
 	/**
@@ -82,10 +67,7 @@ export class XsdDate {
 	 * @returns A string in the format YYYY-MM-DD, where YYYY is the year, MM is the month (01-12) and DD is the day.
 	 */
 	toString() {
-		const yearStr = String(this.#year).padStart(4, '0');
-		const monthStr = String(this.#month).padStart(2, '0');
-		const dayStr = String(this.#day).padStart(2, '0');
-		return `${yearStr}-${monthStr}-${dayStr}`;
+		return this.formatDateYYYYMMDD(this.#ts_date);
 	}
 
 	toApi() {
@@ -110,9 +92,7 @@ export class XsdDate {
 	 */
 	equals(other?: XsdDate | null): boolean {
 		if (!other) return false;
-		return this.#year === other.#year &&
-			this.#month === other.#month &&
-			this.#day === other.#day;
+		return this.#ts_date === other.#ts_date;
 	}
 
 	static areEqual(a?: XsdDate | null, b?: XsdDate | null): boolean {
@@ -137,24 +117,16 @@ export class XsdDate {
 	 * @returns A Date object representing the date
 	 */
 	toDate() {
-		return new Date(this.#year, this.#month - 1, this.#day);
+		return this.#ts_date;
 	}
 
-	/**
-	 * Creates a new XsdDate instance from a Date object
-	 * @param date A Date object
-	 * @returns A new XsdDate instance
-	 */
-	static fromDate(date: Date): XsdDate {
-		return new XsdDate(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`);
-	}
 
 	/**
 	 * Returns the year
 	 * @returns The year
 	 */
 	get year() {
-		return this.#year;
+		return this.#ts_date.getFullYear();
 	}
 
 	/**
@@ -162,7 +134,7 @@ export class XsdDate {
 	 * @returns The month
 	 */
 	get month() {
-		return this.#month;
+		return this.#ts_date.getMonth() + 1;
 	}
 
 	/**
@@ -170,10 +142,10 @@ export class XsdDate {
 	 * @returns The day
 	 */
 	get day() {
-		return this.#day;
+		return this.#ts_date.getDay();
 	}
 
 	clone(): XsdDate {
-		return new XsdDate(this.#year, this.#month, this.#day);
+		return new XsdDate(this.#ts_date);
 	}
 }

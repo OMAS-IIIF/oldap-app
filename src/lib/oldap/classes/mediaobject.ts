@@ -5,6 +5,7 @@
 import type { QName } from '$lib/oldap/datatypes/xsd_qname';
 import { OldapObject } from '$lib/oldap/classes/object';
 import { Iri } from '$lib/oldap/datatypes/xsd_iri';
+import { XsdDateTime } from '$lib/oldap/datatypes/xsd_datetime';
 
 const DCMI_TYPES = [
 	'dcmitype:Collection',
@@ -39,9 +40,9 @@ export class MediaObject extends OldapObject {
 
 	constructor(
 		creator: Iri,
-		created: Date,
+		created: XsdDateTime,
 		contributor: Iri,
-		modified: Date,
+		modified: XsdDateTime,
 		iri: string,
 		graph: QName,
 		type: Dcmitype,
@@ -74,9 +75,9 @@ export class MediaObject extends OldapObject {
 
 	static fromOldapJson(json: any): MediaObject {
 		const creator = new Iri(json.creator);
-		const created = new Date(json.created);
+		const created = new XsdDateTime(json.created);
 		const contributor = new Iri(json.contributor);
-		const modified = new Date(json.modified);
+		const modified = new XsdDateTime(json.modified);
 
 		return new MediaObject(
 			creator,

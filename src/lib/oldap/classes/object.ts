@@ -1,12 +1,13 @@
 import { Iri } from '$lib/oldap/datatypes/xsd_iri';
+import type { XsdDateTime } from '$lib/oldap/datatypes/xsd_datetime';
 
 export class OldapObject {
-	#creator: Iri;
-	#created: Date;
-	#contributor: Iri;
-	#modified: Date;
+	#creator?: Iri;
+	#created?: XsdDateTime;
+	#contributor?: Iri;
+	#modified?: XsdDateTime;
 
-	constructor(creator: Iri, created: Date, contributor: Iri, modified: Date) {
+	constructor(creator?: Iri, created?: XsdDateTime, contributor?: Iri, modified?: XsdDateTime) {
 		this.#creator = creator;
 		this.#created = created;
 		this.#contributor = contributor;

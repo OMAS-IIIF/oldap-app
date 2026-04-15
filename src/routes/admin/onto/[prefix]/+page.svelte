@@ -34,7 +34,6 @@
 	const namespace_pattern: RegExp = /^(https?|ftp|file|urn):[A-Za-z0-9._~:/?#@!$&'()*+,;=%-]+[#/]$/;
 
 	let authinfo: AuthInfo | null = $authInfoStore;
-	let administrator = $state<OldapUser | null>(null);
 	let project = $state<OldapProject | null>(null);
 	let datamodel = $state<DatamodelClass | null>(null);
 

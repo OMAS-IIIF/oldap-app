@@ -77,12 +77,14 @@ Array<string> | /**
  */
 string | null;;
 type Resource = Partial<{
+    iri: Iri;
     creator: string;
     created: string;
     contributor: string;
     modified: string;
+    projectid: string;
     label: LangString;
-    superclass: Array<string> | string;
+    superclass: Array<string>;
     comment: LangString;
     /**
      * The standard closed constraint of RDF. See https://www.w3.org/TR/shacl/#ClosedConstraintComponent
@@ -90,29 +92,9 @@ type Resource = Partial<{
      * @example true
      */
     closed: boolean;
-    hasProperty: Array<Partial<{
-        property: (Partial<{
-            iri: Iri;
-        }> & Property) | Iri;
-        /**
-         * Denotes how often (maximum) this property can be used in one resource
-         *
-         * @example 3
-         */
-        maxCount: number;
-        /**
-         * Denotes how often (minimal) this property must be used in one resource
-         *
-         * @example 1
-         */
-        minCount: number;
-        /**
-         * Hint for GUI. Tells order of properties for a GUI
-         *
-         * @example 2
-         */
-        order: number;
-    }>>;
+    properties: Array<Partial<{
+        iri: Iri;
+    }> & Property>;
 }>;;
 type Iri = /**
  * IRI in the format 'project:object', where 'project' is the project name and 'object' is the object name.
@@ -136,9 +118,9 @@ const postAdminroleDefinedByProjectRoleId_Body = z.object({ label: z.union([Lang
 const ExternalOntology: z.ZodType<ExternalOntology> = z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), prefix: z.string(), namespaceIri: z.string(), label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]) }).partial();
 const Property: z.ZodType<Property> = z.union([z.unknown(), z.unknown()]);
 const Iri = z.string();
-const Resource: z.ZodType<Resource> = z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), label: LangString, superclass: z.union([z.array(z.string()), z.string()]), comment: LangString, closed: z.boolean(), hasProperty: z.array(z.object({ property: z.union([z.object({ iri: Iri.regex(/^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$/) }).partial().passthrough().and(Property), Iri]), maxCount: z.number(), minCount: z.number(), order: z.number() }).partial().passthrough()) }).partial().passthrough();
+const Resource: z.ZodType<Resource> = z.object({ iri: Iri.regex(/^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$/), creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), projectid: z.string(), label: LangString, superclass: z.array(z.string()), comment: LangString, closed: z.boolean(), properties: z.array(z.object({ iri: Iri.regex(/^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$/) }).partial().passthrough().and(Property)) }).partial().passthrough();
 const postAdmindatamodelProjectextontoPrefix_Body = z.object({ label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]) }).partial();
-const OwlPropertyType = z.array(z.enum(["StatementProperty", "TransitiveProperty", "SymmetricProperty", "ReflexiveProperty", "IrreflexiveProperty", "FunctionalProperty", "InverseFunctionalProperty"]));
+const OwlPropertyType = z.array(z.enum(["AnnotationProperty", "DataProperty", "ObjectProperty", "TransitiveProperty", "SymmetricProperty", "ReflexiveProperty", "IrreflexiveProperty", "FunctionalProperty", "InverseFunctionalProperty"]));
 const postAdmindatamodelProjectpropertyProperty_Body = z.object({ type: z.union([OwlPropertyType, z.object({ add: OwlPropertyType, del: OwlPropertyType }).partial().passthrough(), z.null()]), datatype: z.union([z.string(), z.null()]), class: z.union([Iri, z.null()]), name: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), description: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), languageIn: z.union([z.array(z.string()), z.null()]), uniqueLang: z.boolean(), inSet: z.union([z.array(z.union([z.string(), z.number(), z.number()])), z.null()]), minLength: z.union([z.number(), z.number(), z.null()]), maxLength: z.union([z.number(), z.number(), z.null()]), pattern: z.union([z.string(), z.null()]), minExclusive: z.union([z.number(), z.number(), z.null()]), minInclusive: z.union([z.number(), z.number(), z.null()]), maxExclusive: z.union([z.number(), z.number(), z.null()]), maxInclusive: z.union([z.number(), z.number(), z.null()]), lessThan: z.union([Iri, z.null()]), lessThanOrEquals: z.union([Iri, z.null()]), inverseOf: z.union([Iri, z.null()]), equivalentProperty: z.union([Iri, z.null()]) }).partial();
 const postAdmindatamodelProjectResource_Body = z.object({ closed: z.boolean(), superclass: z.union([z.array(z.string()), z.object({ add: z.array(z.string()), del: z.array(z.string()) }).partial().passthrough(), z.null()]), label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]) }).partial().passthrough();
 const putAdmindatamodelProjectResourceProperty_Body = Property.and(z.object({ maxCount: z.union([z.number(), z.number()]), minCount: z.union([z.number(), z.number()]), order: z.union([z.number(), z.number()]) }).partial());
@@ -284,7 +266,7 @@ const endpoints = makeApi([
 				schema: z.string()
 			},
 		],
-		response: z.object({ project: z.string(), externalOntologies: z.array(ExternalOntology), standaloneProperties: z.array(Property), resources: z.array(Resource) }).partial().passthrough(),
+		response: z.object({ project: z.string(), externalOntologies: z.array(ExternalOntology), assertionProperties: z.array(Property), resources: z.array(Resource) }).partial().passthrough(),
 		errors: [
 			{
 				status: 403,
@@ -815,7 +797,7 @@ const endpoints = makeApi([
 		method: "put",
 		path: "/admin/datamodel/:project/property/:property",
 		alias: "putAdmindatamodelProjectpropertyProperty",
-		description: `Viewfunction to add a standalone property to an existing datamodel. A JSON is expectet that has the following form. Either the class or the datatype must be given but not both at the same time. If the datatype is given, then all fields are optional. If the class is given, only subPropertyOf, name and desctiption are allowed.`,
+		description: `Viewfunction to add a annotation property to an existing datamodel. A JSON is expectet that has the following form. Either the class or the datatype must be given but not both at the same time. If the datatype is given, then all fields are optional. If the class is given, only subPropertyOf, name and desctiption are allowed.`,
 		requestFormat: "json",
 		parameters: [
 			{
@@ -862,7 +844,7 @@ const endpoints = makeApi([
 		method: "delete",
 		path: "/admin/datamodel/:project/property/:property",
 		alias: "deleteAdmindatamodelProjectpropertyProperty",
-		description: `Viewfunction that deletes an entire standalone property inside the projects datamodel`,
+		description: `Viewfunction that deletes an entire Annotation property inside the projects datamodel`,
 		requestFormat: "json",
 		parameters: [
 			{
@@ -904,7 +886,7 @@ const endpoints = makeApi([
 		method: "post",
 		path: "/admin/datamodel/:project/property/:property",
 		alias: "postAdmindatamodelProjectpropertyProperty",
-		description: `Viewfunction to modify a standalone property. A JSON is expected that has the following form. At least one field must be given. All fields are optional. At least one field must be given.`,
+		description: `Viewfunction to modify a annotation property. A JSON is expected that has the following form. At least one field must be given. All fields are optional. At least one field must be given.`,
 		requestFormat: "json",
 		parameters: [
 			{

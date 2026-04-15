@@ -33,7 +33,6 @@
 
 	let authinfo = $state<AuthInfo | null>($authInfoStore);
 
-	let exonto: ExternalOntology;
 	let onto_list = $state<string[]>([]);
 	let ontologies = $state<Record<string, ExternalOntology>>({});
 
@@ -46,7 +45,6 @@
 
 	let datamodel = $state<DatamodelClass | null>(null);
 
-
 	datamodelStore.subscribe(dm => {
 		datamodel = dm;
 	});
@@ -56,10 +54,9 @@
 	});
 
 	$effect(() => {
-		//const _ = $refreshPropertiesList;
 		let tmp_list = [];
 		let tmp_extontos: Record<string, ExternalOntology> = {};
-		//const datamodel = $datamodelStore;
+
 		if (!datamodel?.externalOntologies || datamodel.externalOntologies.length === 0) {
 			onto_list = [];
 			ontologies = {};
@@ -116,12 +113,12 @@
 			 description="EXTERNAL ONTOLOGIES..."
 			 action_elements={actions}>
 	<TableHeader>
-		{#each headers as header}
+		{#each headers as header (header)}
 			<TableColumnTitle>{header}</TableColumnTitle>
 		{/each}
 	</TableHeader>
 	<TableBody>
-		{#each onto_list as prefix}
+		{#each onto_list as prefix (prefix)}
 			<TableRow>
 				<TableItem>{ontologies[prefix]?.label?.get(langobj) || prefix }</TableItem>
 				<TableItem>{ontologies[prefix]?.prefix.toString()}</TableItem>

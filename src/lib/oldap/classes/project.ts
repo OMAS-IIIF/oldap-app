@@ -3,6 +3,7 @@ import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
 import { LangString } from '$lib/oldap/datatypes/langstring';
 import { OldapObject } from '$lib/oldap/classes/object';
 import { XsdDate } from '$lib/oldap/datatypes/xsd_date';
+import { XsdDateTime } from '$lib/oldap/datatypes/xsd_datetime';
 
 export class OldapProject extends OldapObject {
 	#projectIri: Iri;
@@ -14,9 +15,9 @@ export class OldapProject extends OldapObject {
 	projectEnd?: XsdDate;
 
 	constructor(creator: Iri,
-							created: Date,
+							created: XsdDateTime,
 							contributor: Iri,
-							modified: Date,
+							modified: XsdDateTime,
 							projectIri: Iri,
 							projectShortName: NCName,
 							namespaceIri: Iri,
@@ -49,9 +50,9 @@ export class OldapProject extends OldapObject {
 
 	static fromOldapJson(json: any): OldapProject {
 		const creator = new Iri(json.creator);
-		const created = new Date(json.created);
+		const created = new XsdDateTime(json.created);
 		const contributor = new Iri(json.contributor);
-		const modified = new Date(json.modified);
+		const modified = new XsdDateTime(json.modified);
 		const projectIri = new Iri(json.projectIri);
 		const projectShortName = new NCName(json.projectShortName);
 		const namespaceIri = new Iri(json.namespaceIri);
