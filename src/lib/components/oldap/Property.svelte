@@ -130,11 +130,14 @@ in relation with a resource class.
 	let prop = $state<PropertyClass>();
 
 	let propertyIri = $state('');
-	let prefix_is_open = $state(false);
-	let prefix = $state('');
-	let fragment = $state('');
+	let propiri_prefix_is_open = $state(false);
+	let propiri_prefix = $state('');
+	let propiri_fragment = $state('');
 	let all_prefixes = $state<string[]>([]);
 	let subPropertyOf = $state('');
+	let subprop_prefix_is_open = $state(false);
+	let subprop_prefix = $state('');
+	let subprop_fragment = $state('');
 	let proptype = $state<PropType>(PropType.LITERAL);
 	let datatype = $state<string|undefined>();
 	let toClass = $state<string|undefined>();
@@ -274,9 +277,11 @@ in relation with a resource class.
 		if (propiri === 'new') {
 			// initialize a new property to be added to reasonable values...
 
-			prefix = $projectStore?.projectShortName.toString() || '';
-			fragment = '';
+			propiri_prefix = $projectStore?.projectShortName.toString() || '';
+			propiri_fragment = '';
 			subPropertyOf = 'NONE';
+			supprop_prefix = all_prefixes[0]
+			subprop_fragment = '';
 			datatype = 'xsd:string';
 			toClass = undefined;
 			inverseOf = 'NONE';
@@ -292,8 +297,8 @@ in relation with a resource class.
 		}
 		else {
 		  const tmp = new QName(propiri);
-			prefix = tmp.prefix?.toString() || '';
-			fragment = tmp.fragment?.toString() || '';
+			propiri_prefix = tmp.prefix?.toString() || '';
+			propiri_fragment = tmp.fragment?.toString() || '';
 			if (resiri) {
 				const res = datamodel?.resources.find(r => r.iri.toString() === resiri);
 				if (res) {
@@ -303,6 +308,8 @@ in relation with a resource class.
 			else {
 				prop = datamodel?.annotationProperties.find(p => p.propertyIri.toString() === propiri);
 			}
+			subprop_prefix = prop?.subPropertyOf?.prefix?.toString() || '';
+			subprop_fragment = prop?.subPropertyOf?.fragment?.toString() || '';
 			subPropertyOf = prop?.subPropertyOf?.toString() || 'NONE';
 			datatype = prop?.datatype;
 			toClass = prop?.toClass?.toString();
@@ -429,7 +436,7 @@ in relation with a resource class.
 
 	const add_property = async () => {
 		confirmation_title = m.add_property();
-		confirmation_message = m.confirm_property_add({propiri: prefix + ":" + fragment});
+		confirmation_message = m.confirm_property_add({propiri: propiri_prefix + ":" + propiri_fragment});
 		const ok = await confirmation_dialog.open();
 		if (!ok) return;
 
@@ -520,7 +527,7 @@ in relation with a resource class.
 		else if (proptype === PropType.LIST) {
 			propertydata.class = toClass;
 		}
-		propertyIri = prefix + ':' + fragment;
+		propertyIri = propiri_prefix + ':' + propiri_fragment;
 		if (authinfo) {
 			if (resiri) {
 				// TODO: Implement adding a property to a resource!
@@ -557,7 +564,7 @@ in relation with a resource class.
 	const modify_property = async () => {
 		if (!prop) return;
 		confirmation_title = m.mod_property();
-		confirmation_message = m.confirm_prop_mod({property: prefix + ":" + fragment});
+		confirmation_message = m.confirm_prop_mod({property: propiri_prefix + ":" + propiri_fragment});
 		const ok = await confirmation_dialog.open();
 		if (!ok) return;
 
@@ -763,19 +770,35 @@ in relation with a resource class.
 The property IRI consists of a prefix (usually the project shortname) or a common prefix like "dcterms", "schema" etc.
 and the actual property id (which is a xs:NCName
 -->
-{#snippet prefixes()}
-	<DropdownButton bind:isOpen={prefix_is_open} buttonText={prefix} name="prefixselsel" disabled={propiri !== 'new' || add_standalone_prop} class="text-xs">
-		<DropdownMenu bind:isOpen={prefix_is_open} position="left" name="prefixselsel" id="prefixselsel_id">
+{#snippet propiri_prefixes()}
+	<DropdownButton bind:isOpen={propiri_prefix_is_open} buttonText={propiri_prefix} name="prefixselsel" disabled={propiri !== 'new' || add_standalone_prop} class="text-xs">
+		<DropdownMenu bind:isOpen={propiri_prefix_is_open} position="left" name="prefixselsel" id="prefixselsel_id">
 			{#each all_prefixes as p (p)}
-				<DropdownLinkItem bind:isOpen={prefix_is_open}
-													onclick={() => {prefix = p; prefix_is_open = false;}}
-													selected={p === prefix}>
+				<DropdownLinkItem bind:isOpen={propiri_prefix_is_open}
+													onclick={() => {propiri_prefix = p; propiri_prefix_is_open = false;}}
+													selected={p === propiri_prefix}>
 					{p}
 				</DropdownLinkItem>
 			{/each}
 		</DropdownMenu>
 	</DropdownButton>
 {/snippet}
+
+{#snippet subprop_prefixes()}
+	<DropdownButton bind:isOpen={subprop_prefix_is_open} buttonText={propiri_prefix} name="prefixselsel" disabled={propiri !== 'new' || add_standalone_prop} class="text-xs">
+		<DropdownMenu bind:isOpen={subprop_prefix_is_open} position="left" name="prefixselsel" id="prefixselsel_id">
+			{#each all_prefixes as p (p)}
+				<DropdownLinkItem bind:isOpen={propiri_prefix_is_open}
+				                  onclick={() => {propiri_prefix = p; propiri_prefix_is_open = false;}}
+				                  selected={p === propiri_prefix}>
+					{p}
+				</DropdownLinkItem>
+			{/each}
+		</DropdownMenu>
+	</DropdownButton>
+{/snippet}
+
+
 
 {#snippet proj_prefix()}
 	<span class="text-xs">{$projectStore?.projectShortName.toString() || ''}:</span>
@@ -786,11 +809,16 @@ and the actual property id (which is a xs:NCName
 	<form class="max-w-128 min-w-64">
 		<LabeledDivider>{m.basic_attr()}:</LabeledDivider>
 		<Textfield type='text' label={m.prop_iri()} name="fragment" id="fragment" placeholder="property ID" required={true}
-							 bind:value={fragment} pattern={ncname_pattern} disabled={propiri !== 'new' || add_standalone_prop}
-							 additional_snippet={resiri ? proj_prefix : prefixes}
+		           bind:value={propiri_fragment} pattern={ncname_pattern} disabled={propiri !== 'new' || add_standalone_prop}
+		           additional_snippet={resiri ? proj_prefix : propiri_prefixes}
 		/>
 		{#if !add_standalone_prop}
-			<DropdownField items={all_prop_list} id="allprops_id" name="allprops" label={m.subprop_of()} bind:selectedItem={subPropertyOf} />
+			<Textfield type='text' label={m.subprop_of()} name="subprop" id="subprop" placeholder="subPropertyOf fragment"
+								 required={false} bind:value={subprop_fragment} pattern={ncname_pattern}
+			           additional_snippet={subprop_prefixes}
+			/>
+
+			<!-- <DropdownField items={all_prop_list} id="allprops_id" name="allprops" label={m.subprop_of()} bind:selectedItem={subPropertyOf} /> -->
 			<PropTypeSelector
 				label={m.property()}
 				{projectid}
