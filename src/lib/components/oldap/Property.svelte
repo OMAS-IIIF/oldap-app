@@ -138,6 +138,7 @@ in relation with a resource class.
 	let subprop_prefix_is_open = $state(false);
 	let subprop_prefix = $state('');
 	let subprop_fragment = $state('');
+	let superprop_list = $state<string[]>([]);
 	let proptype = $state<PropType>(PropType.LITERAL);
 	let datatype = $state<string|undefined>();
 	let toClass = $state<string|undefined>();
@@ -199,7 +200,6 @@ in relation with a resource class.
 			topwin.scrollTo({ top: -1000, behavior: 'smooth' });
 		}
 	}
-
 	/**
 	 * Tests whether a given string is a valid regular expression pattern.
 	 *
@@ -280,7 +280,7 @@ in relation with a resource class.
 			propiri_prefix = $projectStore?.projectShortName.toString() || '';
 			propiri_fragment = '';
 			subPropertyOf = 'NONE';
-			supprop_prefix = all_prefixes[0]
+			subprop_prefix = all_prefixes[0]
 			subprop_fragment = '';
 			datatype = 'xsd:string';
 			toClass = undefined;
@@ -334,6 +334,7 @@ in relation with a resource class.
 		//
 		// if we select the property to be a sub-property, it must have the same data type as the ancestor property!
 		//
+
 		if (subPropertyOf === 'NONE') {
 			untrack(() => {
 				if (propiri === 'new') {
@@ -398,6 +399,19 @@ in relation with a resource class.
 				}
 			}
 		});
+	});
+
+	$effect(() => {
+		const tmp: string[] = [];
+		datamodel?.resources?.forEach(resource => {
+			resource?.properties?.forEach(prop => {
+				if (!prop.propertyIri.isEmpty && prop.propertyIri.fragment !== null) {
+					tmp.push(prop.propertyIri.fragment.toString());
+				}
+			});
+		});
+		superprop_list = tmp;
+		console.log("=========>", tmp);
 	});
 
 	/*
@@ -815,7 +829,7 @@ and the actual property id (which is a xs:NCName
 		{#if !add_standalone_prop}
 			<Textfield type='text' label={m.subprop_of()} name="subprop" id="subprop" placeholder="subPropertyOf fragment"
 								 required={false} bind:value={subprop_fragment} pattern={ncname_pattern}
-			           additional_snippet={subprop_prefixes}
+								 suggestions={ propiri_prefix === datamodel?.projectid.toString() ? superprop_list : undefined} additional_snippet={subprop_prefixes}
 			/>
 
 			<!-- <DropdownField items={all_prop_list} id="allprops_id" name="allprops" label={m.subprop_of()} bind:selectedItem={subPropertyOf} /> -->

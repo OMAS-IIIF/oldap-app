@@ -32,6 +32,9 @@
 		/** @param {string} [value] Optional bindable parameter which reflects the actual value */
 		value = $bindable(),
 
+		/** @param {string[]} [suggestions] Optional list of suggested values shown as browser dropdown suggestions */
+		suggestions = [],
+
 		/** @param {ValidateFunction} [validate] Optional validation function of the form `(value?: string) => [boolean, string]`. Defauklts to undefined */
 		validate = undefined,
 
@@ -58,6 +61,7 @@
 		type: string,
 		placeholder: string,
 		value?: string,
+		suggestions?: string[],
 		validate?: ValidateFunction,
 		readonly?: boolean,
 		disabled?: boolean,
@@ -74,6 +78,7 @@
 	let errortext = $state('');
 	let modified = $state(false);
 	let orig_value: string = value || '';
+	const datalist_id = $derived(suggestions.length > 0 ? `${id || name}-suggestions` : undefined);
 
 	$effect(() => {
 		if (!allowed_types.includes(type)) {
@@ -157,7 +162,15 @@
 		<div class="relative">
 			<input bind:this={thisele} type={type} name={name} id={id} onblur={loose_focus} oninput={() => value_changed(value)} {disabled} {required} {readonly}
 						 class="w-full py-1.0 oldap-textfield-common {disabled ? 'oldap-textfield-disabled' : (invalid ? 'oldap-textfield-invalid' : 'oldap-textfield-valid')} {userClass}"
-						 placeholder={placeholder} bind:value={value} aria-invalid="true" aria-describedby="{id}-error">
+						 placeholder={placeholder} bind:value={value} list={datalist_id} aria-invalid="true" aria-describedby="{id}-error">
+
+			{#if datalist_id}
+				<datalist id={datalist_id}>
+					{#each suggestions as suggestion (suggestion)}
+						<option value={suggestion}></option>
+					{/each}
+				</datalist>
+			{/if}
 
 			<!-- Error/Reset Icons -->
 			{#if invalid}

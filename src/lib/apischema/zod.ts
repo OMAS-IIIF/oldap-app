@@ -64,6 +64,27 @@ type ExternalOntology = Partial<{
         add: LangString;
         del: LangString;
     }> | null;
+    /**
+     * Resource classes that can be proposed a superclasses
+     */
+    proposedResourceClass: Array<string> | Partial<{
+        add: Array<string>;
+        del: Array<string>;
+    }> | null;
+    /**
+     * Property classes that can be proposed a super-properties (owl:DatatypeProperty)
+     */
+    proposedDatatypePropertyClass: Array<string> | Partial<{
+        add: Array<string>;
+        del: Array<string>;
+    }> | null;
+    /**
+     * Property classes that can be proposed a super-properties (owl:DatatypeProperty)
+     */
+    proposedObjectPropertyClass: Array<string> | Partial<{
+        add: Array<string>;
+        del: Array<string>;
+    }> | null;
 }>;;
 type LangString = /**
  * List of strings, each with an optional language tag (e.g., ["Lastname@en", "Nachname@de"])
@@ -115,11 +136,10 @@ const putAdminprojectProjectId_Body = z.object({ projectIri: z.string(), label: 
 const postAdminprojectProjectId_Body = z.object({ label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), projectStart: z.union([z.string(), z.null()]), projectEnd: z.union([z.string(), z.null()]) }).partial().passthrough();
 const putAdminroleDefinedByProjectRoleId_Body = z.object({ label: LangString, comment: LangString }).partial().passthrough();
 const postAdminroleDefinedByProjectRoleId_Body = z.object({ label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.unknown()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]) }).partial().passthrough();
-const ExternalOntology: z.ZodType<ExternalOntology> = z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), prefix: z.string(), namespaceIri: z.string(), label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]) }).partial();
+const ExternalOntology: z.ZodType<ExternalOntology> = z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), prefix: z.string(), namespaceIri: z.string(), label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), proposedResourceClass: z.union([z.array(z.string()), z.object({ add: z.array(z.string()), del: z.array(z.string()) }).partial().passthrough(), z.null()]), proposedDatatypePropertyClass: z.union([z.array(z.string()), z.object({ add: z.array(z.string()), del: z.array(z.string()) }).partial().passthrough(), z.null()]), proposedObjectPropertyClass: z.union([z.array(z.string()), z.object({ add: z.array(z.string()), del: z.array(z.string()) }).partial().passthrough(), z.null()]) }).partial();
 const Property: z.ZodType<Property> = z.union([z.unknown(), z.unknown()]);
 const Iri = z.string();
 const Resource: z.ZodType<Resource> = z.object({ iri: Iri.regex(/^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$/), creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), projectid: z.string(), label: LangString, superclass: z.array(z.string()), comment: LangString, closed: z.boolean(), properties: z.array(z.object({ iri: Iri.regex(/^[A-Za-z_][A-Za-z0-9._-]*:[A-Za-z_][A-Za-z0-9._-]*$/) }).partial().passthrough().and(Property)) }).partial().passthrough();
-const postAdmindatamodelProjectextontoPrefix_Body = z.object({ label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]) }).partial();
 const OwlPropertyType = z.array(z.enum(["AnnotationProperty", "DataProperty", "ObjectProperty", "TransitiveProperty", "SymmetricProperty", "ReflexiveProperty", "IrreflexiveProperty", "FunctionalProperty", "InverseFunctionalProperty"]));
 const postAdmindatamodelProjectpropertyProperty_Body = z.object({ type: z.union([OwlPropertyType, z.object({ add: OwlPropertyType, del: OwlPropertyType }).partial().passthrough(), z.null()]), datatype: z.union([z.string(), z.null()]), class: z.union([Iri, z.null()]), name: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), description: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), languageIn: z.union([z.array(z.string()), z.null()]), uniqueLang: z.boolean(), inSet: z.union([z.array(z.union([z.string(), z.number(), z.number()])), z.null()]), minLength: z.union([z.number(), z.number(), z.null()]), maxLength: z.union([z.number(), z.number(), z.null()]), pattern: z.union([z.string(), z.null()]), minExclusive: z.union([z.number(), z.number(), z.null()]), minInclusive: z.union([z.number(), z.number(), z.null()]), maxExclusive: z.union([z.number(), z.number(), z.null()]), maxInclusive: z.union([z.number(), z.number(), z.null()]), lessThan: z.union([Iri, z.null()]), lessThanOrEquals: z.union([Iri, z.null()]), inverseOf: z.union([Iri, z.null()]), equivalentProperty: z.union([Iri, z.null()]) }).partial();
 const postAdmindatamodelProjectResource_Body = z.object({ closed: z.boolean(), superclass: z.union([z.array(z.string()), z.object({ add: z.array(z.string()), del: z.array(z.string()) }).partial().passthrough(), z.null()]), label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]) }).partial().passthrough();
@@ -148,7 +168,6 @@ export const schemas = {
 	Property,
 	Iri,
 	Resource,
-	postAdmindatamodelProjectextontoPrefix_Body,
 	OwlPropertyType,
 	postAdmindatamodelProjectpropertyProperty_Body,
 	postAdmindatamodelProjectResource_Body,
@@ -756,7 +775,7 @@ const endpoints = makeApi([
 			{
 				name: "body",
 				type: "Body",
-				schema: postAdmindatamodelProjectextontoPrefix_Body
+				schema: ExternalOntology
 			},
 			{
 				name: "project",

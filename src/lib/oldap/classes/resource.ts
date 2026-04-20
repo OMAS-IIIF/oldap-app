@@ -65,11 +65,12 @@ export class ResourceClass extends OldapObject {
 		const comment = LangString.fromJson(json.comment);
 		const closed = json.closed;
 		const properties: PropertyClass[] = []; // TODO: maybe we must make "undefined" as default value...
+
 		if (json?.properties && json?.properties?.length > 0) {
-			for (const prop in json.properties) {
+			json.properties.forEach((prop: any) => {
 				const property = PropertyClass.fromOldapJson(prop);
 				properties.push(property);
-			}
+			});
 			properties.sort((a, b) => {
 				// beide haben keine order → gleichgestellt
 				if (a.order === undefined && b.order === undefined) return 0;

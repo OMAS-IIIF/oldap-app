@@ -20,7 +20,6 @@
 	import { userStore } from '$lib/stores/user';
 	import { OldapUser } from '$lib/oldap/classes/user';
 	import Togglefield from '$lib/components/basic_gui/inputs/Togglefield.svelte';
-	import { type HasProperty, ResourceClass } from '$lib/oldap/classes/resource';
 	import Table from '$lib/components/basic_gui/table/Table.svelte';
 	import DropdownButton from '$lib/components/basic_gui/dropdown/DropdownButton.svelte';
 	import DropdownMenu from '$lib/components/basic_gui/dropdown/DropdownMenu.svelte';
@@ -32,7 +31,7 @@
 	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
 	import { goto_page } from '$lib/helpers/goto_page';
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
-	import { Pencil, Trash2 } from '@lucide/svelte';
+	import { Pencil, Plus, Trash2 } from '@lucide/svelte';
 	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
 	import Property from '$lib/components/oldap/Property.svelte';
 	import { Iri } from '$lib/oldap/datatypes/xsd_iri';
@@ -49,6 +48,9 @@
 	import { refreshResourcesListNow } from '$lib/stores/refresh_resourceslist.svelte';
 	import { datamodelSharedStore } from '$lib/stores/datamodel_shared';
 	import LangstringfieldNew from '$lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
+	import type { PropertyClass } from '$lib/oldap/classes/property';
+	import type { ResourceClass } from '$lib/oldap/classes/resource';
+	import { RepeatableField } from '$lib/components/basic_gui/repeatable';
 
 	let { data } : PageProps = $props();
 
@@ -69,12 +71,10 @@
 	let prefix = $state('');
 	let fragment = $state('');
 	let all_prefixes = $state<string[]>([]);
-	let superclasses = $state<Set<string>>(new Set());
+	let superclasses = $state<string[]>([]);
 	let res = $state<ResourceClass | null>(null);
-	//let label_field: LangstringField;
 	let label = $state<LangString>(new LangString());
 	let orig_label: LangString = new LangString();
-	//let comment_field: LangstringField;
 	let comment = $state<LangString>(new LangString());
 	let orig_comment: LangString = new LangString();
 	let closed = $state(false);
@@ -143,7 +143,7 @@
 			// we are editing an existing resource
 			res = tmp_resources.find(r => r.iri.toString() === data.resiri) || null;
 			if (res) {
-				superclasses = res.superclass ? new Set<string>([...res.superclass].filter(s => s.toString() !== 'oldap:Thing').map(s => s.toString())) : new Set<string>();
+				superclasses = res.superclass ? [...res.superclass].filter(s => s.toString() !== 'oldap:Thing').map(s => s.toString()) : [];
 				label = res.label || new LangString();
 				orig_label = label.clone();
 				comment = res.comment || new LangString();
@@ -151,8 +151,8 @@
 				closed = res.closed || true;
 				orig_closed = closed;
 				const tmp = QName.createQName(res.iri.toString());
-				prefix = tmp.prefix.toString();
-				fragment = tmp.fragment.toString();
+				prefix = tmp.prefix?.toString() || '';
+				fragment = tmp.fragment?.toString() || '';
 			}
 		}
 		else {
@@ -160,45 +160,34 @@
 			prefix = $projectStore?.projectShortName.toString() || '';
 			fragment = '';
 		}
-		console.log($datamodelSharedStore?.standaloneProperties)
 	});
 
-	const propinfo_as_html = (prop: HasProperty) => {
-		let result = '<h1>' + prop.property.propertyIri.toString() + '</h1>';
+	const propinfo_as_html = (prop: PropertyClass) => {
+		let result = '<h1>' + prop.propertyIri.toString() + '</h1>';
 		result += '<table class="table-auto w-full">';
 		result += '<thead><tr><th>field</th><th> </th></th><th>value</th></tr></thead>';
 		result += '<tbody>';
 		for (const [key, value] of Object.entries(prop)) {
-			if (key === 'property') {
-				for (const [key2, value2] of Object.entries(value)) {
-					if (value2) {
-						if (value2 instanceof Iri) {
-							if (value2.iri === null) {
-								continue;
-							}
-							result += '<tr><td>' + key2 + '</td><td> : </td></td><td>' + value2.iri + '</td></tr>';
-						}
-						else if (value2 instanceof LangString) {
-							if (value2.length() == 0) {
-								continue;
-							}
-							result += '<tr><td>' + key2 + '</td><td> : </td><td>' + value2.get(langobj) + '</td></tr>';
-						}
-						else if (value2 instanceof Set) {
-							if (value2.size == 0) {
-								continue;
-							}
-							result += '<tr><td>' + key2 + '</td><td> : </td><td>' + [...value2].join(", ") + '</td></tr>';
-						}
-						else {
-							result += '<tr><td>' + key2 + '</td><td> : </td><td>' + value2.toString() + '</td></tr>';
-						}
-					}
+			if (value) {
+				if (value instanceof Iri) {
+					if (value.iri === null) continue;
+					result += '<tr><td>' + key + '</td><td> : </td></td><td>' + value.toString() + '</td></tr>';
 				}
-				continue
-			}
-			if (value && value !== null) {
-				result += '<tr><td>' + key + '</td><td> : </td><td>' + value + '</td></tr>';
+				else if (value instanceof QName) {
+					if (value.isEmpty) continue;
+					result += '<tr><td>' + key + '</td><td> : </td></td><td>' + value.toString() + '</td></tr>';
+				}
+				else if (value instanceof LangString) {
+					if (value.length() == 0) continue;
+					result += '<tr><td>' + key + '</td><td> : </td><td>' + value.get(langobj) + '</td></tr>';
+				}
+				else if (value instanceof Set) {
+					if (value.size == 0) continue;
+					result += '<tr><td>' + key + '</td><td> : </td><td>' + [...value].join(", ") + '</td></tr>';
+				}
+				else {
+					result += '<tr><td>' + key + '</td><td> : </td><td>' + value.toString() + '</td></tr>';
+				}
 			}
 		}
 		result += '</tbody>'
@@ -218,7 +207,7 @@
 			comment?: string[],
 			closed?: boolean
 		} = {
-			superclass: superclasses.size > 0 ?  Array.from(superclasses) : undefined,
+			superclass: superclasses.length > 0 ?  superclasses : undefined,
 			label: label ? label.toApi() : undefined,
 			comment: comment ? comment.toApi() : undefined,
 			closed: closed
@@ -306,7 +295,7 @@ and the actual property id (which is a xs:NCName
 {#snippet prefixes()}
 	<DropdownButton bind:isOpen={prefix_is_open} buttonText={prefix} name="prefixselsel" disabled={data.resiri !== 'new'} class="text-xs">
 		<DropdownMenu bind:isOpen={prefix_is_open} position="left" name="prefixselsel" id="prefixselsel_id">
-			{#each all_prefixes as p}
+			{#each all_prefixes as p (p)}
 				<DropdownLinkItem bind:isOpen={prefix_is_open}
 													onclick={() => {prefix = p; prefix_is_open = false;}}
 													selected={p === prefix}>
@@ -318,19 +307,11 @@ and the actual property id (which is a xs:NCName
 {/snippet}
 
 
-{#snippet actions()}
-	<div class="flex flex-row items-center justify-end gap-4">
-		<span>
-			<DropdownButton bind:isOpen={addPropOpen} buttonText="Add property" name="add-prop-menu" class="text-xs">
-				<DropdownMenu bind:isOpen={addPropOpen} name="add-prop-menu" id="add-prop-menu-id" size="" transparent={false}>
-					<DropdownButtonItem bind:isOpen={addPropOpen} onclick={() => {add_property('new')}}>NEW PROPERTY</DropdownButtonItem>
-					{#each [...(datamodel?.standaloneProperties || []), ...($datamodelSharedStore?.standaloneProperties || [])] as prop}
-						<DropdownButtonItem bind:isOpen={addPropOpen} onclick={() => {add_property(prop.propertyIri.toString())}}>{prop.propertyIri.toString()}</DropdownButtonItem>
-					{/each}
-				</DropdownMenu>
-			</DropdownButton>
-		</span>
-	</div>
+{#snippet add_action()}
+	<Button round={true} onclick={() => {add_property('new')}}>
+		<Plus size="16" strokeWidth="1" />
+	</Button>
+
 {/snippet}
 
 <div class="absolute top-0 left-0 right-0 bottom-0 overflow-auto flex flex-col justify-center items-center" bind:this={topwin}>
@@ -340,8 +321,27 @@ and the actual property id (which is a xs:NCName
 							 bind:value={fragment} pattern={ncname_pattern} disabled={data.resiri !== 'new'}
 							 additional_snippet={prefixes}
 		/>
-
-		<SelectMutiple label={m.superclasses()} selectables={all_res_set} bind:values={superclasses} disabled={data.resiri !== 'new'}/>
+		<!--<SelectMutiple label={m.superclasses()} selectables={all_res_set} bind:values={superclasses} disabled={data.resiri !== 'new'}/> -->
+		<RepeatableField
+			label={m.superclasses()}
+			bind:values={superclasses}
+			createEmpty={() => ''}>
+			{#snippet children(value, index, update)}
+				<div class="flex gap-2">
+				<select name="sc_prefixes" id="id_prefixes">
+					<option value="schema">schema</option>
+					<option value="resiri">resiri</option>
+					<option value="relationship">relationship</option>
+				</select>:
+				<input
+					class="py-1.0 oldap-textfield-common oldap-textfield-valid w-full"
+					{value}
+					placeholder={`Value ${index + 1}`}
+					oninput={(e) => update(index, e.currentTarget.value)}
+				/>
+				</div>
+			{/snippet}
+		</RepeatableField>
 		<LangstringfieldNew
 			label={m.label()}
 			name="label"
@@ -362,29 +362,27 @@ and the actual property id (which is a xs:NCName
 		<Togglefield label={m.is_closed()} id="closed_id" bind:toggle_state={closed} />
 
 		{#if data.resiri !== 'new'}
-			<Table label={m.properties()} description={m.properties_desc()} padding={false} action_elements={actions}>
+			<Table label={m.properties()} description={m.properties_desc()} padding={false} action_elements={add_action}>
 				<TableHeader>
 					<TableColumnTitle>PROPERTY</TableColumnTitle>
-					<TableColumnTitle>STANDALONE</TableColumnTitle>
 					<TableColumnTitle>{m.action()}</TableColumnTitle>
 				</TableHeader>
 				<TableBody>
-					{#each res?.hasProperty || [] as prop}
+					{#each res?.properties || [] as prop (prop.propertyIri)}
 						<TableRow>
 							<TableItem>
 								<ToolInfo content={propinfo_as_html(prop)}
 								>
-									{prop.property?.name?.get(langobj) || prop.property.propertyIri.toString()}
+									{prop?.name?.get(langobj) || prop.propertyIri.toString()}
 								</ToolInfo>
 							</TableItem>
-							<TableItem>{datamodel?.is_standalone_property(prop.property)  ? 'yes' : 'no'}</TableItem>
 							<TableItem>
 								<!--<Button round={true} onclick={() => modify_property(prop.property.propertyIri.toString())} disabled={datamodel?.is_standalone_property(prop.property)}>-->
-								<Button round={true} onclick={() => modify_property(prop.property.propertyIri.toString())}>
+								<Button round={true} onclick={() => modify_property(prop.propertyIri.toString())}>
 									<Pencil size="16" strokeWidth="1" />
 								</Button>
 
-								<Button round={true} onclick={() => remove_property(prop.property.propertyIri.toString())}>
+								<Button round={true} onclick={() => remove_property(prop.propertyIri.toString())}>
 									<Trash2 size="16" strokeWidth="1" />
 								</Button>
 

@@ -9,6 +9,9 @@ export class ExternalOntology extends OldapObject {
 	#namespaceIri: Iri;
 	label?: LangString;
 	comment?: LangString;
+	proposedResourceClass?: NCName[];
+	proposedDatatypePropertyClass?: NCName[];
+	proposedObjectPropertyClass?: NCName[];
 
 	constructor(
 		creator: Iri,
@@ -18,13 +21,19 @@ export class ExternalOntology extends OldapObject {
 		prefix: NCName,
 		namespaceIri: Iri,
 		label?: LangString,
-		comment?: LangString
+		comment?: LangString,
+		proposedResourceClass?: NCName[],
+		proposedDatatypePropertyClass?: NCName[],
+		proposedObjectPropertyClass?: NCName[]
 	) {
 		super(creator, created, contributor, modified);
 		this.#prefix = prefix;
 		this.#namespaceIri = namespaceIri;
 		this.label = label;
 		this.comment = comment;
+		this.proposedResourceClass = proposedResourceClass;
+		this.proposedDatatypePropertyClass = proposedDatatypePropertyClass;
+		this.proposedObjectPropertyClass = proposedObjectPropertyClass;
 	}
 
 	get prefix() {
@@ -44,6 +53,9 @@ export class ExternalOntology extends OldapObject {
 		const namespaceIri = new Iri(json.namespaceIri);
 		const label = LangString.fromJson(json?.label);
 		const comment = LangString.fromJson(json?.comment);
+		const proposedResourceClass = json?.proposedResourceClass ? json.proposedResourceClass.map(x => new NCName(x)) : undefined;
+		const proposedDatatypePropertyClass = json?.proposedDatatypePropertyClass ? json.proposedDatatypePropertyClass.map(x => new NCName(x)) : undefined;
+		const proposedObjectPropertyClass = json?.proposedObjectPropertyClass ? json.proposedObjectPropertyClass.map(x => new NCName(x)) : undefined;
 
 		return new ExternalOntology(
 			creator,
@@ -53,7 +65,10 @@ export class ExternalOntology extends OldapObject {
 			prefix,
 			namespaceIri,
 			label,
-			comment
+			comment,
+			proposedResourceClass,
+			proposedDatatypePropertyClass,
+			proposedObjectPropertyClass,
 		);
 	}
 }
