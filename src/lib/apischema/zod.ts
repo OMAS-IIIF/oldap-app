@@ -11,23 +11,50 @@ type DataPermission = /**
  * @enum DATA_RESTRICTED, DATA_VIEW, DATA_EXTEND, DATA_UPDATE, DATA_DELETE, DATA_PERMISSIONS
  */
 "DATA_RESTRICTED" | "DATA_VIEW" | "DATA_EXTEND" | "DATA_UPDATE" | "DATA_DELETE" | "DATA_PERMISSIONS" | null;;
+type UserAdditionalProperties = /**
+ * Mapping from user-class-specific property QName to scalar or array values.
+ */
+{};;
+type UserAdditionalPropertyValue = string | number | number | boolean | Array<string | number | number | boolean>;;
 type AttachedToRoleMap = /**
  * Map of role IRI/QName to permission value.
  */
 {};;
 type InstanceData = {
-    "rdf:type"?: Array<string> | undefined;
+    "rdf:type"?: /**
+     * Explicit resource type assertions from the project data graph. Reasoning-derived types are returned separately in `virtual:inferredTypes`.
+    
+     */
+    Array</**
+     * QName or IRI of an asserted resource class.
+     */
+    string> | undefined;
+    "virtual:inferredTypes"?: /**
+     * Resource types visible through repository reasoning but not explicitly asserted as `rdf:type` in the project data graph.
+    
+     */
+    Array</**
+     * QName or IRI of a reasoning-inferred resource class.
+     */
+    string> | undefined;
     "oldap:attachedToRole"?: AttachedToRoleMap | undefined;
     "oldap:createdBy": Array<string>;
     "oldap:lastModifiedBy": Array<string>;
     "oldap:creationDate": Array<string>;
     "oldap:lastModificationDate": Array<string>;
 } & {
-    [key: string]: ValueArray | AttachedToRoleMap;
+    [key: string]: ValueArray | string | number | number | boolean | null | AttachedToRoleMap;
 };;
 type ValueArray = Array<string | number | number | boolean | null>;;
 type user_get_body_200 = Partial<{
     userIri: string;
+    /**
+     * QName of the user class. Must be oldap:User or a subclass.
+     *
+     * @default "oldap:User"
+     */
+    userclass: string;
+    additionalProperties: UserAdditionalProperties;
     userId: string;
     familyName: string;
     givenName: string;
@@ -36,6 +63,50 @@ type user_get_body_200 = Partial<{
         permissions: Array<string>;
     }>>;
     hasRole: HasRoleMap;
+}>;;
+type new_user = {
+    givenName: string;
+    familyName: string;
+    /**
+     * @minLength 8
+     */
+    password: string;
+    isActive?: boolean | undefined;
+    userclass?: /**
+     * QName of the user class. Must be oldap:User or a subclass.
+     *
+     * @default "oldap:User"
+     */
+    string | undefined;
+    additionalProperties?: UserAdditionalProperties | undefined;
+    inProjects?: /**
+     * The project field is the QName of the project, the permissions is a sets of admin permissions.
+     */
+    Array<Partial<{
+        project: string;
+        permissions: Array</**
+         * @enum ADMIN_OLDAP, ADMIN_USERS, ADMIN_ROLES, ADMIN_RESOURCES, ADMIN_MODEL, ADMIN_CREATE
+         */
+        "ADMIN_OLDAP" | "ADMIN_USERS" | "ADMIN_ROLES" | "ADMIN_RESOURCES" | "ADMIN_MODEL" | "ADMIN_CREATE">;
+    }>> | undefined;
+    hasPermissions?: /**
+     * Lust be a list of QNames of the permission sets.
+     */
+    Array<string> | undefined;
+};;
+type mod_user = Partial<{
+    givenName: string;
+    familyName: string;
+    password: string;
+    additionalProperties: UserAdditionalProperties | Partial<{
+        add: UserAdditionalProperties;
+        del: Array<string>;
+    }> | null;
+    inProjects: Array<Partial<{
+        project: string;
+        permissions: Array<string>;
+    }>>;
+    hasPermissions: Array<string>;
 }>;;
 type ExternalOntology = Partial<{
     creator: string;
@@ -127,10 +198,12 @@ string;;
 type Property = unknown | unknown;;
 
 const Error = z.object({ message: z.string(), error: z.string().optional(), details: z.object({}).partial().passthrough().optional() }).passthrough();
+const UserAdditionalPropertyValue = z.union([z.string(), z.number(), z.number(), z.boolean(), z.array(z.union([z.string(), z.number(), z.number(), z.boolean()]))]);
+const UserAdditionalProperties: z.ZodType<UserAdditionalProperties> = z.record(UserAdditionalPropertyValue);
 const DataPermission = z.enum(["DATA_RESTRICTED", "DATA_VIEW", "DATA_EXTEND", "DATA_UPDATE", "DATA_DELETE", "DATA_PERMISSIONS"]);
 const HasRoleMap: z.ZodType<HasRoleMap> = z.record(z.union([DataPermission, z.null()]));
-const putAdminuserUserId_Body = z.object({ givenName: z.string(), familyName: z.string(), email: z.string().optional(), password: z.string().min(8), isActive: z.boolean().optional(), userIri: z.string().optional(), inProjects: z.array(z.object({ project: z.string(), permissions: z.array(z.enum(["ADMIN_OLDAP", "ADMIN_USERS", "ADMIN_ROLES", "ADMIN_RESOURCES", "ADMIN_MODEL", "ADMIN_CREATE", "ADMIN_LISTS"])) }).partial().passthrough()).optional(), hasRole: HasRoleMap.optional() }).passthrough();
-const postAdminuserUserId_Body = z.object({ userId: z.string(), givenName: z.string(), familyName: z.string(), email: z.string(), password: z.string(), isActive: z.boolean(), inProjects: z.union([z.object({ add: z.object({ project: z.string(), permissions: z.union([z.array(z.string()), z.null()]) }).partial().passthrough(), del: z.array(z.string()) }).partial().passthrough(), z.array(z.object({ project: z.string(), permissions: z.union([z.array(z.string()), z.object({ add: z.array(z.string()), del: z.array(z.string()) }).partial().passthrough(), z.null()]) }).partial().passthrough())]), hasRole: z.union([HasRoleMap, z.object({ add: HasRoleMap, del: z.array(z.string()) }).partial().passthrough(), z.null()]) }).partial().passthrough();
+const putAdminuserUserId_Body = z.object({ givenName: z.string(), familyName: z.string(), email: z.string().optional(), password: z.string().min(8), isActive: z.boolean().optional(), userclass: z.string().optional().default("oldap:User"), additionalProperties: UserAdditionalProperties.optional(), inProjects: z.array(z.object({ project: z.string(), permissions: z.array(z.enum(["ADMIN_OLDAP", "ADMIN_USERS", "ADMIN_ROLES", "ADMIN_RESOURCES", "ADMIN_MODEL", "ADMIN_CREATE", "ADMIN_LISTS"])) }).partial().passthrough()).optional(), hasRole: HasRoleMap.optional() }).passthrough();
+const postAdminuserUserId_Body = z.object({ userId: z.string(), givenName: z.string(), familyName: z.string(), email: z.string(), password: z.string(), isActive: z.boolean(), additionalProperties: z.union([UserAdditionalProperties, z.object({ add: UserAdditionalProperties, del: z.array(z.string()) }).partial().passthrough(), z.null()]), inProjects: z.union([z.object({ add: z.object({ project: z.string(), permissions: z.union([z.array(z.string()), z.null()]) }).partial().passthrough(), del: z.array(z.string()) }).partial().passthrough(), z.array(z.object({ project: z.string(), permissions: z.union([z.array(z.string()), z.object({ add: z.array(z.string()), del: z.array(z.string()) }).partial().passthrough(), z.null()]) }).partial().passthrough())]), hasRole: z.union([HasRoleMap, z.object({ add: HasRoleMap, del: z.array(z.string()) }).partial().passthrough(), z.null()]) }).partial().passthrough();
 const LangString = z.union([z.array(z.string()), z.string(), z.null()]);
 const putAdminprojectProjectId_Body = z.object({ projectIri: z.string(), label: LangString, comment: LangString, namespaceIri: z.string(), projectStart: z.string(), projectEnd: z.string() }).partial().passthrough();
 const postAdminprojectProjectId_Body = z.object({ label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), projectStart: z.union([z.string(), z.null()]), projectEnd: z.union([z.string(), z.null()]) }).partial().passthrough();
@@ -149,12 +222,17 @@ const putAdminhlistProjectHlistid_Body = z.object({ prefLabel: LangString, defin
 const postAdminhlistProjectHlistid_Body = z.object({ prefLabel: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), definition: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]) }).partial().passthrough();
 const putAdminhlistProjectHlistidNodeid_Body = z.union([z.object({ prefLabel: LangString, definition: LangString.optional(), position: z.enum(["belowOf", "leftOf", "rightOf"]), refnode: z.string() }).passthrough(), z.object({ prefLabel: LangString, definition: LangString.optional(), position: z.literal("root") }).passthrough()]);
 const postAdminhlistProjectHlistidNodeidmove_Body = z.union([z.object({ leftOf: z.string() }).passthrough(), z.object({ rightOf: z.string() }).passthrough(), z.object({ belowOf: z.string() }).passthrough()]);
+const SearchSortBy = z.union([z.string(), z.object({ property: z.string(), prop: z.string(), direction: z.enum(["asc", "desc"]).default("asc"), dir: z.enum(["asc", "desc"]), kind: z.enum(["auto", "value", "dating"]).default("auto") }).partial()]);
+const postDatasearchProject_Body = z.object({ q: z.string(), searchString: z.string(), ftField: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), ftProperty: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), resClass: z.string().regex(/^([A-Za-z_][A-Za-z0-9:_-]*:)?[A-Za-z_][A-Za-z0-9:_-]*$/), includeProperties: z.array(z.string()), filter: z.array(z.union([z.string(), z.object({}).partial().passthrough()])), ftfilter: z.array(z.union([z.string(), z.object({ field: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), fieldName: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), property: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), prop: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), query: z.string(), q: z.string() }).partial()])), hlfilter: z.array(z.union([z.string(), z.object({ logic: z.string(), property: z.string(), prop: z.string(), node: z.union([z.string(), z.object({ listId: z.string(), nodeId: z.string() })]) }).partial()])), countOnly: z.boolean(), sortBy: z.array(SearchSortBy), limit: z.number().int().default(100), offset: z.number().int().default(0) }).partial();
+const postDatasearchProjectclassResclass_Body = z.object({ q: z.string(), searchString: z.string(), ftField: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), ftProperty: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), includeProperties: z.array(z.string()), filter: z.array(z.union([z.string(), z.object({}).partial().passthrough()])), ftfilter: z.array(z.union([z.string(), z.object({ field: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), fieldName: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), property: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), prop: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), query: z.string(), q: z.string() }).partial()])), hlfilter: z.array(z.union([z.string(), z.object({ logic: z.string(), property: z.string(), prop: z.string(), node: z.union([z.string(), z.object({ listId: z.string(), nodeId: z.string() })]) }).partial()])), countOnly: z.boolean(), sortBy: z.array(SearchSortBy), limit: z.number().int().default(100), offset: z.number().int().default(0) }).partial();
 const ValueArray = z.array(z.union([z.string(), z.number(), z.number(), z.boolean(), z.null()]));
 const AttachedToRoleMap: z.ZodType<AttachedToRoleMap> = z.record(DataPermission);
-const InstanceData: z.ZodType<InstanceData> = z.record(z.union([ValueArray, AttachedToRoleMap]));
+const InstanceData: z.ZodType<InstanceData> = z.record(z.union([ValueArray, z.string(), z.number(), z.number(), z.boolean(), z.null(), AttachedToRoleMap]));
 
 export const schemas = {
 	Error,
+	UserAdditionalPropertyValue,
+	UserAdditionalProperties,
 	DataPermission,
 	HasRoleMap,
 	putAdminuserUserId_Body,
@@ -177,6 +255,9 @@ export const schemas = {
 	postAdminhlistProjectHlistid_Body,
 	putAdminhlistProjectHlistidNodeid_Body,
 	postAdminhlistProjectHlistidNodeidmove_Body,
+	SearchSortBy,
+	postDatasearchProject_Body,
+	postDatasearchProjectclassResclass_Body,
 	ValueArray,
 	AttachedToRoleMap,
 	InstanceData,
@@ -226,6 +307,13 @@ const endpoints = makeApi([
 		alias: "deleteAdminauthUserId",
 		description: `Logout from system`,
 		requestFormat: "json",
+		parameters: [
+			{
+				name: "userId",
+				type: "Path",
+				schema: z.string()
+			},
+		],
 		response: z.void(),
 		errors: [
 			{
@@ -2169,7 +2257,7 @@ The user must be authenticated with a Bearer token.
 				schema: z.string().max(32)
 			},
 		],
-		response: z.object({ message: z.string(), userIri: z.string() }).partial().passthrough(),
+		response: z.object({ message: z.string(), userId: z.string() }).partial().passthrough(),
 		errors: [
 			{
 				status: 400,
@@ -2238,7 +2326,7 @@ The user must be authenticated with a Bearer token.
 				schema: z.string()
 			},
 		],
-		response: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), userIri: z.string(), userId: z.string(), familyName: z.string(), givenName: z.string(), email: z.string(), is_active: z.boolean().optional(), in_projects: z.array(z.object({ project: z.string(), permissions: z.array(z.string()) }).partial().passthrough()).optional(), hasRole: HasRoleMap.optional() }).passthrough(),
+		response: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), userIri: z.string(), userclass: z.string().optional().default("oldap:User"), userId: z.string(), familyName: z.string(), givenName: z.string(), email: z.string(), isActive: z.boolean().optional(), inProjects: z.array(z.object({ project: z.string(), permissions: z.array(z.string()) }).partial().passthrough()).optional(), hasRole: HasRoleMap.optional(), additionalProperties: UserAdditionalProperties.optional() }).passthrough(),
 		errors: [
 			{
 				status: 400,
@@ -2312,7 +2400,7 @@ The user must be authenticated with a Bearer token.
 				schema: z.string()
 			},
 		],
-		response: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), userIri: z.string(), userId: z.string(), familyName: z.string(), givenName: z.string(), email: z.string(), is_active: z.boolean().optional(), in_projects: z.array(z.object({ project: z.string(), permissions: z.array(z.string()) }).partial().passthrough()).optional(), hasRole: HasRoleMap.optional() }).passthrough(),
+		response: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), userIri: z.string(), userclass: z.string().optional().default("oldap:User"), userId: z.string(), familyName: z.string(), givenName: z.string(), email: z.string(), isActive: z.boolean().optional(), inProjects: z.array(z.object({ project: z.string(), permissions: z.array(z.string()) }).partial().passthrough()).optional(), hasRole: HasRoleMap.optional(), additionalProperties: UserAdditionalProperties.optional() }).passthrough(),
 		errors: [
 			{
 				status: 400,
@@ -2554,7 +2642,7 @@ The user must be authenticated with a Bearer token.
 				schema: z.string()
 			},
 		],
-		response: z.object({ iri: z.string(), graph: z.unknown(), permval: z.unknown(), "oldap:createdBy": z.unknown(), "oldap:creationDate": z.unknown(), "oldap:lastModifiedBy": z.unknown(), "oldap:lastModificationDate": z.unknown(), "shared:assetId": z.unknown(), "shared:originalName": z.unknown(), "dcterms:type": z.unknown(), description: z.unknown(), "shared:originalMimeType": z.string(), "shared:serverUrl": z.string(), "shared:path": z.string(), "shared:protocol": z.enum(["iiif", "http", "custom"]) }).partial().passthrough(),
+		response: z.object({ iri: z.string(), graph: z.unknown(), permval: z.unknown(), "oldap:createdBy": z.unknown(), "oldap:creationDate": z.unknown(), "oldap:lastModifiedBy": z.unknown(), "oldap:lastModificationDate": z.unknown(), "shared:assetId": z.unknown(), "shared:originalName": z.unknown(), "dcterms:type": z.unknown(), "shared:originalMimeType": z.string(), "shared:serverUrl": z.string(), "shared:path": z.string(), "shared:protocol": z.enum(["iiif", "http", "custom"]) }).partial().passthrough(),
 		errors: [
 			{
 				status: 400,
@@ -2628,7 +2716,7 @@ The user must be authenticated with a Bearer token.
 			{
 				name: "resClass",
 				type: "Query",
-				schema: z.string()
+				schema: z.string().regex(/^([A-Za-z_][A-Za-z0-9._-]*:)?[A-Za-z_][A-Za-z0-9._-]*$/)
 			},
 			{
 				name: "includeProperties",
@@ -2648,15 +2736,15 @@ The user must be authenticated with a Bearer token.
 			{
 				name: "limit",
 				type: "Query",
-				schema: z.number().int().optional()
+				schema: z.number().int().optional().default(100)
 			},
 			{
 				name: "offset",
 				type: "Query",
-				schema: z.number().int().optional()
+				schema: z.number().int().optional().default(0)
 			},
 		],
-		response: z.union([z.array(z.record(z.array(z.string()))), z.object({ count: z.number().int().optional() })]),
+		response: z.union([z.array(z.record(z.union([z.string(), z.number(), z.boolean(), z.null(), ValueArray, z.object({}).partial().passthrough()]))), z.object({ count: z.number().int() })]),
 		errors: [
 			{
 				status: 400,
@@ -2681,16 +2769,100 @@ The user must be authenticated with a Bearer token.
 		]
 	},
 	{
+		method: "post",
+		path: "/data/search/:project",
+		alias: "postDatasearchProject",
+		description: `Structured instance search. Use this endpoint for property filters, Lucene ftfilter searches and hlfilter searches.`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "body",
+				type: "Body",
+				schema: postDatasearchProject_Body
+			},
+			{
+				name: "project",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.union([z.array(z.object({}).partial().passthrough()), z.object({ count: z.number().int() }).passthrough()]),
+		errors: [
+			{
+				status: 400,
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
+			},
+			{
+				status: 403,
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
+			},
+			{
+				status: 404,
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
+			},
+		]
+	},
+	{
+		method: "post",
+		path: "/data/search/:project/class/:resclass",
+		alias: "postDatasearchProjectclassResclass",
+		description: `Structured instance search restricted to the given resource class. Use this endpoint for property filters, Lucene ftfilter searches and hlfilter searches.`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "body",
+				type: "Body",
+				schema: postDatasearchProjectclassResclass_Body
+			},
+			{
+				name: "project",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "resclass",
+				type: "Path",
+				schema: z.string().regex(/^([A-Za-z_][A-Za-z0-9:_-]*:)?[A-Za-z_][A-Za-z0-9:_-]*$/)
+			},
+		],
+		response: z.union([z.array(z.object({}).partial().passthrough()), z.object({ count: z.number().int() }).passthrough()]),
+		errors: [
+			{
+				status: 400,
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
+			},
+			{
+				status: 403,
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
+			},
+			{
+				status: 404,
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
+			},
+		]
+	},
+	{
 		method: "get",
-		path: "/data/textsearch/:project",
-		alias: "getDatatextsearchProject",
-		description: `Get all hlist data from the hlist iri`,
+		path: "/data/text/:project",
+		alias: "getDatatextProject",
+		description: `Searches all available text fields for the given string via ResourceInstance.search_fulltext. The optional resource class can be provided as the resClass query parameter.`,
 		requestFormat: "json",
 		parameters: [
 			{
 				name: "project",
 				type: "Path",
 				schema: z.string()
+			},
+			{
+				name: "q",
+				type: "Query",
+				schema: z.string().optional()
 			},
 			{
 				name: "searchString",
@@ -2700,7 +2872,7 @@ The user must be authenticated with a Bearer token.
 			{
 				name: "resClass",
 				type: "Query",
-				schema: z.string().optional()
+				schema: z.string().regex(/^([A-Za-z_][A-Za-z0-9:_-]*:)?[A-Za-z_][A-Za-z0-9:_-]*$/).optional()
 			},
 			{
 				name: "countOnly",
@@ -2715,15 +2887,149 @@ The user must be authenticated with a Bearer token.
 			{
 				name: "limit",
 				type: "Query",
-				schema: z.number().int().optional()
+				schema: z.number().int().optional().default(100)
 			},
 			{
 				name: "offset",
 				type: "Query",
-				schema: z.number().int().optional()
+				schema: z.number().int().optional().default(0)
 			},
 		],
-		response: z.union([z.record(z.object({}).partial().passthrough()), z.object({ count: z.number().int() }).passthrough()]),
+		response: z.union([z.array(z.object({}).partial().passthrough()), z.object({ count: z.number().int() }).passthrough()]),
+		errors: [
+			{
+				status: 400,
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
+			},
+			{
+				status: 403,
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
+			},
+			{
+				status: 404,
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
+			},
+		]
+	},
+	{
+		method: "get",
+		path: "/data/text/:project/class/:resclass",
+		alias: "getDatatextProjectclassResclass",
+		description: `Searches all available text fields for the given string via ResourceInstance.search_fulltext, restricted to the given resource class.`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "project",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "resclass",
+				type: "Path",
+				schema: z.string().regex(/^([A-Za-z_][A-Za-z0-9:_-]*:)?[A-Za-z_][A-Za-z0-9:_-]*$/)
+			},
+			{
+				name: "q",
+				type: "Query",
+				schema: z.string().optional()
+			},
+			{
+				name: "searchString",
+				type: "Query",
+				schema: z.string().optional()
+			},
+			{
+				name: "countOnly",
+				type: "Query",
+				schema: z.boolean().optional()
+			},
+			{
+				name: "sortBy",
+				type: "Query",
+				schema: z.array(z.string()).optional()
+			},
+			{
+				name: "limit",
+				type: "Query",
+				schema: z.number().int().optional().default(100)
+			},
+			{
+				name: "offset",
+				type: "Query",
+				schema: z.number().int().optional().default(0)
+			},
+		],
+		response: z.union([z.array(z.object({}).partial().passthrough()), z.object({ count: z.number().int() }).passthrough()]),
+		errors: [
+			{
+				status: 400,
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
+			},
+			{
+				status: 403,
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
+			},
+			{
+				status: 404,
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
+			},
+		]
+	},
+	{
+		method: "get",
+		path: "/data/textsearch/:project",
+		alias: "getDatatextsearchProject",
+		description: `Compatibility endpoint for ResourceInstance.search_fulltext. Searches all available text fields for the given string and optionally restricts results to a resource class.`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "project",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "searchString",
+				type: "Query",
+				schema: z.string()
+			},
+			{
+				name: "q",
+				type: "Query",
+				schema: z.string().optional()
+			},
+			{
+				name: "resClass",
+				type: "Query",
+				schema: z.string().regex(/^([A-Za-z_][A-Za-z0-9:_-]*:)?[A-Za-z_][A-Za-z0-9:_-]*$/).optional()
+			},
+			{
+				name: "countOnly",
+				type: "Query",
+				schema: z.boolean().optional()
+			},
+			{
+				name: "sortBy",
+				type: "Query",
+				schema: z.array(z.enum(["PROPVAL", "CREATED", "LASTMOD", "PROPVAL|asc", "PROPVAL|desc", "CREATED|asc", "CREATED|desc", "LASTMOD|asc", "LASTMOD|desc"])).optional()
+			},
+			{
+				name: "limit",
+				type: "Query",
+				schema: z.number().int().optional().default(100)
+			},
+			{
+				name: "offset",
+				type: "Query",
+				schema: z.number().int().optional().default(0)
+			},
+		],
+		response: z.union([z.array(z.object({}).partial().passthrough()), z.object({ count: z.number().int() }).passthrough()]),
 		errors: [
 			{
 				status: 400,

@@ -52,6 +52,11 @@
 	import type { ResourceClass } from '$lib/oldap/classes/resource';
 	import { RepeatableField } from '$lib/components/basic_gui/repeatable';
 
+	type Superclass = {
+		prefix: string;
+		fragment: string;
+	};
+
 	let { data } : PageProps = $props();
 
 	let lang = $state(getLocale());
@@ -71,7 +76,7 @@
 	let prefix = $state('');
 	let fragment = $state('');
 	let all_prefixes = $state<string[]>([]);
-	let superclasses = $state<string[]>([]);
+	let superclasses = $state<Superclass[]>([]);
 	let res = $state<ResourceClass | null>(null);
 	let label = $state<LangString>(new LangString());
 	let orig_label: LangString = new LangString();
@@ -134,7 +139,7 @@
 		// and the prefixes of the external ontologies
 		//
 		all_prefixes = [$projectStore?.projectShortName.toString() || '']
-		all_prefixes = [...all_prefixes, 'skos', 'schema', 'dcterms']
+		all_prefixes = [...all_prefixes, 'oldap', 'shared']
 		let extontos: string[] = []
 		datamodel?.externalOntologies.forEach(x => extontos.push(x.prefix.toString()));
 		all_prefixes = [...all_prefixes, ...extontos];
@@ -325,19 +330,23 @@ and the actual property id (which is a xs:NCName
 		<RepeatableField
 			label={m.superclasses()}
 			bind:values={superclasses}
-			createEmpty={() => ''}>
-			{#snippet children(value, index, update)}
+			createEmpty={() => ({prefix: all_prefixes[0], fragment: ''})}>
+			{#snippet children(superclass, index, update)}
 				<div class="flex gap-2">
-				<select name="sc_prefixes" id="id_prefixes">
-					<option value="schema">schema</option>
-					<option value="resiri">resiri</option>
-					<option value="relationship">relationship</option>
+				<select
+					name="sc_prefixes"
+					id="id_prefixes"
+					value={superclass.prefix}
+					oninput={(e) => update(index, {...superclass, prefix: e.currentTarget.value})}>
+					{#each all_prefixes as p (p)}
+						<option value={p}>{p}</option>
+					{/each}
 				</select>:
 				<input
 					class="py-1.0 oldap-textfield-common oldap-textfield-valid w-full"
-					{value}
+					value={superclass.fragment}
 					placeholder={`Value ${index + 1}`}
-					oninput={(e) => update(index, e.currentTarget.value)}
+					oninput={(e) => update(index, {...superclass, fragment: e.currentTarget.value})}
 				/>
 				</div>
 			{/snippet}
