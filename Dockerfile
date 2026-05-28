@@ -1,23 +1,25 @@
+# syntax=docker/dockerfile:1
 # ---- Build stage ----
-FROM node:20-alpine AS build
+FROM --platform=$BUILDPLATFORM node:20-bookworm AS build
 
 # Install build tools
-RUN apk add --no-cache libc6-compat
+#RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
 # Copy dependency manifests first (better layer caching)
 COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
 
-# Install dependencies (adjust command to your package manager)
-RUN npm ci
-
 # Copy project source
 COPY . .
 
+# Install dependencies inside the target platform image.
+# This also removes any node_modules accidentally copied from the host build context.
+RUN npm ci
 
 # Build SvelteKit app
-RUN npm run build
+# Limit Go runtime parallelism for esbuild when building linux/amd64 under emulation.
+RUN GOMAXPROCS=1 npm run build
 
 
 # ---- Runtime stage ----
@@ -28,13 +30,13 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Copy only needed files from build stage
+# Install production dependencies for the target platform
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev
+
+# Copy only needed build artifacts from build stage
 COPY --from=build /app/build ./build
 COPY --from=build /app/static ./static
-
-# Copy dependencies
-COPY --from=build /app/package.json ./package.json
-COPY --from=build /app/node_modules ./node_modules
 
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
