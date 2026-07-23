@@ -5,6 +5,8 @@
 <script lang="ts">
 	import { getLocale, locales } from '$lib/paraglide/runtime';
 	import { authInfoStore } from '$lib/stores/authinfo';
+	import { authenticatedFetch } from '$lib/auth/authenticatedFetch';
+	import { authenticatedXhrUpload } from '$lib/auth/authenticatedXhr';
 	import { projectStore } from '$lib/stores/project';
 	import RadioButton from '$lib/components/basic_gui/buttons/RadioButton.svelte';
 	import { onMount, untrack } from 'svelte';
@@ -562,7 +564,7 @@
 
 			let result: any;
 			if (isSafariBrowser()) {
-				const resp = await fetch(url, {
+				const resp = await authenticatedFetch(url, {
 					method: 'POST',
 					headers: hdrs,
 					body: form
@@ -575,39 +577,27 @@
 				uploadProgress = 100;
 				result = payload;
 			} else {
-				result = await new Promise<any>((resolve, reject) => {
-					const xhr = new XMLHttpRequest();
-					xhr.open('POST', url);
-					Object.entries(hdrs).forEach(([k, v]) => xhr.setRequestHeader(k, v));
-
-					xhr.upload.onprogress = (evt) => {
+				const initialToken = token ?? '';
+				const xhrHeaders = { ...hdrs };
+				delete xhrHeaders.Authorization;
+				const xhr = await authenticatedXhrUpload(url, form, {
+					initialToken,
+					headers: xhrHeaders,
+					onProgress: (evt) => {
 						if (evt.lengthComputable) {
 							uploadProgress = Math.round((evt.loaded / evt.total) * 100);
 						}
-					};
-
-					xhr.onload = () => {
-						const ct = xhr.getResponseHeader('content-type') || '';
-						const ok = xhr.status >= 200 && xhr.status < 300;
-						try {
-							const payload = ct.includes('application/json')
-								? JSON.parse(xhr.responseText || '{}')
-								: xhr.responseText;
-							if (!ok) {
-								reject(new Error(formatUploadError(payload, `Upload failed (HTTP ${xhr.status})`)));
-								return;
-							}
-							resolve(payload);
-						} catch (e) {
-							if (!ok) reject(new Error(xhr.responseText || `Upload failed (HTTP ${xhr.status})`));
-							else resolve(xhr.responseText);
-						}
-					};
-
-					xhr.onerror = () => reject(new Error('Network error during upload.'));
-					xhr.onabort = () => reject(new Error('Upload aborted.'));
-					xhr.send(form);
+					},
+					networkErrorMessage: 'Network error during upload.',
+					abortErrorMessage: 'Upload aborted.'
 				});
+				const ct = xhr.getResponseHeader('content-type') || '';
+				const ok = xhr.status >= 200 && xhr.status < 300;
+				const payload = ct.includes('application/json')
+					? JSON.parse(xhr.responseText || '{}')
+					: xhr.responseText;
+				if (!ok) throw new Error(formatUploadError(payload, `Upload failed (HTTP ${xhr.status})`));
+				result = payload;
 			}
 
 			statusMsg = 'Upload complete.';

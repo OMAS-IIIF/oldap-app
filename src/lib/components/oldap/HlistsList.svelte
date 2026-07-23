@@ -3,10 +3,11 @@
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { api_config, api_get_config } from '$lib/helpers/api_config';
 	import { apiClient } from '$lib/shared/apiClient';
+	import { authenticatedFetch } from '$lib/auth/authenticatedFetch';
 	import { env as publicEnv } from '$env/dynamic/public';
 	import { OldapList } from '$lib/oldap/classes/list';
 	import * as m from '$lib/paraglide/messages';
-	import { Pencil, Trash2, Plus, Upload, Download } from '@lucide/svelte'
+	import { Pencil, Trash2, Plus, Upload, Download } from '@lucide/svelte';
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
 	import { goto_page } from '$lib/helpers/goto_page';
 	import Table from '$lib/components/basic_gui/table/Table.svelte';
@@ -27,10 +28,14 @@
 	import { refreshHlistsListNow, refreshHlistsList } from '$lib/stores/refresh_hlistslist.svelte';
 	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
 
-	let { table_height, project = null, hlistIsOpen = $bindable() }: {
-		table_height: number,
-		project: OldapProject | null,
-		hlistIsOpen?: boolean
+	let {
+		table_height,
+		project = null,
+		hlistIsOpen = $bindable()
+	}: {
+		table_height: number;
+		project: OldapProject | null;
+		hlistIsOpen?: boolean;
 	} = $props();
 
 	let lang = $state(getLocale());
@@ -46,7 +51,7 @@
 	let confirmation_title = $state('');
 	let confirmation_text = $state('');
 
-	authInfoStore.subscribe(data => {
+	authInfoStore.subscribe((data) => {
 		authinfo = data;
 	});
 
@@ -55,37 +60,41 @@
 		const _ = $refreshHlistsList;
 		hlist_list = [];
 		if (authinfo) {
-			let hlistsearch = api_get_config(authinfo, { project: project?.projectIri?.toString() || ''});
-			apiClient.getAdminhlistsearch(hlistsearch).then(hldata => {
+			let hlistsearch = api_get_config(authinfo, {
+				project: project?.projectIri?.toString() || ''
+			});
+			apiClient.getAdminhlistsearch(hlistsearch).then((hldata) => {
 				hlists = {} as Record<string, OldapList>;
-				const promises = hldata.map(hl => {
+				const promises = hldata.map((hl) => {
 					const config_hlistdata = api_get_config(authinfo as AuthInfo, { iri: hl });
 					return apiClient.getAdminhlistget(config_hlistdata);
 				});
-				Promise.all(promises).then((results) => {
-					results.forEach((hlistdata) => {
-						const hlist = OldapList.fromOldapJson(hlistdata, true);
-						const id = hlist.oldapListId.toString();
-						hlists[id] = hlist;
-						hlist_list.push(id);
-						const config_hlist_in_use = api_config(authinfo as AuthInfo, {
-							project: project?.projectIri?.toString() || '',
-							hlistid: id
+				Promise.all(promises)
+					.then((results) => {
+						results.forEach((hlistdata) => {
+							const hlist = OldapList.fromOldapJson(hlistdata, true);
+							const id = hlist.oldapListId.toString();
+							hlists[id] = hlist;
+							hlist_list.push(id);
+							const config_hlist_in_use = api_config(authinfo as AuthInfo, {
+								project: project?.projectIri?.toString() || '',
+								hlistid: id
+							});
+							apiClient.getAdminhlistProjectHlistidin_use(config_hlist_in_use).then((result2) => {
+								hlist_in_use[id] = result2['in_use'] === undefined ? false : result2['in_use'];
+							});
 						});
-						apiClient.getAdminhlistProjectHlistidin_use(config_hlist_in_use).then((result2) => {
-							hlist_in_use[id] = result2['in_use'] === undefined ? false : result2['in_use'];
-						});
+					})
+					.catch((err) => {
+						errorInfoStore.set(process_api_error(err as Error));
 					});
-				}).catch((err) => {
-					errorInfoStore.set(process_api_error(err as Error));
-				});
 			});
 		}
 	});
 
 	const delete_hlist = async (hlist_id: string) => {
 		confirmation_title = m.delete_hlist();
-		confirmation_text = m.delete_hlist_2({hlistid: hlist_id});
+		confirmation_text = m.delete_hlist_2({ hlistid: hlist_id });
 		const ok = await confirmation_dialog.open();
 		if (!ok) {
 			return;
@@ -94,89 +103,103 @@
 			project: project?.projectShortName?.toString() || '',
 			hlistid: hlist_id
 		});
-		apiClient.deleteAdminhlistProjectHlistid(undefined, config_hlistdata).then((result) => {
-			console.log(result);
-			refreshHlistsListNow();
-		}).catch((error) => {
-			errorInfoStore.set(process_api_error(error as Error));
-		})
-	}
+		apiClient
+			.deleteAdminhlistProjectHlistid(undefined, config_hlistdata)
+			.then((result) => {
+				console.log(result);
+				refreshHlistsListNow();
+			})
+			.catch((error) => {
+				errorInfoStore.set(process_api_error(error as Error));
+			});
+	};
 
-	let headers : string[] = $state([
-		m.hlist_id(),
-		m.pref_label(),
-		m.nodeclassiri(),
-		m.action()
-	]);
+	let headers: string[] = $state([m.hlist_id(), m.pref_label(), m.nodeclassiri(), m.action()]);
 
 	const do_upload: UploadFunc = (f: File) => {
 		const config_upload = api_config(authinfo as AuthInfo, {
 			project: project?.projectIri?.toString() || ''
 		});
-		apiClient.postAdminhlistProjectupload({yamlfile: f}, config_upload).then((result) => {
-			spinnerStore.set(null);
-			uploadIsOpen = false;
-			refreshHlistsListNow();
-			console.log(result);
-		}).catch((error) => {
-			console.log(error);
-			spinnerStore.set(null);
-			uploadIsOpen = false;
-			errorInfoStore.set(process_api_error(error as Error));
-		});
-	}
+		apiClient
+			.postAdminhlistProjectupload({ yamlfile: f }, config_upload)
+			.then((result) => {
+				spinnerStore.set(null);
+				uploadIsOpen = false;
+				refreshHlistsListNow();
+				console.log(result);
+			})
+			.catch((error) => {
+				console.log(error);
+				spinnerStore.set(null);
+				uploadIsOpen = false;
+				errorInfoStore.set(process_api_error(error as Error));
+			});
+	};
 
 	const do_download = async (hlist_id: string) => {
 		const config_download = api_config(authinfo as AuthInfo, {
 			project: project?.projectIri?.toString() || '',
 			hlistid: hlist_id
 		});
-		spinnerStore.set("Downloading...");
+		spinnerStore.set('Downloading...');
 
 		const baseUrl = publicEnv.PUBLIC_API_URL;
 		if (!baseUrl) throw new Error('PUBLIC_API_URL is not set');
 		const url = `${baseUrl}/admin/hlist/${encodeURIComponent(project?.projectIri?.toString() || '')}/${hlist_id}/download?format=YAML`; // or JSON
-		fetch(url, {
+		authenticatedFetch(url, {
 			method: config_download.method,
 			headers: config_download.headers
-		}).then(async (res) => {
-			const blob = await res.blob();
-			const contentDisposition = res.headers.get('Content-Disposition');
-			let filename = 'download.yaml';
-			if (contentDisposition?.includes('filename=')) {
-				filename = contentDisposition.split('filename=')[1].replaceAll('"', '');
-			}
-			const blobUrl = URL.createObjectURL(blob);
-			const a = document.createElement('a');
-			a.href = blobUrl;
-			a.download = filename;
-			document.body.appendChild(a);
-			a.click();
-			document.body.removeChild(a);
-			URL.revokeObjectURL(blobUrl);
+		})
+			.then(async (res) => {
+				const blob = await res.blob();
+				const contentDisposition = res.headers.get('Content-Disposition');
+				let filename = 'download.yaml';
+				if (contentDisposition?.includes('filename=')) {
+					filename = contentDisposition.split('filename=')[1].replaceAll('"', '');
+				}
+				const blobUrl = URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.href = blobUrl;
+				a.download = filename;
+				document.body.appendChild(a);
+				a.click();
+				document.body.removeChild(a);
+				URL.revokeObjectURL(blobUrl);
 
-			spinnerStore.set(null);
-
-		}).catch((error) => {
-			console.log(error);
-			spinnerStore.set(null);
-			errorInfoStore.set(process_api_error(error as Error));
-		});
-	}
+				spinnerStore.set(null);
+			})
+			.catch((error) => {
+				console.log(error);
+				spinnerStore.set(null);
+				errorInfoStore.set(process_api_error(error as Error));
+			});
+	};
 </script>
 
 {#snippet actions()}
 	<div class="flex flex-row items-center justify-end gap-4">
 		<span>
 			<Tooltip text={m.add_list()}>
-				<Button round={true} class="text-xs" onclick={() => { hlistIsOpen = true; }}>
+				<Button
+					round={true}
+					class="text-xs"
+					onclick={() => {
+						hlistIsOpen = true;
+					}}
+				>
 					<Plus size="16" strokeWidth="1" />
 				</Button>
 			</Tooltip>
 		</span>
 		<span>
 			<Tooltip text={m.upload_hlist()}>
-				<Button round={true} class="text-xs" onclick={() => {uploadIsOpen = true}}>
+				<Button
+					round={true}
+					class="text-xs"
+					onclick={() => {
+						uploadIsOpen = true;
+					}}
+				>
 					<Upload size="16" strokeWidth="1" />
 				</Button>
 			</Tooltip>
@@ -184,9 +207,12 @@
 	</div>
 {/snippet}
 
-<Table height={table_height} title={m.hlists()}
-			 description={m.hlists_descr()}
-			 action_elements={actions}>
+<Table
+	height={table_height}
+	title={m.hlists()}
+	description={m.hlists_descr()}
+	action_elements={actions}
+>
 	<TableHeader>
 		{#each headers as header}
 			<TableColumnTitle>{header}</TableColumnTitle>
@@ -199,14 +225,18 @@
 				<TableItem>{hlists[hlist_id]?.prefLabel?.get(langobj)}</TableItem>
 				<TableItem>{hlists[hlist_id]?.nodeClassIri.toString()}</TableItem>
 				<TableItem>
-					<div class="flex flex-row items-center justify-left gap-2">
+					<div class="justify-left flex flex-row items-center gap-2">
 						<Button round={true} onclick={goto_page(`/admin/hlist/${hlist_id}`)}>
 							<Pencil size="16" strokeWidth="1" />
 						</Button>
-						<Button round={true} onclick={() => delete_hlist(hlist_id)} disabled={hlist_in_use[hlist_id]}>
+						<Button
+							round={true}
+							onclick={() => delete_hlist(hlist_id)}
+							disabled={hlist_in_use[hlist_id]}
+						>
 							<Trash2 size="16" strokeWidth="1" />
 						</Button>
-						<Button round={true} onclick={() => do_download(hlist_id)} >
+						<Button round={true} onclick={() => do_download(hlist_id)}>
 							<Download size="16" strokeWidth="1" />
 						</Button>
 					</div>
@@ -222,6 +252,6 @@
 
 <DialogWin bind:isopen={uploadIsOpen} title={m.upload_hlist()}>
 	<form>
-		<FileUpload filexts={[".yaml", ".yml"]} {do_upload}/>
+		<FileUpload filexts={['.yaml', '.yml']} {do_upload} />
 	</form>
 </DialogWin>

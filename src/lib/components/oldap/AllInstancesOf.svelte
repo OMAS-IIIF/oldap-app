@@ -8,6 +8,7 @@
 	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
 	import type { OldapProject } from '$lib/oldap/classes/project';
 	import { authInfoStore } from '$lib/stores/authinfo';
+	import { authenticatedFetch } from '$lib/auth/authenticatedFetch';
 	import { datamodelStore } from '$lib/stores/datamodel';
 	import { projectStore } from '$lib/stores/project';
 	import DropdownField from '$lib/components/basic_gui/inputs/DropdownField.svelte';
@@ -23,6 +24,7 @@
 	import { MediaObject } from '$lib/oldap/classes/mediaobject';
 	import IIIFViewer from '$lib/components/basic_gui/IIIFViewer.svelte';
 	import VideoViewer from '$lib/components/basic_gui/VideoViewer.svelte';
+	import { mediaAssetDerivativeUrl, withMediaToken } from '$lib/shared/mediaUrl';
 
 	type Values = (string | number | boolean | null)[];
 	type Result = Record<string, Record<string, Values | MediaObject | null>>;
@@ -53,36 +55,24 @@
 		size: string,
 		angle: number,
 		format: string,
-		token?: string
+		mediaToken?: string
 	): string {
 		const url = new URL(
 			`${mediaurl}/iiif/3/${assetId}/${region}/${size}/${Math.round(angle)}/${format}`
 		);
-		if (token) {
-			url.searchParams.set('token', token);
-		}
-		return url.toString();
+		return withMediaToken(url.toString(), mediaToken);
 	}
 
-	function safe_videothumb_url(assetId: string, size: '128' | '256', token?: string): string {
-		const url = new URL(`${mediaurl}/asset/${assetId}/derived`);
-		if (size === '128') {
-			url.searchParams.set('derivative', 'thumb128.jpg');
-		} else {
-			url.searchParams.set('derivative', 'thumb256.jpg');
-		}
-		if (token) {
-			url.searchParams.set('token', token);
-		}
-		return url.toString();
+	function safe_videothumb_url(assetId: string, size: '128' | '256', mediaToken?: string): string {
+		return mediaAssetDerivativeUrl(
+			`${mediaurl}/asset/${assetId}/derived`,
+			`thumb${size}.jpg`,
+			mediaToken
+		);
 	}
 
-	function safe_video_url(assetId: string, token?: string): string {
-		const url = new URL(`${mediaurl}/asset/${assetId}`);
-		if (token) {
-			url.searchParams.set('token', token);
-		}
-		return url.toString();
+	function safe_video_url(assetId: string): string {
+		return new URL(`${mediaurl}/asset/${assetId}`).toString();
 	}
 
 	function isIsoDateTime(value: string): boolean {
@@ -121,39 +111,39 @@
 	}
 
 	function openIIIFViewer(iri: string) {
-		if (
-			!(
-				results[iri]['mo'] &&
-				results[iri]['mo'] instanceof MediaObject &&
-				results[iri]['mo']?.type == 'dcmitype:StillImage'
-			)
-		)
+		if (!(
+			results[iri]['mo'] &&
+			results[iri]['mo'] instanceof MediaObject &&
+			results[iri]['mo']?.type == 'dcmitype:StillImage'
+		))
 			return;
 		const base_url = `${mediaurl}/iiif/3/${results[iri]['mo']?.assetId}`;
-		const token = results[iri]['mo']?.token;
+		const mediaToken = results[iri]['mo']?.mediaToken;
 		createWindow(
 			results[iri]['mo'].originalName,
 			iiifViewer,
-			[base_url, token] as [string, string | undefined],
+			[base_url, mediaToken] as [string, string | undefined],
 			{ x: 50, y: 50, width: 600, height: 500 }
 		);
 	}
 
 	function openVideoViewer(iri: string) {
-		if (
-			!(
-				results[iri]['mo'] &&
-				results[iri]['mo'] instanceof MediaObject &&
-				results[iri]['mo']?.type == 'dcmitype:MovingImage'
-			)
-		)
+		if (!(
+			results[iri]['mo'] &&
+			results[iri]['mo'] instanceof MediaObject &&
+			results[iri]['mo']?.type == 'dcmitype:MovingImage'
+		))
 			return;
-		const video_url = safe_video_url(results[iri]['mo']?.assetId, results[iri]['mo']?.token);
-		const token = results[iri]['mo']?.token;
+		const video_url = safe_video_url(results[iri]['mo']?.assetId);
+		const mediaToken = results[iri]['mo']?.mediaToken;
 		createWindow(
 			results[iri]['mo'].originalName,
 			videoViewer,
-			[video_url, token, results[iri]['mo'].originalName] as [string, string | undefined, string],
+			[video_url, mediaToken, results[iri]['mo'].originalName] as [
+				string,
+				string | undefined,
+				string
+			],
 			{ x: 50, y: 50, width: 820, height: 620 }
 		);
 	}
@@ -178,12 +168,12 @@
 		console.log('delete instance', iri);
 	}
 
-	async function deleteAsset(url: string, token?: string): Promise<Response> {
-		return fetch(url, {
+	async function deleteAsset(url: string, accessToken?: string): Promise<Response> {
+		return authenticatedFetch(url, {
 			method: 'DELETE',
 			headers: {
 				'Content-Type': 'application/json',
-				...(token ? { Authorization: `Bearer ${token}` } : {})
+				...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
 			}
 		});
 	}
@@ -401,7 +391,7 @@
 												'!128,128',
 												0,
 												'default.jpg',
-												row['mo'].token
+												row['mo'].mediaToken
 											)}
 											<button
 												type="button"
@@ -415,7 +405,7 @@
 											{@const thumburl = safe_videothumb_url(
 												row['mo'].assetId,
 												'128',
-												row['mo'].token
+												row['mo'].mediaToken
 											)}
 											<button
 												type="button"
@@ -489,10 +479,10 @@
 	<InstanceEditor propertyIri={iri} />
 {/snippet}
 
-{#snippet iiifViewer(baseUrl: string, token: string | undefined)}
-	<IIIFViewer {baseUrl} {token}></IIIFViewer>
+{#snippet iiifViewer(baseUrl: string, mediaToken: string | undefined)}
+	<IIIFViewer {baseUrl} {mediaToken}></IIIFViewer>
 {/snippet}
 
-{#snippet videoViewer(src: string, token: string | undefined, title: string)}
-	<VideoViewer {src} {token} {title}></VideoViewer>
+{#snippet videoViewer(src: string, mediaToken: string | undefined, title: string)}
+	<VideoViewer {src} {mediaToken} {title}></VideoViewer>
 {/snippet}

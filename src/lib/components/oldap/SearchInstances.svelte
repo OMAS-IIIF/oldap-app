@@ -9,6 +9,7 @@
 	import type { OldapUser } from '$lib/oldap/classes/user';
 	import type { OldapProject } from '$lib/oldap/classes/project';
 	import { authInfoStore } from '$lib/stores/authinfo';
+	import { authenticatedFetch } from '$lib/auth/authenticatedFetch';
 	import { userStore } from '$lib/stores/user';
 	import { datamodelStore } from '$lib/stores/datamodel';
 	import { projectStore } from '$lib/stores/project';
@@ -24,8 +25,9 @@
 	import { env as publicEnv } from '$env/dynamic/public';
 	import { MediaObject } from '$lib/oldap/classes/mediaobject';
 	import IIIFViewer from '$lib/components/basic_gui/IIIFViewer.svelte';
+	import { withMediaToken } from '$lib/shared/mediaUrl';
 
-	type Values = (string|number|boolean|null)[];
+	type Values = (string | number | boolean | null)[];
 	type Result = Record<string, Record<string, Values | MediaObject | null>>;
 
 	let lang = $state(getLocale());
@@ -36,7 +38,7 @@
 	let user = $state<OldapUser | null>(null);
 	let project = $state<OldapProject | null>(null);
 
-	const languages = Array.from(locales).map(lang => convertToLanguage(lang));
+	const languages = Array.from(locales).map((lang) => convertToLanguage(lang));
 
 	let res_list = $state<string[]>([]);
 	//let resources = $state<Record<string, ResourceClass>>({});
@@ -44,7 +46,7 @@
 
 	let selres = $state<string>('');
 
-	let all_props = $state<Set<{key: string, label?: string}>>();
+	let all_props = $state<Set<{ key: string; label?: string }>>();
 	let selprops = $state<Set<string>>(new Set());
 	let count = $state(0);
 	let results = $state<Result>({});
@@ -53,17 +55,18 @@
 
 	const mediaurl = publicEnv.PUBLIC_MEDIASERVER_URL;
 
-	function safe_iiif_url(assetId: string,
-												 region: string,
-												 size: string,
-												 angle: number,
-												 format: string,
-												 token?: string): string {
-		const url = new URL(`${mediaurl}/iiif/3/${assetId}/${region}/${size}/${Math.round(angle)}/${format}`);
-		if (token) {
-			url.searchParams.set("token", token);
-		}
-		return url.toString();
+	function safe_iiif_url(
+		assetId: string,
+		region: string,
+		size: string,
+		angle: number,
+		format: string,
+		mediaToken?: string
+	): string {
+		const url = new URL(
+			`${mediaurl}/iiif/3/${assetId}/${region}/${size}/${Math.round(angle)}/${format}`
+		);
+		return withMediaToken(url.toString(), mediaToken);
 	}
 
 	function formatCellValue(v: string | number | boolean | null): string {
@@ -81,14 +84,24 @@
 	}
 
 	function openEditor(iri: string) {
-		createWindow('Edit Instance', editInstance, [iri] as [string], { x: 220, y: 80, width: 400, height: 600 });
+		createWindow('Edit Instance', editInstance, [iri] as [string], {
+			x: 220,
+			y: 80,
+			width: 400,
+			height: 600
+		});
 	}
 
 	function openIIIFViewer(iri: string) {
 		if (!results[iri]['mo'] || !(results[iri]['mo'] instanceof MediaObject)) return;
 		const base_url = `${mediaurl}/iiif/3/${results[iri]['mo']?.assetId}`;
-		const token = results[iri]['mo']?.token;
-		createWindow(results[iri]['mo'].originalName, iiifViewer, [base_url, token] as [string, string | undefined], { x: 50, y: 50, width: 600, height: 500 });
+		const mediaToken = results[iri]['mo']?.mediaToken;
+		createWindow(
+			results[iri]['mo'].originalName,
+			iiifViewer,
+			[base_url, mediaToken] as [string, string | undefined],
+			{ x: 50, y: 50, width: 600, height: 500 }
+		);
 	}
 
 	function deleteInstance(iri: string) {
@@ -98,22 +111,25 @@
 		const delete_data = api_config(authinfo || new AuthInfo('unknown', ''), {
 			project: encodeURIComponent(project?.projectShortName?.toString() || ''),
 			instiri: encodeURIComponent(iri)
-		})
-		apiClient.deleteDataProjectInstiri(undefined, delete_data).then(() => {
-			delete results[iri];
-			window.alert('Instance deleted successfully');
-		}).catch(err => {
-			window.alert('Error deleting instance: ' + err.message);
 		});
+		apiClient
+			.deleteDataProjectInstiri(undefined, delete_data)
+			.then(() => {
+				delete results[iri];
+				window.alert('Instance deleted successfully');
+			})
+			.catch((err) => {
+				window.alert('Error deleting instance: ' + err.message);
+			});
 		console.log('delete instance', iri);
 	}
 
-	async function deleteAsset(url: string, token?: string): Promise<Response> {
-		return fetch(url, {
+	async function deleteAsset(url: string, accessToken?: string): Promise<Response> {
+		return authenticatedFetch(url, {
 			method: 'DELETE',
 			headers: {
 				'Content-Type': 'application/json',
-				...(token ? { Authorization: `Bearer ${token}` } : {})
+				...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
 			}
 		});
 	}
@@ -129,12 +145,14 @@
 			const assetId = mo['mo'].assetId;
 			const token = authinfo?.token || '';
 			const url = `${publicEnv.PUBLIC_MEDIASERVER_URL}/upload/${assetId}`;
-			deleteAsset(url, token).then(() => {
-				delete results[iri];
-				window.alert('MediaObject deleted successfully');
-			}).catch(err => {
-				window.alert('Error deleting instance: ' + err.message);
-			});
+			deleteAsset(url, token)
+				.then(() => {
+					delete results[iri];
+					window.alert('MediaObject deleted successfully');
+				})
+				.catch((err) => {
+					window.alert('Error deleting instance: ' + err.message);
+				});
 		}
 	}
 
@@ -143,13 +161,17 @@
 		if (!project) return;
 		if (searchstring) {
 			// TODO!!!!!!!!!!!!
-			const searchstring_count_config = api_config(authinfo,{
-				project: encodeURIComponent(project?.projectShortName?.toString())
-			}, {
-				resclass: selres,
-				searchString: encodeURIComponent(searchstring),
-				countOnly: true
-			});
+			const searchstring_count_config = api_config(
+				authinfo,
+				{
+					project: encodeURIComponent(project?.projectShortName?.toString())
+				},
+				{
+					resclass: selres,
+					searchString: encodeURIComponent(searchstring),
+					countOnly: true
+				}
+			);
 			const count_res = await apiClient.getDatatextsearchProject(searchstring_count_config);
 			if (count_res && !Array.isArray(count_res) && 'count' in count_res) {
 				count = Number(count_res.count) || 0;
@@ -157,20 +179,24 @@
 				count = 0;
 			}
 			console.log('search count', count, count_res);
-			const searchstring_config = api_config(authinfo,{
-				project: encodeURIComponent(project?.projectShortName?.toString())
-			}, {
-				resclass: selres,
-				searchString: encodeURIComponent(searchstring),
-			});
+			const searchstring_config = api_config(
+				authinfo,
+				{
+					project: encodeURIComponent(project?.projectShortName?.toString())
+				},
+				{
+					resclass: selres,
+					searchString: encodeURIComponent(searchstring)
+				}
+			);
 			const data = await apiClient.getDatatextsearchProject(searchstring_config);
 			console.log(data);
 			results = {};
 			for (const [iri, d] of Object.entries(data)) {
-				results[iri] = {}
+				results[iri] = {};
 				for (const [key, val] of Object.entries(d as Record<string, string>)) {
 					if (key === 'owl:Class') continue;
-					results[iri][key] = [val]
+					results[iri][key] = [val];
 				}
 			}
 		} else {
@@ -180,12 +206,16 @@
 				//   - the count in order to know how many results we have to show.
 				//   - then the actual results (as Iri's.
 				//
-				const allofclass_count_config = api_config(authinfo,{
-					project: encodeURIComponent(project?.projectShortName?.toString())
-				}, {
-					resClass: selres,
-					countOnly: true
-				});
+				const allofclass_count_config = api_config(
+					authinfo,
+					{
+						project: encodeURIComponent(project?.projectShortName?.toString())
+					},
+					{
+						resClass: selres,
+						countOnly: true
+					}
+				);
 				const count_res = await apiClient.getDataofclassProject(allofclass_count_config);
 				if (count_res && !Array.isArray(count_res) && 'count' in count_res) {
 					count = Number(count_res.count) || 0;
@@ -217,15 +247,14 @@
 					const iri = d['iri'][0];
 					let mediaobject: MediaObject | null = null;
 					if (is_mediaobject(datamodel?.resources.find((r) => r.iri.toString() === selres))) {
-						const get_mo_config = api_config(authinfo || new AuthInfo('unknown', ''),{
+						const get_mo_config = api_config(authinfo || new AuthInfo('unknown', ''), {
 							iri: encodeURIComponent(iri)
 						});
 						try {
 							const tmp = await apiClient.getDatamediaobjectiriIri(get_mo_config);
 							console.log('mediaobject', tmp);
 							mediaobject = MediaObject.fromOldapJson(tmp);
-						}
-						catch (err) {
+						} catch (err) {
 							console.error(`Could not load mediaobject details for "${iri}"`, err);
 							mediaobject = null;
 						}
@@ -241,17 +270,15 @@
 						}
 						if (is_langstring) {
 							results[iri][prop] = [LangString.fromStringArray(values).get(langobj)];
-						}
-						else {
-							results[iri][prop] = values.map(v => v.toString());
+						} else {
+							results[iri][prop] = values.map((v) => v.toString());
 						}
 						if (mediaobject) {
 							results[iri]['mo'] = mediaobject;
 						}
 					}
 				}
-			}
-			catch (err) {
+			} catch (err) {
 				console.error('Error loading instances:', err);
 			}
 		}
@@ -260,21 +287,30 @@
 	//
 	// setup all necessary stores...
 	//
-	authInfoStore.subscribe(ai => {authinfo = ai as AuthInfo | null});
-	userStore.subscribe((u) => { user = u as OldapUser | null});
-	datamodelStore.subscribe(data => { datamodel = data });
-	projectStore.subscribe(proj => { project = proj });
+	authInfoStore.subscribe((ai) => {
+		authinfo = ai as AuthInfo | null;
+	});
+	userStore.subscribe((u) => {
+		user = u as OldapUser | null;
+	});
+	datamodelStore.subscribe((data) => {
+		datamodel = data;
+	});
+	projectStore.subscribe((proj) => {
+		project = proj;
+	});
 
 	$effect(() => {
-		const tmp_res = datamodel?.resources.filter(x => {
-			const gaga = x?.superclass ? [...x.superclass].map(s => s.toString()) : [];
-			return !gaga.includes('oldap:OldapListNode');
-		}) || [];
+		const tmp_res =
+			datamodel?.resources.filter((x) => {
+				const gaga = x?.superclass ? [...x.superclass].map((s) => s.toString()) : [];
+				return !gaga.includes('oldap:OldapListNode');
+			}) || [];
 		let tmp_list = [];
 		for (const res of tmp_res) {
 			tmp_list.push(res.iri.toString() || 'XXXX');
 		}
-		res_list = tmp_list
+		res_list = tmp_list;
 		selected_resource = tmp_list[0];
 	});
 
@@ -284,12 +320,16 @@
 	});
 
 	$effect(() => {
-		let resdata = datamodel?.resources.find(x => x.iri.toString() === selres);
+		let resdata = datamodel?.resources.find((x) => x.iri.toString() === selres);
 		if (resdata?.hasProperty) {
-			all_props = new Set(resdata.hasProperty.sort((a, b) => (a.order || 9999) - (b.order || 9999)).map((hp) => ({
-				key: hp.property.propertyIri.toString(),
-				label: hp.property.name?.get(langobj)
-			})));
+			all_props = new Set(
+				resdata.hasProperty
+					.sort((a, b) => (a.order || 9999) - (b.order || 9999))
+					.map((hp) => ({
+						key: hp.property.propertyIri.toString(),
+						label: hp.property.name?.get(langobj)
+					}))
+			);
 		}
 	});
 </script>
@@ -305,7 +345,9 @@
 					<tr class="border-b">
 						<th class="px-2 py-2 text-left font-medium">Preview</th>
 						{#each Array.from(selprops) as prop (prop)}
-							<th class="px-2 py-2 text-left font-medium">{Array.from(all_props || []).find(x => x.key === prop)?.label || prop}</th>
+							<th class="px-2 py-2 text-left font-medium"
+								>{Array.from(all_props || []).find((x) => x.key === prop)?.label || prop}</th
+							>
 						{/each}
 						<th class="px-2 py-2 text-left font-medium">Actions</th>
 					</tr>
@@ -314,12 +356,22 @@
 				<tbody>
 					{#each Object.entries(results) as [iri, row] (iri)}
 						<tr class="border-b align-top">
-
-							{#if (row['mo'] && row['mo'] instanceof MediaObject)}
-								{@const iiifurl = safe_iiif_url(row['mo'].assetId, 'full', '!128,128', 0, 'default.jpg', row['mo'].token)}
+							{#if row['mo'] && row['mo'] instanceof MediaObject}
+								{@const iiifurl = safe_iiif_url(
+									row['mo'].assetId,
+									'full',
+									'!128,128',
+									0,
+									'default.jpg',
+									row['mo'].mediaToken
+								)}
 								<td class="px-2 py-2 align-top">
-									<button type="button" class="rounded p-1 hover:bg-gray-100" onclick={() => openIIIFViewer(iri)}>
-									<img src={iiifurl} alt="Preview" class="w-24 h-24 object-cover" />
+									<button
+										type="button"
+										class="rounded p-1 hover:bg-gray-100"
+										onclick={() => openIIIFViewer(iri)}
+									>
+										<img src={iiifurl} alt="Preview" class="h-24 w-24 object-cover" />
 										{row['mo'].originalName}
 									</button>
 								</td>
@@ -330,7 +382,7 @@
 								<td class="px-2 py-2 align-top">
 									<div class="flex flex-col gap-1">
 										{#each cellValues(row, prop) as v (formatCellValue(v))}
-											<div class="whitespace-pre-wrap break-words">{formatCellValue(v)}</div>
+											<div class="break-words whitespace-pre-wrap">{formatCellValue(v)}</div>
 										{/each}
 									</div>
 								</td>
@@ -346,12 +398,14 @@
 									>
 										<Pencil size={16} />
 									</button>
-									{#if (row['mo'] && row['mo'] instanceof MediaObject)}
+									{#if row['mo'] && row['mo'] instanceof MediaObject}
 										{@const may_delete = row['mo'].permval >= 5}
 										{row['mo'].permval}
 										<button
 											type="button"
-											class="rounded p-1 hover:bg-gray-100 {may_delete ? '' : 'opacity-50 cursor-not-allowed'}"
+											class="rounded p-1 hover:bg-gray-100 {may_delete
+												? ''
+												: 'cursor-not-allowed opacity-50'}"
 											title="Delete"
 											onclick={() => deleteMediaObject(iri)}
 											disabled={!may_delete}
@@ -382,6 +436,6 @@
 	<InstanceEditor propertyIri={iri} />
 {/snippet}
 
-{#snippet iiifViewer(baseUrl: string, token: string | undefined)}
-	<IIIFViewer baseUrl={baseUrl} token={token}></IIIFViewer>
+{#snippet iiifViewer(baseUrl: string, mediaToken: string | undefined)}
+	<IIIFViewer {baseUrl} {mediaToken}></IIIFViewer>
 {/snippet}

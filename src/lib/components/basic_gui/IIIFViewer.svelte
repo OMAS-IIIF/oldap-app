@@ -4,12 +4,13 @@
 
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
+	import { withMediaToken } from '$lib/shared/mediaUrl';
 
 	type IIIFViewerProps = {
 		/** IIIF image base URL, e.g. https://media.oldap.org/iiif/3/imageid */
 		baseUrl: string;
-		/** Optional auth token appended as query param to info.json */
-		token?: string | null;
+		/** Optional media capability JWT appended to protected IIIF requests. */
+		mediaToken?: string | null;
 		/** Viewer width (number => px, or CSS string like "100%" / "40rem") */
 		width?: string | number;
 		/** Viewer height (number => px, or CSS string like "100%" / "30rem") */
@@ -24,7 +25,7 @@
 
 	let {
 		baseUrl,
-		token,
+		mediaToken,
 		width = '100%',
 		height = '100%',
 		prefixUrl = 'https://openseadragon.github.io/openseadragon/images/',
@@ -33,18 +34,16 @@
 	}: IIIFViewerProps = $props();
 
 	let containerEl: HTMLDivElement | null = null;
-	let viewer:
-		| {
-				destroy: () => void;
-				viewport?: {
-					zoomBy?: (factor: number) => void;
-					applyConstraints?: () => void;
-					goHome?: () => void;
-					getRotation?: () => number;
-					setRotation?: (degrees: number) => void;
-				};
-		  }
-		| null = null;
+	let viewer: {
+		destroy: () => void;
+		viewport?: {
+			zoomBy?: (factor: number) => void;
+			applyConstraints?: () => void;
+			goHome?: () => void;
+			getRotation?: () => number;
+			setRotation?: (degrees: number) => void;
+		};
+	} | null = null;
 	let initError = $state<string | null>(null);
 	let lastInitKey: string | null = null;
 
@@ -52,18 +51,19 @@
 		return typeof value === 'number' ? `${value}px` : value;
 	}
 
-	function createInfoJsonUrl(inputBaseUrl: string, tkn?: string | null): string {
+	function createInfoJsonUrl(inputBaseUrl: string, token?: string | null): string {
 		const normalized = inputBaseUrl.replace(/\/+$/, '');
-		const url = new URL(`${normalized}/info.json`);
-		if (tkn && tkn.trim().length > 0) {
-			url.searchParams.set('token', tkn.trim());
-		}
-		return url.toString();
+		return withMediaToken(`${normalized}/info.json`, token);
 	}
 
-	async function initViewer() {
+	async function initViewer(
+		inputBaseUrl = baseUrl,
+		inputMediaToken = mediaToken,
+		inputPrefixUrl = prefixUrl,
+		inputUseDefaultControls = useDefaultControls
+	) {
 		if (!containerEl) return;
-		if (!baseUrl || baseUrl.trim().length === 0) {
+		if (!inputBaseUrl || inputBaseUrl.trim().length === 0) {
 			initError = 'IIIF baseUrl is required.';
 			return;
 		}
@@ -71,11 +71,11 @@
 		try {
 			const module = await import('openseadragon');
 			const OpenSeadragon = module.default;
-			const infoJsonUrl = createInfoJsonUrl(baseUrl, token);
+			const infoJsonUrl = createInfoJsonUrl(inputBaseUrl, inputMediaToken);
 			const currentInitKey = JSON.stringify({
 				infoJsonUrl,
-				prefixUrl,
-				useDefaultControls
+				prefixUrl: inputPrefixUrl,
+				useDefaultControls: inputUseDefaultControls
 			});
 
 			// Prevent unnecessary re-creation on parent/window re-renders.
@@ -88,13 +88,13 @@
 			viewer?.destroy();
 			viewer = OpenSeadragon({
 				element: containerEl,
-				prefixUrl,
+				prefixUrl: inputPrefixUrl,
 				tileSources: [infoJsonUrl],
-				showNavigationControl: useDefaultControls,
+				showNavigationControl: inputUseDefaultControls,
 				showFullPageControl: false,
-				showHomeControl: useDefaultControls,
-				showZoomControl: useDefaultControls,
-				showRotationControl: useDefaultControls
+				showHomeControl: inputUseDefaultControls,
+				showZoomControl: inputUseDefaultControls,
+				showRotationControl: inputUseDefaultControls
 			});
 			lastInitKey = currentInitKey;
 		} catch (error) {
@@ -108,11 +108,7 @@
 	});
 
 	$effect(() => {
-		baseUrl;
-		token;
-		prefixUrl;
-		useDefaultControls;
-		void initViewer();
+		void initViewer(baseUrl, mediaToken, prefixUrl, useDefaultControls);
 	});
 
 	onDestroy(() => {
@@ -150,7 +146,7 @@
 	Usage example:
 	<IIIFViewer
 		baseUrl="https://media.oldap.org/iiif/3/imageid"
-		token="x6Df..."
+		mediaToken="x6Df..."
 		width={800}
 		height={500}
 	/>

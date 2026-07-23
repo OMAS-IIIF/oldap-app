@@ -4,6 +4,7 @@
 
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
+	import { withMediaToken } from '$lib/shared/mediaUrl';
 
 	type VideoSource = {
 		src: string;
@@ -25,7 +26,8 @@
 		tracks?: VideoTrack[];
 		title?: string;
 		poster?: string;
-		token?: string | null;
+		/** Optional media capability JWT appended to sources and poster URLs. */
+		mediaToken?: string | null;
 		width?: string | number;
 		height?: string | number;
 		autoplay?: boolean;
@@ -63,7 +65,7 @@
 		tracks = [],
 		title = 'Video Viewer',
 		poster,
-		token,
+		mediaToken,
 		width = '100%',
 		height = '100%',
 		autoplay = false,
@@ -115,9 +117,7 @@
 
 	function appendToken(url: string): string {
 		const trimmed = url.trim();
-		if (!trimmed || !token || token.trim().length === 0) return trimmed;
-		const separator = trimmed.includes('?') ? '&' : '?';
-		return `${trimmed}${separator}token=${encodeURIComponent(token.trim())}`;
+		return trimmed ? withMediaToken(trimmed, mediaToken) : trimmed;
 	}
 
 	function clamp(value: number, min: number, max: number): number {

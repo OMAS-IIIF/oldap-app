@@ -16,53 +16,60 @@
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { datamodelOldapStore } from '$lib/stores/datamodel_oldap';
 	import { datamodelSharedStore } from '$lib/stores/datamodel_shared';
-	import type { PageData } from './$types';
+	import { restoreAuthenticatedSession } from '$lib/auth/session';
+	import { AUTH_SESSION_EXPIRED_EVENT } from '$lib/auth/accessToken';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 
-	let {
-		children,
-		data
-	}: {
-		children: Snippet,
-		data: PageData
-	} = $props();
+	let { children }: { children: Snippet } = $props();
 
-	onMount(async () => {
+	onMount(() => {
 		// changing the locale if necessary...
 		localeStore.set(getLocale());
 		afterNavigate(() => {
 			localeStore.set(getLocale());
 		});
 
-		// Automatisches Login für unbekannten Benutzer beim Anwendungsstart
-		if (!$userStore && !$authInfoStore) {
-			await loginUnknownUser();
-		}
+		const handleExpiredSession = () => {
+			void goto(resolve('/')).then(() => loginUnknownUser());
+		};
+		window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, handleExpiredSession);
+
+		// Restore a named session from its HttpOnly cookie before falling back to anonymous access.
+		void (async () => {
+			if (!$userStore && !$authInfoStore) {
+				const restored = await restoreAuthenticatedSession();
+				if (!restored) await loginUnknownUser();
+			}
+		})();
+
+		return () => window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, handleExpiredSession);
 	});
 
 	authInfoStore.subscribe((authinfo: AuthInfo | null) => {
 		if (authinfo && authinfo.userid !== 'unknown') {
-			const dmlist = ['oldap', 'shared']
-			const promises = dmlist.map(dm => {
+			const dmlist = ['oldap', 'shared'];
+			const promises = dmlist.map((dm) => {
 				const dm_config = api_config(authinfo, { project: dm });
-				return apiClient.getAdmindatamodelProject(dm_config)
+				return apiClient.getAdmindatamodelProject(dm_config);
 			});
 
-			Promise.all(promises).then((results) => {
-				results.forEach((dmdata) => {
-					const dm = DatamodelClass.fromOldapJson(dmdata);
-					if (dm.projectid.toString() === 'oldap') {
-						datamodelOldapStore.set(dm);
-					}
-					else if (dm.projectid.toString() === 'shared') {
-						datamodelSharedStore.set(dm);
-					}
+			Promise.all(promises)
+				.then((results) => {
+					results.forEach((dmdata) => {
+						const dm = DatamodelClass.fromOldapJson(dmdata);
+						if (dm.projectid.toString() === 'oldap') {
+							datamodelOldapStore.set(dm);
+						} else if (dm.projectid.toString() === 'shared') {
+							datamodelSharedStore.set(dm);
+						}
+					});
+				})
+				.catch((error) => {
+					errorInfoStore.set(process_api_error(error as Error));
 				});
-			}).catch((error) => {
-				errorInfoStore.set(process_api_error(error as Error));
-			});
 		}
-	})
-
+	});
 </script>
 
 {#key $localeStore}

@@ -20,6 +20,59 @@ type AttachedToRoleMap = /**
  * Map of role IRI/QName to permission value.
  */
 {};;
+type AttachedToRoleUpdate = /**
+ * Update payload for `oldap:attachedToRole`. Clients may either send a full replacement map of role IRI/QName to DataPermission, or a patch object with `add` and/or `del`. `add` grants or changes permissions for the given roles; `del` removes role attachments from the instance.
+
+ */
+AttachedToRoleMap | Partial<{
+    add: AttachedToRoleMap;
+    del: AttachedToRoleDelete;
+}>;;
+type AttachedToRoleDelete = /**
+ * One role IRI/QName or a list of role IRIs/QNames to remove from an instance permission map.
+ */
+/**
+ * Role IRI/QName.
+ */
+string | Array</**
+ * Role IRI/QName.
+ */
+string>;;
+type InstanceCreateData = Partial<{
+    attachedToRole: AttachedToRoleMap;
+    "oldap:attachedToRole": AttachedToRoleMap;
+} & {
+    [key: string]: any;
+}>;;
+type InstanceUpdateData = Partial<{
+    "oldap:attachedToRole": AttachedToRoleUpdate;
+} & {
+    [key: string]: any;
+}>;;
+type InstanceTransformData = {
+    /**
+     * QName of the target resource class.
+     */
+    targetClass: string;
+    /**
+     * QName of the base resource class whose properties must be retained.
+     */
+    preserveClass: string;
+    expectedSourceClass?: /**
+     * Optional QName guard for the current concrete resource class.
+     */
+    string | undefined;
+    properties?: /**
+     * Target-class properties to add during the transformation.
+     */
+    {} | undefined;
+    additionalProperties?: /**
+     * Alias for target-class properties, useful for media-server style payloads.
+     */
+    {} | undefined;
+    attachedToRole?: AttachedToRoleMap | undefined;
+    "oldap:attachedToRole"?: AttachedToRoleMap | undefined;
+};;
 type InstanceData = {
     "rdf:type"?: /**
      * Explicit resource type assertions from the project data graph. Reasoning-derived types are returned separately in `virtual:inferredTypes`.
@@ -58,6 +111,17 @@ type user_get_body_200 = Partial<{
     userId: string;
     familyName: string;
     givenName: string;
+    email: string;
+    /**
+     * Timestamp when a password reset was requested.
+     */
+    passwordResetRequestAt: /**
+     * Timestamp when a password reset was requested.
+     */
+    string | /**
+     * Timestamp when a password reset was requested.
+     */
+    null;
     in_projects: Array<Partial<{
         project: string;
         permissions: Array<string>;
@@ -72,6 +136,17 @@ type new_user = {
      */
     password: string;
     isActive?: boolean | undefined;
+    email?: string | undefined;
+    passwordResetRequestAt?: (/**
+     * Timestamp when a password reset was requested.
+     */
+    /**
+     * Timestamp when a password reset was requested.
+     */
+    string | /**
+     * Timestamp when a password reset was requested.
+     */
+    null) | undefined;
     userclass?: /**
      * QName of the user class. Must be oldap:User or a subclass.
      *
@@ -98,6 +173,17 @@ type mod_user = Partial<{
     givenName: string;
     familyName: string;
     password: string;
+    email: string;
+    /**
+     * Timestamp when a password reset was requested. Use null to clear it.
+     */
+    passwordResetRequestAt: /**
+     * Timestamp when a password reset was requested. Use null to clear it.
+     */
+    string | /**
+     * Timestamp when a password reset was requested. Use null to clear it.
+     */
+    null;
     additionalProperties: UserAdditionalProperties | Partial<{
         add: UserAdditionalProperties;
         del: Array<string>;
@@ -198,12 +284,16 @@ string;;
 type Property = unknown | unknown;;
 
 const Error = z.object({ message: z.string(), error: z.string().optional(), details: z.object({}).partial().passthrough().optional() }).passthrough();
+const AccessTokenResponse = z.object({ message: z.string(), accessToken: z.string(), tokenType: z.string(), expiresIn: z.number().int(), token: z.string() }).passthrough();
+const password_reset_request_body = z.union([z.unknown(), z.unknown()]);
+const password_reset_message_response = z.object({ message: z.string() }).passthrough();
+const password_reset_confirm_body = z.object({ token: z.string(), password: z.string().min(8) });
 const UserAdditionalPropertyValue = z.union([z.string(), z.number(), z.number(), z.boolean(), z.array(z.union([z.string(), z.number(), z.number(), z.boolean()]))]);
 const UserAdditionalProperties: z.ZodType<UserAdditionalProperties> = z.record(UserAdditionalPropertyValue);
 const DataPermission = z.enum(["DATA_RESTRICTED", "DATA_VIEW", "DATA_EXTEND", "DATA_UPDATE", "DATA_DELETE", "DATA_PERMISSIONS"]);
 const HasRoleMap: z.ZodType<HasRoleMap> = z.record(z.union([DataPermission, z.null()]));
-const putAdminuserUserId_Body = z.object({ givenName: z.string(), familyName: z.string(), email: z.string().optional(), password: z.string().min(8), isActive: z.boolean().optional(), userclass: z.string().optional().default("oldap:User"), additionalProperties: UserAdditionalProperties.optional(), inProjects: z.array(z.object({ project: z.string(), permissions: z.array(z.enum(["ADMIN_OLDAP", "ADMIN_USERS", "ADMIN_ROLES", "ADMIN_RESOURCES", "ADMIN_MODEL", "ADMIN_CREATE", "ADMIN_LISTS"])) }).partial().passthrough()).optional(), hasRole: HasRoleMap.optional() }).passthrough();
-const postAdminuserUserId_Body = z.object({ userId: z.string(), givenName: z.string(), familyName: z.string(), email: z.string(), password: z.string(), isActive: z.boolean(), additionalProperties: z.union([UserAdditionalProperties, z.object({ add: UserAdditionalProperties, del: z.array(z.string()) }).partial().passthrough(), z.null()]), inProjects: z.union([z.object({ add: z.object({ project: z.string(), permissions: z.union([z.array(z.string()), z.null()]) }).partial().passthrough(), del: z.array(z.string()) }).partial().passthrough(), z.array(z.object({ project: z.string(), permissions: z.union([z.array(z.string()), z.object({ add: z.array(z.string()), del: z.array(z.string()) }).partial().passthrough(), z.null()]) }).partial().passthrough())]), hasRole: z.union([HasRoleMap, z.object({ add: HasRoleMap, del: z.array(z.string()) }).partial().passthrough(), z.null()]) }).partial().passthrough();
+const putAdminuserUserId_Body = z.object({ givenName: z.string(), familyName: z.string(), email: z.string().optional(), password: z.string().min(8), isActive: z.boolean().optional(), passwordResetRequestAt: z.union([z.string(), z.null()]).optional(), userclass: z.string().optional().default("oldap:User"), additionalProperties: UserAdditionalProperties.optional(), inProjects: z.array(z.object({ project: z.string(), permissions: z.array(z.enum(["ADMIN_OLDAP", "ADMIN_USERS", "ADMIN_ROLES", "ADMIN_RESOURCES", "ADMIN_MODEL", "ADMIN_CREATE", "ADMIN_LISTS"])) }).partial().passthrough()).optional(), hasRole: HasRoleMap.optional() }).passthrough();
+const postAdminuserUserId_Body = z.object({ userId: z.string(), givenName: z.string(), familyName: z.string(), email: z.string(), password: z.string(), isActive: z.boolean(), passwordResetRequestAt: z.union([z.string(), z.null()]), additionalProperties: z.union([UserAdditionalProperties, z.object({ add: UserAdditionalProperties, del: z.array(z.string()) }).partial().passthrough(), z.null()]), inProjects: z.union([z.object({ add: z.object({ project: z.string(), permissions: z.union([z.array(z.string()), z.null()]) }).partial().passthrough(), del: z.array(z.string()) }).partial().passthrough(), z.array(z.object({ project: z.string(), permissions: z.union([z.array(z.string()), z.object({ add: z.array(z.string()), del: z.array(z.string()) }).partial().passthrough(), z.null()]) }).partial().passthrough())]), hasRole: z.union([HasRoleMap, z.object({ add: HasRoleMap, del: z.array(z.string()) }).partial().passthrough(), z.null()]) }).partial().passthrough();
 const LangString = z.union([z.array(z.string()), z.string(), z.null()]);
 const putAdminprojectProjectId_Body = z.object({ projectIri: z.string(), label: LangString, comment: LangString, namespaceIri: z.string(), projectStart: z.string(), projectEnd: z.string() }).partial().passthrough();
 const postAdminprojectProjectId_Body = z.object({ label: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), comment: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), projectStart: z.union([z.string(), z.null()]), projectEnd: z.union([z.string(), z.null()]) }).partial().passthrough();
@@ -222,15 +312,25 @@ const putAdminhlistProjectHlistid_Body = z.object({ prefLabel: LangString, defin
 const postAdminhlistProjectHlistid_Body = z.object({ prefLabel: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]), definition: z.union([LangString, z.object({ add: LangString, del: LangString }).partial().passthrough(), z.null()]) }).partial().passthrough();
 const putAdminhlistProjectHlistidNodeid_Body = z.union([z.object({ prefLabel: LangString, definition: LangString.optional(), position: z.enum(["belowOf", "leftOf", "rightOf"]), refnode: z.string() }).passthrough(), z.object({ prefLabel: LangString, definition: LangString.optional(), position: z.literal("root") }).passthrough()]);
 const postAdminhlistProjectHlistidNodeidmove_Body = z.union([z.object({ leftOf: z.string() }).passthrough(), z.object({ rightOf: z.string() }).passthrough(), z.object({ belowOf: z.string() }).passthrough()]);
+const SearchFilterItem = z.union([z.enum(["AND", "&&", "OR", "||", "(", "LEFT", "LEFT_", ")", "RIGHT", "_RIGHT"]), z.object({ logic: z.enum(["AND", "&&", "OR", "||", "(", "LEFT", "LEFT_", ")", "RIGHT", "_RIGHT"]) }), z.union([z.unknown(), z.unknown()]).and(z.union([z.unknown(), z.unknown()])), z.union([z.unknown(), z.unknown()])]);
 const SearchSortBy = z.union([z.string(), z.object({ property: z.string(), prop: z.string(), direction: z.enum(["asc", "desc"]).default("asc"), dir: z.enum(["asc", "desc"]), kind: z.enum(["auto", "value", "dating"]).default("auto") }).partial()]);
-const postDatasearchProject_Body = z.object({ q: z.string(), searchString: z.string(), ftField: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), ftProperty: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), resClass: z.string().regex(/^([A-Za-z_][A-Za-z0-9:_-]*:)?[A-Za-z_][A-Za-z0-9:_-]*$/), includeProperties: z.array(z.string()), filter: z.array(z.union([z.string(), z.object({}).partial().passthrough()])), ftfilter: z.array(z.union([z.string(), z.object({ field: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), fieldName: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), property: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), prop: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), query: z.string(), q: z.string() }).partial()])), hlfilter: z.array(z.union([z.string(), z.object({ logic: z.string(), property: z.string(), prop: z.string(), node: z.union([z.string(), z.object({ listId: z.string(), nodeId: z.string() })]) }).partial()])), countOnly: z.boolean(), sortBy: z.array(SearchSortBy), limit: z.number().int().default(100), offset: z.number().int().default(0) }).partial();
-const postDatasearchProjectclassResclass_Body = z.object({ q: z.string(), searchString: z.string(), ftField: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), ftProperty: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), includeProperties: z.array(z.string()), filter: z.array(z.union([z.string(), z.object({}).partial().passthrough()])), ftfilter: z.array(z.union([z.string(), z.object({ field: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), fieldName: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), property: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), prop: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), query: z.string(), q: z.string() }).partial()])), hlfilter: z.array(z.union([z.string(), z.object({ logic: z.string(), property: z.string(), prop: z.string(), node: z.union([z.string(), z.object({ listId: z.string(), nodeId: z.string() })]) }).partial()])), countOnly: z.boolean(), sortBy: z.array(SearchSortBy), limit: z.number().int().default(100), offset: z.number().int().default(0) }).partial();
+const postDatasearchProject_Body = z.object({ q: z.string(), searchString: z.string(), ftField: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), ftProperty: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), resClass: z.string().regex(/^([A-Za-z_][A-Za-z0-9:_-]*:)?[A-Za-z_][A-Za-z0-9:_-]*$/), includeProperties: z.array(z.string()), filter: z.array(SearchFilterItem), ftfilter: z.array(z.union([z.string(), z.object({ field: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), fieldName: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), property: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), prop: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), query: z.string(), q: z.string() }).partial()])), hlfilter: z.array(z.union([z.string(), z.object({ logic: z.string(), property: z.string(), prop: z.string(), node: z.union([z.string(), z.object({ listId: z.string(), nodeId: z.string() })]) }).partial()])), countOnly: z.boolean(), sortBy: z.array(SearchSortBy), limit: z.number().int().default(100), offset: z.number().int().default(0) }).partial();
+const postDatasearchProjectclassResclass_Body = z.object({ q: z.string(), searchString: z.string(), ftField: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), ftProperty: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), includeProperties: z.array(z.string()), filter: z.array(SearchFilterItem), ftfilter: z.array(z.union([z.string(), z.object({ field: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), fieldName: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), property: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), prop: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/), query: z.string(), q: z.string() }).partial()])), hlfilter: z.array(z.union([z.string(), z.object({ logic: z.string(), property: z.string(), prop: z.string(), node: z.union([z.string(), z.object({ listId: z.string(), nodeId: z.string() })]) }).partial()])), countOnly: z.boolean(), sortBy: z.array(SearchSortBy), limit: z.number().int().default(100), offset: z.number().int().default(0) }).partial();
 const ValueArray = z.array(z.union([z.string(), z.number(), z.number(), z.boolean(), z.null()]));
 const AttachedToRoleMap: z.ZodType<AttachedToRoleMap> = z.record(DataPermission);
+const InstanceCreateData: z.ZodType<InstanceCreateData> = z.object({ attachedToRole: AttachedToRoleMap, "oldap:attachedToRole": AttachedToRoleMap }).partial().passthrough();
 const InstanceData: z.ZodType<InstanceData> = z.record(z.union([ValueArray, z.string(), z.number(), z.number(), z.boolean(), z.null(), AttachedToRoleMap]));
+const AttachedToRoleDelete = z.union([z.string(), z.array(z.string())]);
+const AttachedToRoleUpdate: z.ZodType<AttachedToRoleUpdate> = z.union([AttachedToRoleMap, z.object({ add: AttachedToRoleMap, del: AttachedToRoleDelete }).partial()]);
+const InstanceUpdateData: z.ZodType<InstanceUpdateData> = z.object({ "oldap:attachedToRole": AttachedToRoleUpdate }).partial().passthrough();
+const InstanceTransformData: z.ZodType<InstanceTransformData> = z.object({ targetClass: z.string(), preserveClass: z.string(), expectedSourceClass: z.string().optional(), properties: z.object({}).partial().passthrough().optional(), additionalProperties: z.object({}).partial().passthrough().optional(), attachedToRole: AttachedToRoleMap.optional(), "oldap:attachedToRole": AttachedToRoleMap.optional() });
 
 export const schemas = {
 	Error,
+	AccessTokenResponse,
+	password_reset_request_body,
+	password_reset_message_response,
+	password_reset_confirm_body,
 	UserAdditionalPropertyValue,
 	UserAdditionalProperties,
 	DataPermission,
@@ -255,12 +355,18 @@ export const schemas = {
 	postAdminhlistProjectHlistid_Body,
 	putAdminhlistProjectHlistidNodeid_Body,
 	postAdminhlistProjectHlistidNodeidmove_Body,
+	SearchFilterItem,
 	SearchSortBy,
 	postDatasearchProject_Body,
 	postDatasearchProjectclassResclass_Body,
 	ValueArray,
 	AttachedToRoleMap,
+	InstanceCreateData,
 	InstanceData,
+	AttachedToRoleDelete,
+	AttachedToRoleUpdate,
+	InstanceUpdateData,
+	InstanceTransformData,
 };
 
 const endpoints = makeApi([
@@ -268,7 +374,8 @@ const endpoints = makeApi([
 		method: "post",
 		path: "/admin/auth/:userId",
 		alias: "postAdminauthUserId",
-		description: `Perform login/logout with userid/password. Returns a JWT token.`,
+		description: `Authenticate with user ID and password. Returns a short-lived access token and sets an absolute-lifetime refresh JWT in the secure HttpOnly refresh cookie. The deprecated token field aliases accessToken for one transition release. The unknown pseudo-user receives no refresh token.
+`,
 		requestFormat: "json",
 		parameters: [
 			{
@@ -282,7 +389,66 @@ const endpoints = makeApi([
 				schema: z.string()
 			},
 		],
-		response: z.object({ message: z.string(), token: z.string() }).partial().passthrough(),
+		response: z.object({ message: z.string(), token: z.string(), accessToken: z.string(), tokenType: z.string(), expiresIn: z.number().int() }).passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
+			},
+			{
+				status: 403,
+				description: `Error 403: Forbidden - Insufficient permissions to perform the requested operation`,
+				schema: Error
+			},
+			{
+				status: 404,
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
+			},
+			{
+				status: 503,
+				description: `Error 503: Service Unavailable - Required backend service or configuration is missing`,
+				schema: Error
+			},
+		]
+	},
+	{
+		method: "post",
+		path: "/admin/auth/logout",
+		alias: "postAdminauthlogout",
+		description: `Atomically increment the refresh token user&#x27;s authVersion and clear the refresh cookie. The cookie is also cleared when it is absent, malformed, expired, or already revoked. Existing access tokens remain valid until their short expiry.
+`,
+		requestFormat: "json",
+		response: z.void(),
+		errors: [
+			{
+				status: 403,
+				description: `Error 403: Forbidden - Insufficient permissions to perform the requested operation`,
+				schema: Error
+			},
+			{
+				status: 503,
+				description: `Error 503: Service Unavailable - Required backend service or configuration is missing`,
+				schema: Error
+			},
+		]
+	},
+	{
+		method: "post",
+		path: "/admin/auth/password-reset/confirm",
+		alias: "postAdminauthpasswordResetconfirm",
+		description: `Set a new password using a password-reset JWT. The token is accepted only if its resetRequestedAt claim equals the current oldap:passwordResetRequestAt value stored on the user; the timestamp is deleted after a successful reset.
+`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "body",
+				type: "Body",
+				schema: password_reset_confirm_body
+			},
+		],
+		response: z.object({ message: z.string() }).passthrough(),
 		errors: [
 			{
 				status: 400,
@@ -295,35 +461,82 @@ const endpoints = makeApi([
 				schema: Error
 			},
 			{
-				status: 404,
-				description: `Error 404: Not Found - Requested resource does not exist`,
+				status: 500,
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
+			},
+			{
+				status: 503,
+				description: `Error 503: Service Unavailable - Required backend service or configuration is missing`,
 				schema: Error
 			},
 		]
 	},
 	{
-		method: "delete",
-		path: "/admin/auth/:userId",
-		alias: "deleteAdminauthUserId",
-		description: `Logout from system`,
+		method: "post",
+		path: "/admin/auth/password-reset/request",
+		alias: "postAdminauthpasswordResetrequest",
+		description: `Request a password-reset link by User-ID or email. Exactly one identifier must be supplied. If exactly one user is found, oldap:passwordResetRequestAt is replaced, a two-hour JWT is created, and a reset link is sent by email. If no unique user can be found, the API returns a conflict response.
+`,
 		requestFormat: "json",
 		parameters: [
 			{
-				name: "userId",
-				type: "Path",
-				schema: z.string()
+				name: "body",
+				type: "Body",
+				schema: z.union([z.unknown(), z.unknown()])
 			},
 		],
-		response: z.void(),
+		response: z.object({ message: z.string() }).passthrough(),
 		errors: [
 			{
 				status: 400,
-				description: `Several Errors that involve bad requests`,
-				schema: z.void()
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
+			},
+			{
+				status: 403,
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
+			},
+			{
+				status: 409,
+				description: `No unique user could be identified`,
+				schema: z.object({ message: z.string() }).passthrough()
 			},
 			{
 				status: 500,
 				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
+			},
+			{
+				status: 503,
+				description: `Error 503: Service Unavailable - Required backend service or configuration is missing`,
+				schema: Error
+			},
+		]
+	},
+	{
+		method: "post",
+		path: "/admin/auth/refresh",
+		alias: "postAdminauthrefresh",
+		description: `Validate the HttpOnly refresh cookie, load the user and current permissions from GraphDB, compare authVersion, and return a new short-lived access token. The refresh cookie keeps its original absolute expiry and is not rotated.
+`,
+		requestFormat: "json",
+		response: AccessTokenResponse,
+		errors: [
+			{
+				status: 401,
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
+			},
+			{
+				status: 403,
+				description: `Error 403: Forbidden - Insufficient permissions to perform the requested operation`,
+				schema: Error
+			},
+			{
+				status: 503,
+				description: `Error 503: Service Unavailable - Required backend service or configuration is missing`,
 				schema: Error
 			},
 		]
@@ -2326,7 +2539,7 @@ The user must be authenticated with a Bearer token.
 				schema: z.string()
 			},
 		],
-		response: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), userIri: z.string(), userclass: z.string().optional().default("oldap:User"), userId: z.string(), familyName: z.string(), givenName: z.string(), email: z.string(), isActive: z.boolean().optional(), inProjects: z.array(z.object({ project: z.string(), permissions: z.array(z.string()) }).partial().passthrough()).optional(), hasRole: HasRoleMap.optional(), additionalProperties: UserAdditionalProperties.optional() }).passthrough(),
+		response: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), userIri: z.string(), userclass: z.string().optional().default("oldap:User"), userId: z.string(), familyName: z.string(), givenName: z.string(), email: z.string(), passwordResetRequestAt: z.union([z.string(), z.null()]).optional(), isActive: z.boolean().optional(), inProjects: z.array(z.object({ project: z.string(), permissions: z.array(z.string()) }).partial().passthrough()).optional(), hasRole: HasRoleMap.optional(), additionalProperties: UserAdditionalProperties.optional() }).passthrough(),
 		errors: [
 			{
 				status: 400,
@@ -2400,7 +2613,7 @@ The user must be authenticated with a Bearer token.
 				schema: z.string()
 			},
 		],
-		response: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), userIri: z.string(), userclass: z.string().optional().default("oldap:User"), userId: z.string(), familyName: z.string(), givenName: z.string(), email: z.string(), isActive: z.boolean().optional(), inProjects: z.array(z.object({ project: z.string(), permissions: z.array(z.string()) }).partial().passthrough()).optional(), hasRole: HasRoleMap.optional(), additionalProperties: UserAdditionalProperties.optional() }).passthrough(),
+		response: z.object({ creator: z.string(), created: z.string().datetime({ offset: true }), contributor: z.string(), modified: z.string().datetime({ offset: true }), userIri: z.string(), userclass: z.string().optional().default("oldap:User"), userId: z.string(), familyName: z.string(), givenName: z.string(), email: z.string(), passwordResetRequestAt: z.string().datetime({ offset: true }).optional(), isActive: z.boolean().optional(), inProjects: z.array(z.object({ project: z.string(), permissions: z.array(z.string()) }).partial().passthrough()).optional(), hasRole: HasRoleMap.optional(), additionalProperties: UserAdditionalProperties.optional() }).passthrough(),
 		errors: [
 			{
 				status: 400,
@@ -2428,6 +2641,11 @@ The user must be authenticated with a Bearer token.
 		parameters: [
 			{
 				name: "userId",
+				type: "Query",
+				schema: z.string().optional()
+			},
+			{
+				name: "email",
 				type: "Query",
 				schema: z.string().optional()
 			},
@@ -2511,7 +2729,7 @@ The user must be authenticated with a Bearer token.
 			{
 				name: "body",
 				type: "Body",
-				schema: z.object({}).partial().passthrough()
+				schema: z.object({ "oldap:attachedToRole": AttachedToRoleUpdate }).partial().passthrough()
 			},
 			{
 				name: "project",
@@ -2590,6 +2808,54 @@ The user must be authenticated with a Bearer token.
 		]
 	},
 	{
+		method: "post",
+		path: "/data/:project/:instiri/transform",
+		alias: "postDataProjectInstiritransform",
+		description: `Reclassifies an existing resource instance in one backend transaction. Properties belonging to &#x60;preserveClass&#x60; are retained, source-class-specific properties are removed, target-class properties from &#x60;properties&#x60; and &#x60;additionalProperties&#x60; are inserted, optional role attachments are replaced, and OLDAP modification metadata is updated.
+`,
+		requestFormat: "json",
+		parameters: [
+			{
+				name: "body",
+				type: "Body",
+				schema: InstanceTransformData
+			},
+			{
+				name: "project",
+				type: "Path",
+				schema: z.string()
+			},
+			{
+				name: "instiri",
+				type: "Path",
+				schema: z.string()
+			},
+		],
+		response: z.object({ message: z.string(), iri: z.string(), resourceClass: z.string() }).partial().passthrough(),
+		errors: [
+			{
+				status: 400,
+				description: `Error 400: Bad Request - Invalid input parameters, malformed request, or validation errors`,
+				schema: Error
+			},
+			{
+				status: 403,
+				description: `Error 401: Unauthorized - Authentication failed, invalid token, or missing credentials`,
+				schema: Error
+			},
+			{
+				status: 404,
+				description: `Error 404: Not Found - Requested resource does not exist`,
+				schema: Error
+			},
+			{
+				status: 500,
+				description: `Error 500: Internal Server Error - Unexpected server error occurred`,
+				schema: Error
+			},
+		]
+	},
+	{
 		method: "put",
 		path: "/data/:project/:resclass",
 		alias: "putDataProjectResclass",
@@ -2598,7 +2864,7 @@ The user must be authenticated with a Bearer token.
 			{
 				name: "body",
 				type: "Body",
-				schema: z.object({}).partial().passthrough()
+				schema: z.object({ attachedToRole: AttachedToRoleMap, "oldap:attachedToRole": AttachedToRoleMap }).partial().passthrough()
 			},
 			{
 				name: "project",
@@ -2642,7 +2908,7 @@ The user must be authenticated with a Bearer token.
 				schema: z.string()
 			},
 		],
-		response: z.object({ iri: z.string(), graph: z.unknown(), permval: z.unknown(), "oldap:createdBy": z.unknown(), "oldap:creationDate": z.unknown(), "oldap:lastModifiedBy": z.unknown(), "oldap:lastModificationDate": z.unknown(), "shared:assetId": z.unknown(), "shared:originalName": z.unknown(), "dcterms:type": z.unknown(), "shared:originalMimeType": z.string(), "shared:serverUrl": z.string(), "shared:path": z.string(), "shared:protocol": z.enum(["iiif", "http", "custom"]) }).partial().passthrough(),
+		response: z.object({ iri: z.string(), graph: z.unknown(), permval: z.unknown(), "oldap:createdBy": z.unknown(), "oldap:creationDate": z.unknown(), "oldap:lastModifiedBy": z.unknown(), "oldap:lastModificationDate": z.unknown(), "shared:assetId": z.unknown(), "shared:originalName": z.unknown(), "dcterms:type": z.unknown(), "shared:mediaAccessMode": z.enum(["local", "external"]), "shared:originalMimeType": z.string(), "shared:serverUrl": z.string(), "shared:path": z.string(), "shared:protocol": z.enum(["iiif", "http", "custom"]), "shared:mediaUrl": z.string().url(), "shared:thumbnailUrl": z.string().url(), token: z.string() }).partial().passthrough(),
 		errors: [
 			{
 				status: 400,
@@ -2678,7 +2944,7 @@ The user must be authenticated with a Bearer token.
 				schema: z.string()
 			},
 		],
-		response: z.object({ "oldap:createdBy": z.string(), "oldap:creationDate": z.string().datetime({ offset: true }), "oldap:lastModifiedBy": z.string(), "oldap:lastModificationDate": z.string().datetime({ offset: true }), "shared:asssetId": z.string(), "shared:originalName": z.string(), "dcterms:type": z.enum(["dcmitype:Collection", "dcmitype:Dataset", "dcmitype:StillImage", "dcmitype:Image", "dcmitype:MovingImage", "dcmitype:Sound", "dcmitype:Text"]), "shared:originalMimeType": z.string(), "shared:serverUrl": z.string(), "shared:path": z.string(), "shared:protocol": z.enum(["iiif", "http", "custom"]) }).partial().passthrough(),
+		response: z.object({ "oldap:createdBy": z.string(), "oldap:creationDate": z.string().datetime({ offset: true }), "oldap:lastModifiedBy": z.string(), "oldap:lastModificationDate": z.string().datetime({ offset: true }), "shared:assetId": z.string(), "shared:originalName": z.string(), "dcterms:type": z.enum(["dcmitype:Collection", "dcmitype:Dataset", "dcmitype:StillImage", "dcmitype:Image", "dcmitype:MovingImage", "dcmitype:Sound", "dcmitype:Text"]), "shared:mediaAccessMode": z.enum(["local", "external"]), "shared:originalMimeType": z.string(), "shared:serverUrl": z.string(), "shared:path": z.string(), "shared:protocol": z.enum(["iiif", "http", "custom"]), "shared:mediaUrl": z.string().url(), "shared:thumbnailUrl": z.string().url(), token: z.string() }).partial().passthrough(),
 		errors: [
 			{
 				status: 400,

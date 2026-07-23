@@ -17,7 +17,7 @@ const DCMI_TYPES = [
 	'dcmitype:Text'
 ] as const;
 
-export type Dcmitype = typeof DCMI_TYPES[number];
+export type Dcmitype = (typeof DCMI_TYPES)[number];
 
 export function isDcmitype(value: string): value is Dcmitype {
 	return (DCMI_TYPES as readonly string[]).includes(value);
@@ -36,7 +36,8 @@ export class MediaObject extends OldapObject {
 	path?: string;
 	protocol: string;
 	serverUrl: string;
-	token: string;
+	/** Short-lived capability JWT for protected media delivery; never use it as an API bearer. */
+	mediaToken?: string;
 
 	constructor(
 		creator: Iri,
@@ -55,7 +56,7 @@ export class MediaObject extends OldapObject {
 		path: string | undefined,
 		protocol: string,
 		serverUrl: string,
-		token: string
+		mediaToken: string | undefined
 	) {
 		super(creator, created, contributor, modified);
 		this.iri = iri;
@@ -70,7 +71,7 @@ export class MediaObject extends OldapObject {
 		this.path = path;
 		this.protocol = protocol;
 		this.serverUrl = serverUrl;
-		this.token = token;
+		this.mediaToken = mediaToken;
 	}
 
 	static fromOldapJson(json: any): MediaObject {

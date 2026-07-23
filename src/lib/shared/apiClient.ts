@@ -1,4 +1,3 @@
-
 /**
  * IMPORTANT:
  * - API base URL MUST come from env vars:
@@ -10,44 +9,72 @@
 
 import { createApiClient } from '$lib/apischema/zod';
 import { browser } from '$app/environment';
-import { env as publicEnv } from '$env/dynamic/public';
+import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import {
+	currentAuthInfo,
+	expireAuthenticatedSession,
+	hasRefreshableSession,
+	refreshAccessToken
+} from '$lib/auth/accessToken';
+import { getApiBaseUrl } from '$lib/shared/apiBaseUrl';
 
 type ApiClient = ReturnType<typeof createApiClient>;
 
 let clientPromise: Promise<ApiClient> | null = null;
 
-function stripTrailingSlash(url: string) {
-	return url.replace(/\/+$/, '');
+export { getApiBaseUrl } from '$lib/shared/apiBaseUrl';
+
+function isAuthenticationEndpoint(url?: string): boolean {
+	return Boolean(url?.startsWith('/admin/auth/'));
 }
 
-function getServerEnv(name: string): string | undefined {
-	// Avoid importing $env/static/private in shared modules; read from process.env at runtime on the server.
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const p = (globalThis as any).process;
-	return p?.env?.[name] as string | undefined;
-}
+function installBrowserAuthentication(client: ApiClient): void {
+	if (!browser) return;
 
-async function getBaseUrl(): Promise<string> {
-	// Browser: use PUBLIC_API_URL (available client-side)
-	if (browser) {
-		if (!publicEnv.PUBLIC_API_URL) {
-			throw new Error('PUBLIC_API_URL is not set');
+	client.axios.defaults.withCredentials = true;
+	client.axios.interceptors.request.use((config) => {
+		const authorization = config.headers.get('Authorization');
+		const token = currentAuthInfo()?.token;
+		if (token && typeof authorization === 'string' && authorization.startsWith('Bearer ')) {
+			config.headers.set('Authorization', `Bearer ${token}`);
 		}
-		return stripTrailingSlash(publicEnv.PUBLIC_API_URL);
-	}
+		return config;
+	});
 
-	// Server/SSR: read SERVER_API_URL from process.env (available at runtime in Node)
-	const serverUrl = getServerEnv('SERVER_API_URL');
-	const url = serverUrl ?? publicEnv.PUBLIC_API_URL;
-	if (!url) {
-		throw new Error('SERVER_API_URL (or PUBLIC_API_URL fallback) is not set on the server');
-	}
-	return stripTrailingSlash(url);
+	client.axios.interceptors.response.use(undefined, async (error: unknown) => {
+		const axiosError = error as AxiosError;
+		const config = axiosError.config as
+			| (InternalAxiosRequestConfig & { _oldapAuthRetry?: boolean })
+			| undefined;
+		if (
+			axiosError.response?.status !== 401 ||
+			!config ||
+			config._oldapAuthRetry ||
+			isAuthenticationEndpoint(config.url) ||
+			!hasRefreshableSession()
+		) {
+			return Promise.reject(error);
+		}
+
+		config._oldapAuthRetry = true;
+		try {
+			const token = await refreshAccessToken();
+			config.headers?.set('Authorization', `Bearer ${token}`);
+			return client.axios.request(config);
+		} catch {
+			expireAuthenticatedSession();
+			return Promise.reject(error);
+		}
+	});
 }
 
 async function getClient(): Promise<ApiClient> {
 	if (!clientPromise) {
-		clientPromise = getBaseUrl().then((baseUrl) => createApiClient(baseUrl));
+		clientPromise = getApiBaseUrl().then((baseUrl) => {
+			const client = createApiClient(baseUrl);
+			installBrowserAuthentication(client);
+			return client;
+		});
 	}
 	return clientPromise;
 }
@@ -58,15 +85,15 @@ type AsyncApiClient = {
 		: never;
 };
 
-export const apiClient: AsyncApiClient = new Proxy({} as any, {
+export const apiClient: AsyncApiClient = new Proxy({} as AsyncApiClient, {
 	get(_, prop: string) {
-		return async (...args: any[]) => {
+		return async (...args: unknown[]) => {
 			const client = await getClient();
-			const fn = (client as any)[prop];
+			const fn = (client as unknown as Record<string, unknown>)[prop];
 			if (typeof fn !== 'function') {
 				throw new Error(`${prop} is not a function on ApiClient`);
 			}
-			return fn(...args);
+			return Reflect.apply(fn, client, args);
 		};
 	}
 });
