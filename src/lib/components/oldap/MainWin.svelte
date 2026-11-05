@@ -1,4 +1,5 @@
 <script lang="ts">
+	import SearchInstances from '$lib/components/oldap/SearchInstances.svelte';
 	import LeftHeader from '$lib/components/basic_gui/header/LeftHeader.svelte';
 	import ContentArea from '$lib/components/basic_gui/ContentArea.svelte';
 	import Header from '$lib/components/basic_gui/header/Header.svelte';
@@ -115,11 +116,16 @@
 	}
 
 	function create_search_window(searchString: string, resourceClass: string) {
-		void searchString;
-		void resourceClass;
-		// TODO
+		if (!resourceClass) return;
+		createWindow('Search', searchInstances, [searchString, resourceClass], {
+			x: 120, y: 120, width: 700, height: 600
+		});
 	}
 </script>
+
+{#snippet searchInstances(searchString: string, resourceClass: string)}
+	<SearchInstances {searchString} {resourceClass} />
+{/snippet}
 
 {#snippet imageUpload()}
 	<ImageUpload></ImageUpload>

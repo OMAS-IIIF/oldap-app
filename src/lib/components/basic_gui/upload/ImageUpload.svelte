@@ -32,7 +32,7 @@
 	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
 	import Table from '$lib/components/basic_gui/table/Table.svelte';
 	import TableItem from '$lib/components/basic_gui/table/TableItem.svelte';
-	import type { HasProperty } from '$lib/oldap/classes/resource';
+	import type { PropertyClass } from '$lib/oldap/classes/property';
 	import { XsdDate } from '$lib/oldap/datatypes/xsd_date';
 	import { LangString } from '$lib/oldap/datatypes/langstring';
 	import { XsdDatatypes } from '$lib/oldap/enums/xsd_datatypes';
@@ -170,14 +170,14 @@
 			let props = get_props();
 			values = {};
 			for (const prop of props) {
-				if (prop.property.datatype === XsdDatatypes.langString) {
-					values[prop.property.propertyIri.toString()] = new LangString();
-				} else if (prop.property.datatype == XsdDatatypes.date) {
-					values[prop.property.propertyIri.toString()] = [new XsdDate()];
+				if (prop.datatype === XsdDatatypes.langString) {
+					values[prop.propertyIri.toString()] = new LangString();
+				} else if (prop.datatype == XsdDatatypes.date) {
+					values[prop.propertyIri.toString()] = [new XsdDate()];
 				} else {
-					values[prop.property.propertyIri.toString()] = [''];
+					values[prop.propertyIri.toString()] = [''];
 				}
-				input_fields[prop.property.propertyIri.toString()] = undefined;
+				input_fields[prop.propertyIri.toString()] = undefined;
 			}
 		});
 	});
@@ -244,10 +244,10 @@
 		selectFile(null);
 	}
 
-	function get_props(): HasProperty[] {
+	function get_props(): PropertyClass[] {
 		const r = $datamodelStore?.resources.find((r) => r.iri.toString() === resourceClass);
 		if (r) {
-			return r?.hasProperty || [];
+			return r?.properties || [];
 		} else {
 			return [];
 		}
@@ -514,10 +514,10 @@
 			form.append(fieldName, file);
 
 			get_props().forEach((hasprop) => {
-				const propname = hasprop.property.propertyIri.toString();
+				const propname = hasprop.propertyIri.toString();
 				const propValue = values[propname];
 
-				switch (hasprop.property.datatype) {
+				switch (hasprop.datatype) {
 					case XsdDatatypes.xsdString:
 						if (Array.isArray(propValue)) {
 							propValue.forEach((v) => {
@@ -906,48 +906,48 @@
 			{/each}
 		</TableBody>
 	</Table>
-	{#each get_props() as hasprop (hasprop.property.propertyIri.toString())}
-		{@const propname = hasprop.property.propertyIri.toString()}
-		{#if hasprop.property?.datatype === XsdDatatypes.xsdString}
+	{#each get_props() as hasprop (hasprop.propertyIri.toString())}
+		{@const propname = hasprop.propertyIri.toString()}
+		{#if hasprop?.datatype === XsdDatatypes.xsdString}
 			<TextFieldData
-				id={hasprop.property?.propertyIri?.fragment?.toString() || 'prop_id'}
+				id={hasprop?.propertyIri?.fragment?.toString() || 'prop_id'}
 				name="prop_name"
-				label={hasprop.property?.name?.get(langobj) || hasprop.property?.propertyIri.toString()}
+				label={hasprop?.name?.get(langobj) || hasprop?.propertyIri.toString()}
 				minCount={hasprop?.minCount || 0}
 				maxCount={hasprop?.maxCount || Infinity}
 				bind:values={values[propname]}
-				bind:this={input_fields[hasprop.property.propertyIri.toString()]}
+				bind:this={input_fields[hasprop.propertyIri.toString()]}
 			/>
-		{:else if hasprop.property?.datatype === XsdDatatypes.date && values[propname]}
+		{:else if hasprop?.datatype === XsdDatatypes.date && values[propname]}
 			<DatePickerData
-				id={hasprop.property?.propertyIri?.fragment?.toString() || 'prop_id'}
+				id={hasprop?.propertyIri?.fragment?.toString() || 'prop_id'}
 				name="prop_name"
-				label={hasprop.property?.name?.get(langobj) || hasprop.property?.propertyIri.toString()}
+				label={hasprop?.name?.get(langobj) || hasprop?.propertyIri.toString()}
 				minCount={hasprop?.minCount || 0}
 				maxCount={hasprop?.maxCount || Infinity}
 				bind:values={values[propname]}
-				bind:this={input_fields[hasprop.property.propertyIri.toString()]}
+				bind:this={input_fields[hasprop.propertyIri.toString()]}
 			/>
-		{:else if hasprop.property?.datatype === XsdDatatypes.langString && values[propname] instanceof LangString}
+		{:else if hasprop?.datatype === XsdDatatypes.langString && values[propname] instanceof LangString}
 			<LangstringfieldNew
-				id={hasprop.property?.propertyIri?.fragment?.toString() || 'prop_id'}
+				id={hasprop?.propertyIri?.fragment?.toString() || 'prop_id'}
 				name="prop_name"
 				placeholder="Enter a value"
 				{languages}
-				input_type={hasprop.editor === 'dash:TextFieldWithLangEditor' ? 'input' : 'textarea'}
-				label={hasprop.property?.name?.get(langobj) || hasprop.property?.propertyIri.toString()}
+				input_type={hasprop.editor?.toString() === 'dash:TextFieldWithLangEditor' ? 'input' : 'textarea'}
+				label={hasprop?.name?.get(langobj) || hasprop?.propertyIri.toString()}
 				bind:value={values[propname]}
 			/>
-		{:else if hasprop.property?.toClass && hlists[hasprop.property.toClass.toString()]}
+		{:else if hasprop?.toClass && hlists[hasprop.toClass.toString()]}
 			<HlistSelectorData
-				id={hasprop.property?.propertyIri?.fragment?.toString() || 'prop_id'}
+				id={hasprop?.propertyIri?.fragment?.toString() || 'prop_id'}
 				name="prop_name"
-				label={hasprop.property?.name?.get(langobj) || hasprop.property?.propertyIri.toString()}
+				label={hasprop?.name?.get(langobj) || hasprop?.propertyIri.toString()}
 				minCount={hasprop?.minCount || 0}
 				maxCount={hasprop?.maxCount || Infinity}
-				hlist={hlists[hasprop.property.toClass.toString()]}
+				hlist={hlists[hasprop.toClass.toString()]}
 				bind:values={values[propname]}
-				bind:this={input_fields[hasprop.property.propertyIri.toString()]}
+				bind:this={input_fields[hasprop.propertyIri.toString()]}
 			/>
 		{/if}
 	{/each}

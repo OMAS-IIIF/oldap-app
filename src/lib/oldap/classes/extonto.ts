@@ -53,9 +53,9 @@ export class ExternalOntology extends OldapObject {
 		const namespaceIri = new Iri(json.namespaceIri);
 		const label = LangString.fromJson(json?.label);
 		const comment = LangString.fromJson(json?.comment);
-		const proposedResourceClass = json?.proposedResourceClass ? json.proposedResourceClass.map(x => new NCName(x)) : undefined;
-		const proposedDatatypePropertyClass = json?.proposedDatatypePropertyClass ? json.proposedDatatypePropertyClass.map(x => new NCName(x)) : undefined;
-		const proposedObjectPropertyClass = json?.proposedObjectPropertyClass ? json.proposedObjectPropertyClass.map(x => new NCName(x)) : undefined;
+		const proposedResourceClass = json?.proposedResourceClass ? json.proposedResourceClass.map((x: string) => new NCName(x)) : undefined;
+		const proposedDatatypePropertyClass = json?.proposedDatatypePropertyClass ? json.proposedDatatypePropertyClass.map((x: string) => new NCName(x)) : undefined;
+		const proposedObjectPropertyClass = json?.proposedObjectPropertyClass ? json.proposedObjectPropertyClass.map((x: string) => new NCName(x)) : undefined;
 
 		return new ExternalOntology(
 			creator,

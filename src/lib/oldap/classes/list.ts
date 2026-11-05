@@ -4,13 +4,12 @@ import { LangString } from '$lib/oldap/datatypes/langstring';
 import { Iri } from '$lib/oldap/datatypes/xsd_iri';
 import { OldapListNode } from '$lib/oldap/classes/listnode';
 import { XsdDateTime } from '$lib/oldap/datatypes/xsd_datetime';
-import { QName } from '$lib/oldap/datatypes/xsd_qname';
 
 export class OldapList extends OldapObject {
 	#oldapListId: NCName;
-	#iri: QName;
-	#nodeClassIri: QName;
-	#nodeNamespaceIri: QName;
+	#iri: Iri;
+	#nodeClassIri: Iri;
+	#nodeNamespaceIri: Iri;
 	#nodePrefix: NCName;
 	#prefLabel?: LangString;
 	#definition?: LangString;
@@ -22,9 +21,9 @@ export class OldapList extends OldapObject {
 		contributor: Iri,
 		modified: XsdDateTime,
 		oldapListId: NCName,
-		iri: QName,
-		nodeClassIri: QName,
-		nodeNamespaceIri: QName,
+		iri: Iri,
+		nodeClassIri: Iri,
+		nodeNamespaceIri: Iri,
 		nodePrefix: NCName,
 		prefLabel?: LangString,
 		definition?: LangString
@@ -44,15 +43,15 @@ export class OldapList extends OldapObject {
 		return this.#oldapListId;
 	}
 
-	get iri(): QName {
+	get iri(): Iri {
 		return this.#iri;
 	}
 
-	get nodeNamespaceIri(): QName {
+	get nodeNamespaceIri(): Iri {
 		return this.#nodeNamespaceIri;
 	}
 
-	get nodeClassIri(): QName {
+	get nodeClassIri(): Iri {
 		return this.#nodeClassIri;
 	}
 

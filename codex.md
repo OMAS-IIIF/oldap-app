@@ -1,5 +1,7 @@
 # OLDAP App Context
 
+- Home activation (2026-11-04): `lrosenth/oldap-app:jena-0.2.7-rc1-6e5e392b8e5a-amd64` is deployed with a pinned registry digest. Public HTTPS/Chromium smoke passes; previous configuration retained for rollback. See sibling oldap-setup/docs/jena-apps-home.md. Production and stable image tags remain unchanged.
+
 ## Purpose
 
 `oldap-app` is the generic SvelteKit browser application for administering OLDAP projects, users, roles, lists, ontologies, data models, and resource instances.
@@ -33,3 +35,16 @@
 
 - Validate the browser behavior against a compatible deployed `oldap-api` during release integration.
 - Coordinate work package 7 release and migration with the compatible `oldaplib`, `oldap-api`, deployment secrets, and browser clients.
+
+## Jena migration checkout (2026-11-04)
+
+- Branch `migration/jena` in `OLDAP-Jena/oldap-app`; original GraphDB checkout is unchanged.
+- Keep the frontend backend-neutral: HTTP contracts, not SPARQL or reasoner assumptions.
+- Resource fields use the existing flat `ResourceClass.properties` model; do not reintroduce `hasProperty[].property` wrappers.
+- `src/lib/helpers/searchResults.ts` adapts current scalar resource IDs and legacy singleton IDs to the two instance tables and merges repeated full-text rows.
+- Local completion passes build, typecheck (zero errors/warnings), 20 unit/component tests and four mocked Chromium workflows. Eleven administration GET probes pass against home.org. Real deployed write/upload acceptance remains a release check.
+- See `docs/jena-compatibility.md` for evidence, limitations and required browser/write acceptance before release. No oldap-app Jena image has been published or deployed in this step.
+
+- `tools/fix-generated-schema.mjs` runs after API generation to preserve explicit InstanceData properties that openapi-zod-client 1.18 omits for this record schema.
+- `instanceForm.ts` serializes editable values and computes content-only deltas; ordinary content editing must never replace unseen fields or role assignments.
+- Header search creates a result window; identical query/context effects do not repeat HTTP requests. Project/session restoration loads the selected model automatically.

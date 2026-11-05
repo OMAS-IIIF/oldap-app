@@ -2,6 +2,12 @@
   - Copyright (©) 2026. This software is licenced under the GNU General Public License v3.0 (https://www.gnu.org/licenses/gpl-3.0.en.html)
   -->
 <script lang="ts">
+	import { untrack } from 'svelte';
+	/** A result window owns the query/class chosen in the application header. */
+	let { searchString, resourceClass }: { searchString: string; resourceClass: string } = $props();
+	let searchError = $state('');
+	let lastQuery = '';
+	import { searchResults, fulltextQueries } from '$lib/helpers/searchResults';
 	import { locales, getLocale } from '$lib/paraglide/runtime';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
@@ -160,17 +166,12 @@
 		if (!authinfo || !datamodel) return;
 		if (!project) return;
 		if (searchstring) {
-			// TODO!!!!!!!!!!!!
 			const searchstring_count_config = api_config(
 				authinfo,
 				{
 					project: encodeURIComponent(project?.projectShortName?.toString())
 				},
-				{
-					resclass: selres,
-					searchString: encodeURIComponent(searchstring),
-					countOnly: true
-				}
+				fulltextQueries(selres, searchstring, true)
 			);
 			const count_res = await apiClient.getDatatextsearchProject(searchstring_count_config);
 			if (count_res && !Array.isArray(count_res) && 'count' in count_res) {
@@ -184,21 +185,11 @@
 				{
 					project: encodeURIComponent(project?.projectShortName?.toString())
 				},
-				{
-					resclass: selres,
-					searchString: encodeURIComponent(searchstring)
-				}
+				fulltextQueries(selres, searchstring)
 			);
 			const data = await apiClient.getDatatextsearchProject(searchstring_config);
 			console.log(data);
-			results = {};
-			for (const [iri, d] of Object.entries(data)) {
-				results[iri] = {};
-				for (const [key, val] of Object.entries(d as Record<string, string>)) {
-					if (key === 'owl:Class') continue;
-					results[iri][key] = [val];
-				}
-			}
+			results = searchResults(data as Record<string, unknown>[]);
 		} else {
 			try {
 				//
@@ -241,10 +232,9 @@
 				//
 				const data = await apiClient.getDataofclassProject(allofclass_get_config);
 
-				// The API returns ApiRes: Record<prop, primitive[]>[]
+				// Normalize current scalar IDs and legacy list-valued IDs before rendering.
 				results = {};
-				for (const d of (data as Record<string, string[]>[]) || []) {
-					const iri = d['iri'][0];
+				for (const [iri, d] of Object.entries(searchResults(data as Record<string, unknown>[]))) {
 					let mediaobject: MediaObject | null = null;
 					if (is_mediaobject(datamodel?.resources.find((r) => r.iri.toString() === selres))) {
 						const get_mo_config = api_config(authinfo || new AuthInfo('unknown', ''), {
@@ -301,40 +291,30 @@
 	});
 
 	$effect(() => {
-		const tmp_res =
-			datamodel?.resources.filter((x) => {
-				const gaga = x?.superclass ? [...x.superclass].map((s) => s.toString()) : [];
-				return !gaga.includes('oldap:OldapListNode');
-			}) || [];
-		let tmp_list = [];
-		for (const res of tmp_res) {
-			tmp_list.push(res.iri.toString() || 'XXXX');
-		}
-		res_list = tmp_list;
-		selected_resource = tmp_list[0];
-	});
-
-	$effect(() => {
-		console.log('effect', $state.snapshot(selected_resource));
-		selres = selected_resource;
-	});
-
-	$effect(() => {
-		let resdata = datamodel?.resources.find((x) => x.iri.toString() === selres);
-		if (resdata?.hasProperty) {
-			all_props = new Set(
-				resdata.hasProperty
-					.sort((a, b) => (a.order || 9999) - (b.order || 9999))
-					.map((hp) => ({
-						key: hp.property.propertyIri.toString(),
-						label: hp.property.name?.get(langobj)
-					}))
-			);
-		}
+		const model = datamodel;
+		const query = searchString;
+		const selectedClass = resourceClass;
+		const language = langobj;
+		if (!authinfo || !project || !model) return;
+		// The query depends on its context, not mutations of form/column state.
+		untrack(() => {
+			const queryKey = JSON.stringify([authinfo?.token, project?.projectShortName.toString(), selectedClass, query]);
+			if (lastQuery === queryKey) return;
+			lastQuery = queryKey;
+			const resource = model.resources.find(r => r.iri.toString() === selectedClass);
+			selres = selectedClass;
+			const columns = (resource?.properties ?? []).map(p => ({
+				key: p.propertyIri.toString(), label: p.name?.get(language)
+			}));
+			all_props = new Set(columns);
+			selprops = new Set(columns.map(p => p.key));
+			void do_search(query).catch((error: Error) => { searchError = error.message; });
+		});
 	});
 </script>
 
 <div>
+	{#if searchError}<p role="alert">{searchError}</p>{/if}
 	<hr />
 	{#if count > 0}
 		<div class="mt-2">Found {count} instances</div>

@@ -319,7 +319,15 @@ const postDatasearchProjectclassResclass_Body = z.object({ q: z.string(), search
 const ValueArray = z.array(z.union([z.string(), z.number(), z.number(), z.boolean(), z.null()]));
 const AttachedToRoleMap: z.ZodType<AttachedToRoleMap> = z.record(DataPermission);
 const InstanceCreateData: z.ZodType<InstanceCreateData> = z.object({ attachedToRole: AttachedToRoleMap, "oldap:attachedToRole": AttachedToRoleMap }).partial().passthrough();
-const InstanceData: z.ZodType<InstanceData> = z.record(z.union([ValueArray, z.string(), z.number(), z.number(), z.boolean(), z.null(), AttachedToRoleMap]));
+const InstanceData: z.ZodType<InstanceData> = z.object({
+    "rdf:type": z.array(z.string()).optional(),
+    "virtual:inferredTypes": z.array(z.string()).optional(),
+    "oldap:attachedToRole": AttachedToRoleMap.optional(),
+    "oldap:createdBy": z.array(z.string()),
+    "oldap:lastModifiedBy": z.array(z.string()),
+    "oldap:creationDate": z.array(z.string()),
+    "oldap:lastModificationDate": z.array(z.string())
+}).catchall(z.union([ValueArray, z.string(), z.number(), z.boolean(), z.null(), AttachedToRoleMap]));
 const AttachedToRoleDelete = z.union([z.string(), z.array(z.string())]);
 const AttachedToRoleUpdate: z.ZodType<AttachedToRoleUpdate> = z.union([AttachedToRoleMap, z.object({ add: AttachedToRoleMap, del: AttachedToRoleDelete }).partial()]);
 const InstanceUpdateData: z.ZodType<InstanceUpdateData> = z.object({ "oldap:attachedToRole": AttachedToRoleUpdate }).partial().passthrough();

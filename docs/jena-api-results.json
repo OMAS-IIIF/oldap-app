@@ -1,0 +1,111 @@
+{
+	"backend": "JenaConnection",
+	"passed": true,
+	"checks": [
+		{
+			"path": "/admin/project/search",
+			"params": {},
+			"status": 200,
+			"shape": "list",
+			"length": 6,
+			"first_item_fields": {
+				"projectIri": "str",
+				"projectShortName": "str"
+			}
+		},
+		{
+			"path": "/admin/user/search",
+			"params": {},
+			"status": 200,
+			"shape": "list",
+			"length": 17
+		},
+		{
+			"path": "/admin/role/search",
+			"params": {},
+			"status": 200,
+			"shape": "list",
+			"length": 10
+		},
+		{
+			"path": "/admin/hlist/search",
+			"params": {
+				"project": "chama"
+			},
+			"status": 200,
+			"shape": "list",
+			"length": 0
+		},
+		{
+			"path": "/admin/datamodel/shared",
+			"params": {},
+			"status": 200,
+			"shape": "dict",
+			"fields": ["annotationProperties", "externalOntologies", "project", "resources"]
+		},
+		{
+			"path": "/admin/datamodel/chama",
+			"params": {},
+			"status": 200,
+			"shape": "dict",
+			"fields": ["annotationProperties", "externalOntologies", "project", "resources"]
+		},
+		{
+			"path": "/admin/datamodel/fasnacht",
+			"params": {},
+			"status": 200,
+			"shape": "dict",
+			"fields": ["annotationProperties", "externalOntologies", "project", "resources"]
+		},
+		{
+			"path": "/data/ofclass/chama",
+			"params": {
+				"resClass": "oldap:Thing",
+				"includeProperties[]": "schema:name",
+				"limit": 2
+			},
+			"status": 200,
+			"shape": "list",
+			"length": 2,
+			"first_item_fields": {
+				"iri": "str",
+				"resclass": "str"
+			}
+		},
+		{
+			"path": "/data/ofclass/chama",
+			"params": {
+				"resClass": "oldap:Thing",
+				"countOnly": "true"
+			},
+			"status": 200,
+			"shape": "dict",
+			"fields": ["count"]
+		},
+		{
+			"path": "/data/textsearch/chama",
+			"params": {
+				"searchString": "Chama",
+				"limit": 2
+			},
+			"status": 200,
+			"shape": "list",
+			"length": 2,
+			"first_item_fields": {
+				"iri": "str",
+				"resclass": "str",
+				"shared:path": "str"
+			}
+		},
+		{
+			"path": "/data/textsearch/chama",
+			"params": {
+				"searchString": "Chama",
+				"countOnly": "true"
+			},
+			"status": 200,
+			"shape": "dict",
+			"fields": ["count"]
+		}
+	]
+}
