@@ -1,5 +1,7 @@
 # OLDAP App Context
 
+- Final release live (2026-11-09): oldap-app 0.2.8 is released; core PyPI wheels and immutable Docker tags are verified. Production API/library 1.0.0 and app 0.2.8 are active. Tools is an operator image; Jena retains its byte-identical existing JAR and namespace. Exact evidence/rollback: ../oldap-setup/docs/oldap-1.0.0-release.md. This supersedes earlier pending-release entries. Home is unchanged; accepted Zod 3 risk and intermittent browser timeout observation remain documented.
+
 - Final release preparation (2026-11-09): package 0.2.8; core metadata/locks move from RC to final while public API contracts remain unchanged. Final artifact acceptance/publication/deployment is coordinated by oldap-setup. Zod 3 remains an explicitly accepted temporary risk for oldap-app.
 
 - Security maintenance (2026-11-09): compatible runtime patches and Vitest 4.1.12 remove all critical audit entries; Tinypool is gone and Vite resolves esbuild normally without the vulnerable override. Test groups use test.projects. Zod 3 remains constrained by Zodios, so its high finding stays open. Source/tests and local AMD64 image validated; publication/deployment pending. See docs/dependency-security-review-20261109.md.
