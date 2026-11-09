@@ -1,5 +1,7 @@
 # OLDAP App Context
 
+- Dependency audit (2026-11-09): critical findings originate in developer-only Handlebars/Tinypool; neither is installed in the production app. Five high runtime package entries remain, including Zod 3 constrained by Zodios. No dependency changes yet; use docs/dependency-security-review-20261109.md for the staged update plan and evidence limitations.
+
 - Jena mainline integration (2026-11-09): the accepted migration is integrated into `main` with its complete ancestry. Core runtime/package versions remain the tested RC versions; this Git integration does not publish final 1.0.0 packages or change deployed images. Prior primary ref is retained by `pre-jena-merge-20261109`; this tag records Git history, not the deployed GraphDB baseline. Migration branches and old GraphDB checkouts are retained. Coordinated evidence: ../oldap-setup/docs/jena-mainline-merge-20261109.md. Older pending-merge notes below are historical.
 
 - Home activation (2026-11-04): `lrosenth/oldap-app:jena-0.2.7-rc1-6e5e392b8e5a-amd64` is deployed with a pinned registry digest. Public HTTPS/Chromium smoke passes; previous configuration retained for rollback. See sibling oldap-setup/docs/jena-apps-home.md. Production and stable image tags remain unchanged.

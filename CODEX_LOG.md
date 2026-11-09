@@ -1,3 +1,9 @@
+### Update 2026-11-09 17:43
+- Decisions: Audit dependency findings before selecting fixes; distinguish development-tool risk from production exposure and package counts from advisory counts.
+- Implementation: Current/old-main/deployed lock hashes match. Full npm audit: 33 package entries, three critical from Handlebars/Tinypool plus propagated Vitest severity, four distinct critical advisories. Runtime package audit: zero critical/five high. Read-only production manifest scan confirms critical tools absent; sole bundled name marker is MIME metadata. Documented upgrade/compatibility plan and GitHub alert API 403 limitation.
+- Open: Patch compatible packages, upgrade Vitest with tests, assess Zod 3/API-client compatibility and framework/runtime high findings. Exact original two Dependabot IDs remain unavailable.
+- Risks/Assumptions: No dependency/code/deployment changes or exploit tests. Audit snapshot is not a general security clearance; omit=dev alone misses bundled framework code.
+
 ### Update 2026-11-09 17:33
 - Decisions: Preserve complete migration history in main via a non-squashed merge; keep pre-jena-merge-20261109 at the previous remote primary tip. No final release/version change or deployment.
 - Implementation: Refreshed origin; primary has no unique commits and merge-tree exactly matches reviewed migration 6c01cc453566. Added current integration context only; runtime sources remain unchanged.
