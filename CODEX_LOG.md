@@ -1,3 +1,9 @@
+### Update 2026-11-09 17:47
+- Decisions: Apply compatible security patches, upgrade Vitest to the Node-20-compatible v4 line, remove obsolete esbuild override; keep Zod 3 until a supported API-client migration is designed.
+- Implementation: Handlebars 4.7.10, Axios 1.21.1, follow-redirects 1.16.3, devalue 5.9.4, Vitest 4.1.12; Tinypool removed, esbuild resolves 0.25.12. Test config uses projects and Vitest defineConfig. Full audit 33→25 entries/zero critical; runtime 5→2 high entries (Zod/parent). Check, 20 unit tests, four browser tests, targeted lint and AMD64 Docker build pass.
+- Open: Runtime-image HTTP startup and installed-version checks passed; publish/deploy after acceptance. Zod 3 compatibility and other framework/build-tool findings remain open; do not force incompatible Zod or disable validation.
+- Risks/Assumptions: No application API/schema change. Audit counts represent packages; no broad security clearance. Existing Dockerfile/build platform settings preserved; production unchanged.
+
 ### Update 2026-11-09 17:43
 - Decisions: Audit dependency findings before selecting fixes; distinguish development-tool risk from production exposure and package counts from advisory counts.
 - Implementation: Current/old-main/deployed lock hashes match. Full npm audit: 33 package entries, three critical from Handlebars/Tinypool plus propagated Vitest severity, four distinct critical advisories. Runtime package audit: zero critical/five high. Read-only production manifest scan confirms critical tools absent; sole bundled name marker is MIME metadata. Documented upgrade/compatibility plan and GitHub alert API 403 limitation.

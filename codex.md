@@ -1,5 +1,7 @@
 # OLDAP App Context
 
+- Security maintenance (2026-11-09): compatible runtime patches and Vitest 4.1.12 remove all critical audit entries; Tinypool is gone and Vite resolves esbuild normally without the vulnerable override. Test groups use test.projects. Zod 3 remains constrained by Zodios, so its high finding stays open. Source/tests and local AMD64 image validated; publication/deployment pending. See docs/dependency-security-review-20261109.md.
+
 - Dependency audit (2026-11-09): critical findings originate in developer-only Handlebars/Tinypool; neither is installed in the production app. Five high runtime package entries remain, including Zod 3 constrained by Zodios. No dependency changes yet; use docs/dependency-security-review-20261109.md for the staged update plan and evidence limitations.
 
 - Jena mainline integration (2026-11-09): the accepted migration is integrated into `main` with its complete ancestry. Core runtime/package versions remain the tested RC versions; this Git integration does not publish final 1.0.0 packages or change deployed images. Prior primary ref is retained by `pre-jena-merge-20261109`; this tag records Git history, not the deployed GraphDB baseline. Migration branches and old GraphDB checkouts are retained. Coordinated evidence: ../oldap-setup/docs/jena-mainline-merge-20261109.md. Older pending-merge notes below are historical.

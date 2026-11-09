@@ -1,0 +1,77 @@
+{
+  "date": "2026-11-09",
+  "full_audit_counts": {
+    "info": 0,
+    "low": 6,
+    "moderate": 10,
+    "high": 9,
+    "critical": 0,
+    "total": 25
+  },
+  "runtime_audit_counts": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 2,
+    "critical": 0,
+    "total": 2
+  },
+  "remaining_runtime_packages": [
+    "@zodios/core",
+    "zod"
+  ],
+  "remaining_full_packages": {
+    "@rollup/plugin-node-resolve": "low",
+    "@sveltejs/adapter-node": "low",
+    "@sveltejs/kit": "moderate",
+    "@sveltejs/vite-plugin-svelte": "low",
+    "@sveltejs/vite-plugin-svelte-inspector": "low",
+    "@typescript-eslint/eslint-plugin": "moderate",
+    "@typescript-eslint/parser": "moderate",
+    "@typescript-eslint/type-utils": "moderate",
+    "@typescript-eslint/typescript-estree": "moderate",
+    "@typescript-eslint/utils": "moderate",
+    "@zodios/core": "high",
+    "brace-expansion": "high",
+    "cookie": "low",
+    "deepmerge": "low",
+    "fast-uri": "high",
+    "js-yaml": "high",
+    "minimatch": "moderate",
+    "nanoid": "high",
+    "openapi-zod-client": "high",
+    "postcss": "moderate",
+    "postcss-selector-parser": "moderate",
+    "source-map-js": "high",
+    "typescript-eslint": "moderate",
+    "vite": "high",
+    "zod": "high"
+  },
+  "validation": {
+    "typecheck_errors": 0,
+    "typecheck_warnings": 0,
+    "unit_tests_passed": 20,
+    "browser_tests_passed": 4,
+    "targeted_eslint": "passed",
+    "amd64_build": "passed"
+  },
+  "image": {
+    "image": "lrosenth/oldap-app:jena-0.2.7-rc1-8c6ca697eba8-amd64",
+    "image_id": "sha256:18fada657d0a5d8338616bfcb0489a894c273df72e9daca2d94d233ad1deabf6",
+    "http_smoke": 200,
+    "runtime_versions": {
+      "axios": "1.21.1",
+      "follow-redirects": "1.16.3",
+      "devalue": "5.9.4",
+      "zod": "3.25.76"
+    },
+    "development_tools_absent": [
+      "handlebars",
+      "tinypool",
+      "vitest"
+    ],
+    "published": false,
+    "deployed": false
+  },
+  "source_fingerprint": "8c6ca697eba869ece0c0c8d235fe313daac150033d2aef4c15228138d8099c68"
+}

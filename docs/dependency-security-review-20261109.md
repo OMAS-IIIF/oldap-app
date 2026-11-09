@@ -1,6 +1,52 @@
 # Dependency security review — 2026-11-09
 
-## Scope and evidence
+## Remediation follow-up
+
+The compatible fixes below are implemented locally and tested; the original
+audit sections remain historical evidence. No image publication or deployment
+has occurred.
+
+| Dependency | Previous | Updated |
+|---|---|---|
+| Handlebars | 4.7.9 | 4.7.10 |
+| Axios | 1.18.1 | 1.21.1 |
+| follow-redirects | 1.16.0 | 1.16.3 |
+| devalue | 5.8.2 | 5.9.4 |
+| Vitest | 3.2.7 | 4.1.12 |
+| Tinypool | 1.1.1 | Removed by Vitest 4 |
+| esbuild | Forced 0.24.2 | 0.25.12, normal Vite dependency |
+
+Vitest uses `test.projects` and `defineConfig` from `vitest/config`; existing
+client/server test boundaries remain intact. Removing the historical esbuild
+override restores Vite's declared ^0.25.0 range. Docker still keeps its original
+GOMAXPROCS=1 setting. No application API/generated schema is changed.
+
+Fresh audits: full tree 33 → 25 package entries, critical 3 → 0; runtime-only
+5 → 2 high package entries, both Zod and its parent @zodios/core. Remaining
+framework/build-tool findings are not silently dismissed. Version updates stayed
+within existing ranges except the explicitly tested Vitest major upgrade.
+
+Validation: Svelte check has zero errors/warnings; all 20 unit tests and four
+mocked browser workflows pass; targeted ESLint passes. Production build and
+clean Linux/AMD64 Docker build pass with the unmodified Dockerfile. Runtime
+image startup/version/absence checks are recorded in the remediation evidence.
+No test-server or smoke container is left running.
+
+### Separate Zod assessment
+
+Registry metadata still lists @zodios/core 10.9.6 as latest, requiring zod ^3.x;
+the latest Zod 3 is 3.25.76. Therefore no compatible upstream patched version
+is available through that contract. Do not force Zod 4 or disable validation
+merely to suppress the audit. The generated client includes array schemas and
+validates API responses; checked +server/+page.server code does not expose a
+Zod request-body parsing route. This narrows the observed server entry points,
+but does not prove oversized or unexpected API data harmless in a browser.
+A supported client/generator migration or a maintained upstream Zod-3 fix needs
+its own contract tests. This finding remains open and is not claimed mitigated.
+
+Vitest migration reference: https://v4.vitest.dev/guide/migration.html
+
+## Original scope and evidence
 
 Read-only review of oldap-app after mainline integration. No dependency, runtime,
 image or deployment changes; no exploit payloads were sent to production.

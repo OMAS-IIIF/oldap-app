@@ -2,7 +2,7 @@ import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import tailwindcss from '@tailwindcss/vite';
 import { svelteTesting } from '@testing-library/svelte/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
 	plugins: [
@@ -16,7 +16,8 @@ export default defineConfig({
 	],
 
 	test: {
-		workspace: [
+		// Vitest 4 names the existing browser/server test groups projects.
+		projects: [
 			{
 				extends: './vite.config.ts',
 				plugins: [svelteTesting()],
