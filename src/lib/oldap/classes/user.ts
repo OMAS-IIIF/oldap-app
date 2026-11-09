@@ -16,10 +16,11 @@ export interface Role {
 	[roleId: string]: DataPermission | null;
 }
 
-export function jsonToRole(json: any): Role {
+/** Missing optional role assignments represent an empty role map. */
+export function jsonToRole(json?: Record<string, string> | null): Role {
 	const role: Role = {};
 
-	for (const [roleId, dperm] of Object.entries(json)) {
+	for (const [roleId, dperm] of Object.entries(json ?? {})) {
 		const tmp = stringToDataPermission(dperm as string)
 		role[roleId] = tmp ? tmp : null;
 	}

@@ -15,7 +15,7 @@
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run && npm run test:e2e",
 		"test:e2e": "playwright test",
-		"zod": "npx openapi-zod-client ../oldap-api/API-def/oldap-api.yaml --with-docs -o src/lib/apischema/zod.ts --export-types"
+		"zod": "npx openapi-zod-client ../oldap-api/API-def/oldap-api.yaml --with-docs -o src/lib/apischema/zod.ts --export-types && node tools/fix-generated-schema.mjs"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^2.0.2",

@@ -2,6 +2,7 @@
   - Copyright (©) 2026. This software is licenced under the GNU General Public License v3.0 (https://www.gnu.org/licenses/gpl-3.0.en.html)
   -->
 <script lang="ts">
+	import { searchResults } from '$lib/helpers/searchResults';
 	import { getLocale } from '$lib/paraglide/runtime';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
@@ -246,10 +247,9 @@
 			//
 			const data = await apiClient.getDataofclassProject(allofclass_get_config);
 
-			// The API returns ApiRes: Record<prop, primitive[]>[]
+			// Normalize current scalar IDs and legacy list-valued IDs before rendering.
 			results = {};
-			for (const d of (data as Record<string, string[]>[]) || []) {
-				const iri = d['iri'][0];
+			for (const [iri, d] of Object.entries(searchResults(data as Record<string, unknown>[]))) {
 				let mediaobject: MediaObject | null = null;
 				if (is_mo) {
 					const get_mo_config = api_config(authinfo || new AuthInfo('unknown', ''), {
@@ -323,13 +323,13 @@
 
 	$effect(() => {
 		let resdata = datamodel?.resources.find((x) => x.iri.toString() === selres);
-		if (resdata?.hasProperty) {
+		if (resdata?.properties) {
 			all_props = new Set(
-				resdata.hasProperty
-					.sort((a, b) => (a.order || 9999) - (b.order || 9999))
+				resdata.properties
+					.sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999))
 					.map((hp) => ({
-						key: hp.property.propertyIri.toString(),
-						label: hp.property.name?.get(langobj)
+						key: hp.propertyIri.toString(),
+						label: hp.name?.get(langobj)
 					}))
 			);
 		}

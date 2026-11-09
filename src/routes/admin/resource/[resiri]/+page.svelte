@@ -77,6 +77,7 @@
 	let fragment = $state('');
 	let all_prefixes = $state<string[]>([]);
 	let superclasses = $state<Superclass[]>([]);
+	let originalSuperclasses: string[] = [];
 	let res = $state<ResourceClass | null>(null);
 	let label = $state<LangString>(new LangString());
 	let orig_label: LangString = new LangString();
@@ -148,12 +149,13 @@
 			// we are editing an existing resource
 			res = tmp_resources.find(r => r.iri.toString() === data.resiri) || null;
 			if (res) {
-				superclasses = res.superclass ? [...res.superclass].filter(s => s.toString() !== 'oldap:Thing').map(s => s.toString()) : [];
+				superclasses = res.superclass ? [...res.superclass].filter(s => s.toString() !== 'oldap:Thing').map(s => ({ prefix: s.prefix!.toString(), fragment: s.fragment!.toString() })) : [];
+				originalSuperclasses = superclasses.map(s => `${s.prefix}:${s.fragment}`);
 				label = res.label || new LangString();
 				orig_label = label.clone();
 				comment = res.comment || new LangString();
 				orig_comment = comment.clone();
-				closed = res.closed || true;
+				closed = res.closed ?? true;
 				orig_closed = closed;
 				const tmp = QName.createQName(res.iri.toString());
 				prefix = tmp.prefix?.toString() || '';
@@ -212,7 +214,8 @@
 			comment?: string[],
 			closed?: boolean
 		} = {
-			superclass: superclasses.length > 0 ?  superclasses : undefined,
+			// The form edits QName parts; the API accepts complete QName strings.
+			superclass: superclasses.length > 0 ? superclasses.map(s => `${s.prefix}:${s.fragment}`) : undefined,
 			label: label ? label.toApi() : undefined,
 			comment: comment ? comment.toApi() : undefined,
 			closed: closed
@@ -236,7 +239,7 @@
 		if (!ok) return;
 
 		let resourcedata: {
-			// superclass?: string[] | Partial<Record<'add'|'del', string[]>> | null,
+			superclass?: Partial<Record<'add'|'del', string[]>>,
 			label?: string[] | Partial<Record<'add'|'del', string[]>> | null,
 			comment?: string[] | Partial<Record<'add'|'del', string[]>> | null,
 			closed?: boolean
@@ -247,6 +250,16 @@
 		};
 
 
+		// Send only explicit hierarchy changes; preserve the implicit oldap:Thing base.
+		const currentSuperclasses = superclasses.map(s => `${s.prefix}:${s.fragment}`);
+		const added = currentSuperclasses.filter(iri => !originalSuperclasses.includes(iri));
+		const removed = originalSuperclasses.filter(iri => !currentSuperclasses.includes(iri));
+		if (added.length || removed.length) {
+			resourcedata.superclass = {
+				...(added.length ? { add: added } : {}),
+				...(removed.length ? { del: removed } : {})
+			};
+		}
 		const resourceIri = prefix + ':' + fragment;
 		if (authinfo) {
 			const resource_post = api_notget_config(authinfo, {project: projectid, resource: resourceIri});

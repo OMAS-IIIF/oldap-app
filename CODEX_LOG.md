@@ -1,6 +1,38 @@
+### Update 2026-11-09 17:33
+- Decisions: Preserve complete migration history in main via a non-squashed merge; keep pre-jena-merge-20261109 at the previous remote primary tip. No final release/version change or deployment.
+- Implementation: Refreshed origin; primary has no unique commits and merge-tree exactly matches reviewed migration 6c01cc453566. Added current integration context only; runtime sources remain unchanged.
+- Open: Verify coordinated remote refs and record final merge IDs in setup/docs/jena-mainline-merge-20261109.md. Final 1.0.0 artifact publication and old checkout cleanup remain separate.
+- Risks/Assumptions: Existing deployed/candidate acceptance covers identical runtime trees; this is not a fresh full-system test. All nine checkouts were clean. Existing GraphDB checkouts and migration branches are retained.
+
+### Update 2026-11-05 12:08
+- Decisions: Checkpoint the reviewed Jena migration changes on the migration branch; keep publication, merges and deployment separate.
+- Implementation: Rechecked Svelte (zero errors/warnings), 20 unit tests and four browser tests. All 220 packaged source files match the accepted home image snapshot. Checked candidate changes for accidental credentials and whitespace.
+- Open: Remaining production readiness gates and final release acceptance; see the coordinated setup checkpoint.
+- Risks/Assumptions: This checkpoint does not change running services or production. Existing skipped tests and prior runtime evidence retain their documented scope.
+
+### Update 2026-11-04 23:45
+- Decisions: Activate the reviewed working-tree fixes on home using an isolated, digest-pinned Jena candidate; preserve existing stable tags and production.
+- Implementation: Built/verified/published `lrosenth/oldap-app:jena-0.2.7-rc1-6e5e392b8e5a-amd64@sha256:ad3308b9e4c18054ed431e24ebec953efcfd5253fc910a39014da9ace28220e7` from a hashed source snapshot. Image-only Ansible rollout backs up installed selection and replaces only the two web services. Public HTTPS/Chromium checks pass without JavaScript errors or server errors; Fasnacht stories and archive return real records.
+- Open: Interactive write/upload acceptance by the user; production deployment and source commits/merge remain separate.
+- Risks/Assumptions: No API contract, role or data changes. Jena/identity/Redis/Caddy container identities and start times unchanged. Provenance and rollback: sibling oldap-setup/docs/jena-apps-home.md.
+
 # CODEX_LOG
 
 Ongoing technical work log for this project. New entries are inserted at the top.
+
+### Update 2026-11-04 23:26
+
+- Decisions: Complete local Jena frontend checks without deployment; distinguish mocked browser writes from real database acceptance. Preserve public API contracts and unseen RDF fields.
+- Implementation: Fixed remaining schema/model types and fieldset semantics; durable post-generation schema correction; QName superclass creation/edit deltas and false closed flag; optional user roles and project/model restoration; connected header search and implemented content-only MODIFY with error retention. Replaced obsolete tests and documented release boundaries.
+- Open: Coordinated image/deployment and real write/upload/permission acceptance on home.org. Browser tests do not exercise every administration screen or binary format.
+- Risks/Assumptions: Build succeeds, typecheck has zero errors/warnings, 20 unit/component and four mocked Chromium tests pass; eleven live read-only API probes pass. No server data/roles changed, no publish/deploy, original GraphDB checkout untouched. Full repository formatting/lint cleanup is outside this change; focused new-code lint passes.
+
+### Update 2026-11-04 23:14
+
+- Decisions: Review oldap-app in a separate migration/jena checkout; preserve HTTP contracts and use the existing flat resource property model.
+- Implementation: Corrected full-text parameter casing/encoding, merged row-based search responses, retained complete scalar/legacy array IRIs, and updated instance/upload/search components from removed nested properties to PropertyClass fields. Added four regressions, read-only live API probe and compatibility evidence.
+- Open: Seven pre-existing typecheck errors, one accessibility warning, obsolete h1 component/E2E expectations, and browser write/upload acceptance before release. No deployment or image publication.
+- Risks/Assumptions: Build passes; 14 unit tests pass and one pre-existing component test fails. Eleven home.org GET probes pass on JenaConnection, including nonempty full-text hits; list search is empty. GET checks do not prove editing workflows or permissions for other users. Original GraphDB checkout remains clean.
 
 ### Update 2026-07-23 18:15
 

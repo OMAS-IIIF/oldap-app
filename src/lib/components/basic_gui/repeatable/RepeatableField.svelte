@@ -183,12 +183,12 @@
 	};
 </script>
 
-<div class="mt-3">
-	<label
+<fieldset class="mt-3">
+	<legend
 		class="{required
 			? 'underline'
 			: ''} text-input-label-fg dark:text-input-label-fg-dark block text-xs/4 font-medium"
-		>{label}:</label
+		>{label}:</legend
 	>
 
 	<div class="space-y-2 {userClass}">
@@ -234,4 +234,4 @@
 			{/each}
 		{/if}
 	</div>
-</div>
+</fieldset>

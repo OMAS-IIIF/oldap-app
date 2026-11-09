@@ -37,79 +37,36 @@
 		authinfo = data;
 	});
 
+	// Restore the selected project's model as well as its label after login/reload.
+	// A cancelled load must not restore data from a previous user session.
 	$effect(() => {
-		const _ = $refreshProjectsList;
-		read_projects($userStore, authinfo).then((pdata) => {
-			projects = pdata;
-			if (!(current_project_id || '' in projects)) { // the current project has been removed from the list
-				current_project_id = Object.values(projects)[0]?.projectShortName.toString();
-				projectStore.set(projects[current_project_id] || null);
-			}
-		}).catch((error) => {
-			errorInfoStore.set(process_api_error(error as Error));
-			return;
-		});
-	});
-
-	/*
-	const read_projects = async (user?: OldapUser | null, authinfo?: AuthInfo | null) => {
-		if (!user || !authinfo) {
-			return {}
-		}
-
-		//
-		// first we search the projects (if user is not root, only the projects the user is member of,
-		// if the user is rppot, then we search all available projects.
-		//
-		let project_iris: string[] | undefined;
-		if (user.isRoot) {
-			const all_projects_config = api_config(authinfo)
-			try {
-				const res = await apiClient.getAdminprojectsearch(all_projects_config);
-				project_iris = res.map(item => item.projectIri) as string[] | undefined;
-			}
-			catch (err) {
-				process_api_error(err as Error);
-			}
-		}
-		else {
-			project_iris = user.inProject?.map((x) => (x.project.toString()));
-		}
-		//
-		// now we get the full project data for each project
-		//
-		let projs: Record<string, OldapProject> = {};
-		for (const iri of project_iris || []) {
-			let config_projectiri = api_config(authinfo, undefined, { iri: iri });
-			try {
-				let proj_data = await apiClient.getAdminprojectget(config_projectiri);
-				const project = OldapProject.fromOldapJson(proj_data);
-				projs[project.projectShortName.toString()] = project;
-			}
-			catch (err) {
-				process_api_error(err as Error);
-			}
-		}
-		return projs;
-	}
-	*/
-
-	userStore.subscribe(async (user: OldapUser | null) => {
-		if (user && authinfo) {
-			projects = await read_projects(user, authinfo);
-			current_project_id = Object.values(projects)[0]?.projectShortName.toString();
-			projectStore.set(projects[current_project_id] || null);
-			// for (const k in projects) {
-			// 	current_project_id = projects[k].projectShortName.toString();
-			// 	projectStore.set(projects[k]);
-			// 	break;
-			// }
-		}
-		else {
+		const user = $userStore;
+		const auth = $authInfoStore;
+		const refresh = $refreshProjectsList;
+		void refresh;
+		let cancelled = false;
+		if (!user || !auth) {
+			projects = {};
 			current_project_id = null;
 			projectStore.set(null);
-			projects = {};
+			datamodelStore.set(null);
+			return;
 		}
+		read_projects(user, auth).then((available) => {
+			if (cancelled) return;
+			projects = available;
+			const selected = current_project_id && current_project_id in available
+				? current_project_id : Object.keys(available)[0];
+			if (selected) set_current_project(selected);
+			else {
+				current_project_id = null;
+				projectStore.set(null);
+				datamodelStore.set(null);
+			}
+		}).catch((error) => {
+			if (!cancelled) errorInfoStore.set(process_api_error(error as Error));
+		});
+		return () => { cancelled = true; };
 	});
 
 	const set_current_project = (project_id: string): void => {
@@ -118,6 +75,7 @@
 		const dm_config = api_config(authinfo || new AuthInfo('', ''), { project:  project_id});
 		spinnerStore.set(m.retrieve_dm());
 		apiClient.getAdmindatamodelProject(dm_config).then((jsonresult) => {
+			if (current_project_id !== project_id || !$userStore) return;
 			const datamodel = DatamodelClass.fromOldapJson(jsonresult);
 			datamodelStore.set(datamodel);
 			spinnerStore.set(null);
@@ -134,7 +92,7 @@
 
 
 <DropdownLabel bind:isOpen={projectsIsOpen} name="projects"
-							 labelText={current_project_id ? projects[current_project_id].label?.get(langobj) : 'Projects'}>
+							 labelText={current_project_id ? projects[current_project_id]?.label?.get(langobj) : 'Projects'}>
 	<DropdownMenu bind:isOpen={projectsIsOpen} position="left" name="projects" id="projects-id">
 		{#each Object.entries(projects) as [key, value]}
 			<DropdownLinkItem bind:isOpen={projectsIsOpen}

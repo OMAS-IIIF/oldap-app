@@ -2,6 +2,10 @@
   - Copyright (©) 2026. This software is licenced under the GNU General Public License v3.0 (https://www.gnu.org/licenses/gpl-3.0.en.html)
   -->
 <script lang="ts">
+	import { instanceFormValues, instanceFormChanges } from '$lib/helpers/instanceForm';
+	let originalValues: Record<string, string[]> = {};
+	let saveError = $state('');
+	let saving = $state(false);
 	import { locales, getLocale } from '$lib/paraglide/runtime';
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { authInfoStore } from '$lib/stores/authinfo';
@@ -11,7 +15,8 @@
 	import { userStore } from '$lib/stores/user';
 	import DropdownField from '$lib/components/basic_gui/inputs/DropdownField.svelte';
 	import { getContext, onMount, untrack } from 'svelte';
-	import { type HasProperty, ResourceClass } from '$lib/oldap/classes/resource';
+	import { ResourceClass } from '$lib/oldap/classes/resource';
+	import type { PropertyClass } from '$lib/oldap/classes/property';
 	import TextFieldData from '$lib/components/basic_gui/inputs/TextFieldData.svelte';
 	import { XsdDatatypes } from '$lib/oldap/enums/xsd_datatypes';
 	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
@@ -52,7 +57,7 @@
 	let selected_resource = $state<string>('');
 
 	let selres = $state<string>('');
-	let hasprops = $state<HasProperty[]>([]);
+	let hasprops = $state<PropertyClass[]>([]);
 
 	const text_dtypes = [XsdDatatypes.xsdString, XsdDatatypes.NCName];
 	const langstr_dtypes = [XsdDatatypes.langString];
@@ -221,45 +226,46 @@
 				.getDataProjectInstiri(get_data)
 				.then((data) => {
 					selres = data && data['rdf:type'] ? data['rdf:type'][0]?.toString() : '';
-					hasprops = (resources[selres]?.hasProperty || []).sort(
-						(a: HasProperty, b: HasProperty) => (a.order ?? 9999) - (b.order ?? 9999)
+					hasprops = (resources[selres]?.properties || []).sort(
+						(a: PropertyClass, b: PropertyClass) => (a.order ?? 9999) - (b.order ?? 9999)
 					);
 					for (const prop of hasprops) {
-						if (data[prop.property.propertyIri.toString()] === undefined) {
-							if (prop.property.datatype === XsdDatatypes.langString) {
-								values[prop.property.propertyIri.toString()] = new LangString();
+						if (data[prop.propertyIri.toString()] === undefined) {
+							if (prop.datatype === XsdDatatypes.langString) {
+								values[prop.propertyIri.toString()] = new LangString();
 							} else {
-								values[prop.property.propertyIri.toString()] = [];
+								values[prop.propertyIri.toString()] = [];
 							}
 							continue;
 						}
-						if (prop.property.propertyIri.toString() !== 'oldap:attachedToRole') {
-							switch (prop.property.datatype) {
+						if (prop.propertyIri.toString() !== 'oldap:attachedToRole') {
+							switch (prop.datatype) {
 								case XsdDatatypes.xsdString:
-									values[prop.property.propertyIri.toString()] = data[
-										prop.property.propertyIri.toString()
+									values[prop.propertyIri.toString()] = data[
+										prop.propertyIri.toString()
 									] as Array<string>;
 									break;
 								case XsdDatatypes.date:
-									values[prop.property.propertyIri.toString()] = (
-										data[prop.property.propertyIri.toString()] as Array<string>
+									values[prop.propertyIri.toString()] = (
+										data[prop.propertyIri.toString()] as Array<string>
 									).map((x) => new XsdDate(x));
 									break;
 								case XsdDatatypes.langString:
-									values[prop.property.propertyIri.toString()] = LangString.fromStringArray(
-										data[prop.property.propertyIri.toString()] as Array<string>
+									values[prop.propertyIri.toString()] = LangString.fromStringArray(
+										data[prop.propertyIri.toString()] as Array<string>
 									);
 									break;
 								default:
-									values[prop.property.propertyIri.toString()] = data[
-										prop.property.propertyIri.toString()
+									values[prop.propertyIri.toString()] = data[
+										prop.propertyIri.toString()
 									] as Array<string>;
 							}
 						}
 					}
+					originalValues = instanceFormValues(values);
 				})
 				.catch((err) => {
-					console.error(err);
+					saveError = err.message;
 				});
 		}
 	});
@@ -273,17 +279,17 @@
 			const _ = selres; // effect must run if selres changes
 			if (propertyIri) return;
 			untrack(() => {
-				if (resources[selres]?.hasProperty !== undefined) {
-				hasprops = (resources[selres].hasProperty || []).sort(
-					(a: HasProperty, b: HasProperty) => (a.order ?? 9999) - (b.order ?? 9999)
+				if (resources[selres]?.properties !== undefined) {
+				hasprops = (resources[selres].properties || []).sort(
+					(a: PropertyClass, b: PropertyClass) => (a.order ?? 9999) - (b.order ?? 9999)
 				);
 					values = {};
 					hasprops.forEach((hasprop) => {
-						const propIri = hasprop.property.propertyIri.toString();
+						const propIri = hasprop.propertyIri.toString();
 						const min = hasprop?.minCount && hasprop.minCount > 0 ? hasprop.minCount : 0;
 						input_fields[propIri] = undefined;
 
-						switch (hasprop.property.datatype) {
+						switch (hasprop.datatype) {
 							case XsdDatatypes.langString:
 								values[propIri] = new LangString();
 								break;
@@ -307,18 +313,18 @@
 
 	function add_resource() {
 		let data: Record<string, (string | null)[]> = {};
-		(resources[selres] ? resources[selres]?.hasProperty || [] : []).forEach((hasprop) => {
-			const propname = hasprop.property.propertyIri.toString();
+		(resources[selres] ? resources[selres]?.properties || [] : []).forEach((hasprop) => {
+			const propname = hasprop.propertyIri.toString();
 			if (values[propname] instanceof LangString) {
-				data[hasprop.property.propertyIri.toString()] = values[propname].toApi();
+				data[hasprop.propertyIri.toString()] = values[propname].toApi();
 			}
 			if (
 				Array.isArray(values[propname]) &&
 				values[propname].length > 0 &&
 				values[propname][0] instanceof XsdDate
 			) {
-				data[hasprop.property.propertyIri.toString()] = (
-					values[hasprop.property.propertyIri.toString()] as XsdDate[]
+				data[hasprop.propertyIri.toString()] = (
+					values[hasprop.propertyIri.toString()] as XsdDate[]
 				).map((x) => x.toApi());
 			}
 			if (
@@ -326,8 +332,8 @@
 				values[propname].length > 0 &&
 				typeof values[propname][0] === 'string'
 			) {
-				data[hasprop.property.propertyIri.toString()] = values[
-					hasprop.property.propertyIri.toString()
+				data[hasprop.propertyIri.toString()] = values[
+					hasprop.propertyIri.toString()
 				] as string[];
 			}
 		});
@@ -348,8 +354,24 @@
 			});
 	}
 
-	function modify_resource() {
-		console.log('modify_resource dummy');
+	/** Save content edits through the existing API; never replace unseen fields. */
+	async function modify_resource() {
+		if (!authinfo || !project || !propertyIri || saving) return;
+		const changes = instanceFormChanges(originalValues, instanceFormValues(values));
+		if (!Object.keys(changes).length) { success = true; return; }
+		saving = true;
+		saveError = '';
+		try {
+			await apiClient.postDataProjectInstiri(changes, api_notget_config(authinfo, {
+				project: project.projectShortName.toString(),
+				instiri: encodeURIComponent(propertyIri)
+			}));
+			success = true;
+		} catch (error) {
+			saveError = error instanceof Error ? error.message : String(error);
+		} finally {
+			saving = false;
+		}
 	}
 
 	type WindowCtx = { close: () => void };
@@ -358,7 +380,8 @@
 </script>
 
 <div>
-	<form>
+	<form onsubmit={(event) => event.preventDefault()}>
+		{#if saveError}<p role="alert">{saveError}</p>{/if}
 		<DropdownField
 			items={res_list}
 			id="allres_id"
@@ -368,49 +391,49 @@
 			bind:selectedItem={selres}
 		/>
 
-		{#each hasprops as hasprop (hasprop.property.propertyIri.toString())}
-			{@const propname = hasprop.property.propertyIri.toString()}
+		{#each hasprops as hasprop (hasprop.propertyIri.toString())}
+			{@const propname = hasprop.propertyIri.toString()}
 			{#if values[propname]}
-				{#if hasprop.property?.datatype === XsdDatatypes.xsdString}
+				{#if hasprop?.datatype === XsdDatatypes.xsdString}
 					<TextFieldData
-						id={hasprop.property?.propertyIri?.fragment?.toString() || 'prop_id'}
+						id={hasprop?.propertyIri?.fragment?.toString() || 'prop_id'}
 						name="prop_name"
-						label={hasprop.property?.name?.get(langobj) || hasprop.property?.propertyIri.toString()}
+						label={hasprop?.name?.get(langobj) || hasprop?.propertyIri.toString()}
 						minCount={hasprop?.minCount || 0}
 						maxCount={hasprop?.maxCount || Infinity}
 						bind:values={values[propname]}
-						bind:this={input_fields[hasprop.property.propertyIri.toString()]}
+						bind:this={input_fields[hasprop.propertyIri.toString()]}
 					/>
-				{:else if hasprop.property?.datatype === XsdDatatypes.date}
+				{:else if hasprop?.datatype === XsdDatatypes.date}
 					<DatePickerData
-						id={hasprop.property?.propertyIri?.fragment?.toString() || 'prop_id'}
+						id={hasprop?.propertyIri?.fragment?.toString() || 'prop_id'}
 						name="prop_name"
-						label={hasprop.property?.name?.get(langobj) || hasprop.property?.propertyIri.toString()}
+						label={hasprop?.name?.get(langobj) || hasprop?.propertyIri.toString()}
 						minCount={hasprop?.minCount || 0}
 						maxCount={hasprop?.maxCount || Infinity}
 						bind:values={values[propname]}
-						bind:this={input_fields[hasprop.property.propertyIri.toString()]}
+						bind:this={input_fields[hasprop.propertyIri.toString()]}
 					/>
-				{:else if hasprop.property?.datatype === XsdDatatypes.langString && values[propname] instanceof LangString}
+				{:else if hasprop?.datatype === XsdDatatypes.langString && values[propname] instanceof LangString}
 					<LangstringfieldNew
-						id={hasprop.property?.propertyIri?.fragment?.toString() || 'prop_id'}
+						id={hasprop?.propertyIri?.fragment?.toString() || 'prop_id'}
 						name="prop_name"
 						placeholder="Enter a value"
 						{languages}
-						input_type={hasprop.editor === 'dash:TextFieldWithLangEditor' ? 'input' : 'textarea'}
-						label={hasprop.property?.name?.get(langobj) || hasprop.property?.propertyIri.toString()}
+						input_type={hasprop.editor?.toString() === 'dash:TextFieldWithLangEditor' ? 'input' : 'textarea'}
+						label={hasprop?.name?.get(langobj) || hasprop?.propertyIri.toString()}
 						bind:value={values[propname]}
 					/>
-				{:else if hasprop.property?.toClass && hlists[hasprop.property.toClass.toString()]}
+				{:else if hasprop?.toClass && hlists[hasprop.toClass.toString()]}
 					<HlistSelectorData
-						id={hasprop.property?.propertyIri?.fragment?.toString() || 'prop_id'}
+						id={hasprop?.propertyIri?.fragment?.toString() || 'prop_id'}
 						name="prop_name"
-						label={hasprop.property?.name?.get(langobj) || hasprop.property?.propertyIri.toString()}
+						label={hasprop?.name?.get(langobj) || hasprop?.propertyIri.toString()}
 						minCount={hasprop?.minCount || 0}
 						maxCount={hasprop?.maxCount || Infinity}
-						hlist={hlists[hasprop.property.toClass.toString()]}
+						hlist={hlists[hasprop.toClass.toString()]}
 						bind:values={values[propname]}
-						bind:this={input_fields[hasprop.property.propertyIri.toString()]}
+						bind:this={input_fields[hasprop.propertyIri.toString()]}
 					/>
 				{/if}
 			{:else}
@@ -420,19 +443,19 @@
 
 		<div class="mt-8 flex w-full items-center justify-center gap-3 border-t border-black/10 pt-4">
 			{#if success === undefined}
-				<button
+				<button type="button" disabled={saving}
 					class="bg-oldap-button rounded-md border px-3 py-1 text-white disabled:opacity-50"
 					onclick={windowCtx.close}>CANCEL</button
 				>
 				{#if propertyIri === undefined}
-					<button
+					<button type="button" disabled={saving}
 						class="bg-oldap-button rounded-md border px-3 py-1 text-white disabled:opacity-50"
 						onclick={() => {
 							add_resource();
 						}}>ADD</button
 					>
 				{:else}
-					<button
+					<button type="button" disabled={saving}
 						class="bg-oldap-button rounded-md border px-3 py-1 text-white disabled:opacity-50"
 						onclick={() => {
 							modify_resource();
@@ -440,12 +463,12 @@
 					>
 				{/if}
 			{:else if success}
-				<button
+				<button type="button" disabled={saving}
 					class="bg-oldap-button rounded-md border px-3 py-1 text-white disabled:opacity-50"
 					onclick={windowCtx.close}>CLOSE</button
 				>
 			{:else if !success}
-				<button
+				<button type="button" disabled={saving}
 					class="bg-oldap-button rounded-md border px-3 py-1 text-white disabled:opacity-50"
 					onclick={windowCtx.close}>CLOSE</button
 				>
