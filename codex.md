@@ -1,5 +1,7 @@
 # OLDAP App Context
 
+- Final release preparation (2026-11-09): package 0.2.8; core metadata/locks move from RC to final while public API contracts remain unchanged. Final artifact acceptance/publication/deployment is coordinated by oldap-setup. Zod 3 remains an explicitly accepted temporary risk for oldap-app.
+
 - Security maintenance (2026-11-09): compatible runtime patches and Vitest 4.1.12 remove all critical audit entries; Tinypool is gone and Vite resolves esbuild normally without the vulnerable override. Test groups use test.projects. Zod 3 remains constrained by Zodios, so its high finding stays open. Source/tests and local AMD64 image validated; publication/deployment pending. See docs/dependency-security-review-20261109.md.
 
 - Dependency audit (2026-11-09): critical findings originate in developer-only Handlebars/Tinypool; neither is installed in the production app. Five high runtime package entries remain, including Zod 3 constrained by Zodios. No dependency changes yet; use docs/dependency-security-review-20261109.md for the staged update plan and evidence limitations.

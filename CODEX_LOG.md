@@ -1,3 +1,9 @@
+### Update 2026-11-09 18:00
+- Decisions: Prepare the owner-approved final 0.2.8 release; preserve independent component version lines and exact accepted runtime behavior.
+- Implementation: Updated package/runtime/bump metadata where applicable; core API/Tools require final library >=1.0.0,<2.0.0 and locks retain its exact wheel hash. App includes the previously tested dependency patches; Zod 3 remains the owner's accepted temporary risk. Native service 1.0.0 compiles byte-identically to the deployed RC JAR.
+- Open: Final clean-source artifacts, installed-image acceptance, immutable publication and coordinated production rollout; record exact results in oldap-setup.
+- Risks/Assumptions: No deployment from this commit. Existing production images/data retained; final version labels require genuinely final package metadata.
+
 ### Update 2026-11-09 17:47
 - Decisions: Apply compatible security patches, upgrade Vitest to the Node-20-compatible v4 line, remove obsolete esbuild override; keep Zod 3 until a supported API-client migration is designed.
 - Implementation: Handlebars 4.7.10, Axios 1.21.1, follow-redirects 1.16.3, devalue 5.9.4, Vitest 4.1.12; Tinypool removed, esbuild resolves 0.25.12. Test config uses projects and Vitest defineConfig. Full audit 33→25 entries/zero critical; runtime 5→2 high entries (Zod/parent). Check, 20 unit tests, four browser tests, targeted lint and AMD64 Docker build pass.
