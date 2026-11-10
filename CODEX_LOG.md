@@ -1,3 +1,9 @@
+### Update 2026-11-10 22:42
+- Decisions: Publish/deploy owner-accepted current 0.2.9 implementation despite known feature gaps; separate broader remediation.
+- Implementation: Built clean f67cbc2 archive for AMD64/ARM64, verified startup/version/HTTP HTML, pushed immutable v0.2.9 index 0a5bd7223775. Production scoped deployment passed with unchanged sibling container IDs and public/browser smoke. Recorded setup evidence/rollback.
+- Open: Home deployment after VPN shutdown; full functional review and authenticated workflow acceptance.
+- Risks/Assumptions: No latest overwrite, data changes or API/database restart. Earlier source test coverage does not claim entire application correctness.
+
 ### Update 2026-11-10 22:39
 - Decisions: Owner explicitly accepts releasing the current incomplete application; publish patch 0.2.9 with the reviewed inversePath correction. Broader defects/features remain a separate work package.
 - Implementation: Increased package/lockfile version from 0.2.8 to 0.2.9; runtime source remains the tested a766113 implementation.
