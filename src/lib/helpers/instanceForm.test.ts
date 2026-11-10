@@ -1,5 +1,9 @@
 import { expect, it } from 'vitest';
-import { instanceFormValues, instanceFormChanges } from './instanceForm';
+import {
+	instanceFormValues,
+	instanceFormChanges,
+	instanceEditableProperties
+} from './instanceForm';
 import { LangString } from '$lib/oldap/datatypes/langstring';
 import { XsdDate } from '$lib/oldap/datatypes/xsd_date';
 import { schemas } from '$lib/apischema/zod';
@@ -53,4 +57,27 @@ import { jsonToRole } from '$lib/oldap/classes/user';
 it('accepts omitted optional roles without breaking session restoration', () => {
 	expect(jsonToRole(undefined)).toEqual({});
 	expect(jsonToRole(null)).toEqual({});
+});
+
+import { PropertyClass } from '$lib/oldap/classes/property';
+
+it('retains reverse-path metadata through cloning and excludes it from editable fields', () => {
+	const direct = PropertyClass.fromOldapJson({ projectid: 'test', iri: 'test:title', order: 2 });
+	const first = PropertyClass.fromOldapJson({ projectid: 'test', iri: 'test:first', order: 1 });
+	const reverse = PropertyClass.fromOldapJson({
+		projectid: 'test',
+		iri: 'test:children',
+		inversePath: 'test:parent'
+	});
+	const legacy = PropertyClass.fromOldapJson({
+		projectid: 'test',
+		iri: 'test:legacy',
+		inverseOf: 'test:parent'
+	});
+	const cloned = reverse.clone();
+	expect(cloned.inversePath?.toString()).toBe('test:parent');
+	expect(cloned.inversePath).not.toBe(reverse.inversePath);
+	const properties = [direct, reverse, legacy, first];
+	expect(instanceEditableProperties(properties)).toEqual([first, direct]);
+	expect(properties).toEqual([direct, reverse, legacy, first]);
 });

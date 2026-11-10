@@ -2,7 +2,11 @@
   - Copyright (©) 2026. This software is licenced under the GNU General Public License v3.0 (https://www.gnu.org/licenses/gpl-3.0.en.html)
   -->
 <script lang="ts">
-	import { instanceFormValues, instanceFormChanges } from '$lib/helpers/instanceForm';
+	import {
+		instanceFormValues,
+		instanceFormChanges,
+		instanceEditableProperties
+	} from '$lib/helpers/instanceForm';
 	let originalValues: Record<string, string[]> = {};
 	let saveError = $state('');
 	let saving = $state(false);
@@ -226,9 +230,7 @@
 				.getDataProjectInstiri(get_data)
 				.then((data) => {
 					selres = data && data['rdf:type'] ? data['rdf:type'][0]?.toString() : '';
-					hasprops = (resources[selres]?.properties || []).sort(
-						(a: PropertyClass, b: PropertyClass) => (a.order ?? 9999) - (b.order ?? 9999)
-					);
+					hasprops = instanceEditableProperties(resources[selres]?.properties || []);
 					for (const prop of hasprops) {
 						if (data[prop.propertyIri.toString()] === undefined) {
 							if (prop.datatype === XsdDatatypes.langString) {
@@ -280,9 +282,7 @@
 			if (propertyIri) return;
 			untrack(() => {
 				if (resources[selres]?.properties !== undefined) {
-				hasprops = (resources[selres].properties || []).sort(
-					(a: PropertyClass, b: PropertyClass) => (a.order ?? 9999) - (b.order ?? 9999)
-				);
+				hasprops = instanceEditableProperties(resources[selres]?.properties || []);
 					values = {};
 					hasprops.forEach((hasprop) => {
 						const propIri = hasprop.propertyIri.toString();
@@ -313,7 +313,7 @@
 
 	function add_resource() {
 		let data: Record<string, (string | null)[]> = {};
-		(resources[selres] ? resources[selres]?.properties || [] : []).forEach((hasprop) => {
+		hasprops.forEach((hasprop) => {
 			const propname = hasprop.propertyIri.toString();
 			if (values[propname] instanceof LangString) {
 				data[hasprop.propertyIri.toString()] = values[propname].toApi();

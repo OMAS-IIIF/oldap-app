@@ -1,4 +1,34 @@
-# Jena compatibility review — 2026-11-04
+# Jena compatibility review
+
+## Consolidation and current API check — 2026-11-10
+
+`OLDAP/oldap-app` on `main` is now the primary checkout. Published 0.2.8 changes
+were fast-forwarded from origin, including the earlier Jena and security fixes.
+
+An additional compatibility correction retains/clones `inversePath` in the
+TypeScript property model. Instance creation/editing shares a direct-field
+selection that excludes both SHACL inverse paths and legacy inverseOf fields.
+The related object's forward relation is the write location; reverse fields must
+not be submitted as ordinary asserted properties. Selection sorts a new array,
+leaving the shared model order untouched. Existing empty QName objects are handled
+without accidentally excluding ordinary fields. No HTTP signature changes.
+
+Validation: 21 unit/component tests, four mocked browser workflows, production
+build and zero-error/zero-warning typecheck pass. Eleven read-only API probes
+against production pass with JenaConnection: projects, users, roles, list search,
+shared/Chama/Fasnacht models, instance/fulltext searches and their count requests.
+List search returned no lists, so list-node rendering is not covered. No live
+writes/uploads or deployment occurred. The existing JSON evidence below belongs
+to the historical review, not this production probe.
+
+The owner explicitly notes known bugs and incomplete functionality. This review
+is compatibility/consolidation work, not acceptance of the entire application.
+A later dedicated review will inventory workflows, defects and missing features
+with the owner and prioritize them. Fulltext configuration and inversePath model
+authoring still use API/oldap-tools; no new administration UI is claimed here.
+The source version remains 0.2.8; a new patch release/image is a separate step.
+
+## Historical review — 2026-11-04
 
 ## Scope and outcome
 

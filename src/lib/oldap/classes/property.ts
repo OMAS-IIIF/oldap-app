@@ -116,6 +116,8 @@ export type PropertyClassOptions = {
 	maxInclusive?: number;
 	lessThan?: QName;
 	lessThanOrEquals?: QName;
+	/** SHACL reverse field: values are derived from another resource's forward relation. */
+	inversePath?: QName;
 	inverseOf?: QName;
 	equivalentProperty?: QName;
 	minCount?: number;
@@ -148,6 +150,8 @@ export class PropertyClass extends OldapObject {
 	maxInclusive?: number;
 	lessThan?: QName;
 	lessThanOrEquals?: QName;
+	/** SHACL reverse field: values are derived from another resource's forward relation. */
+	inversePath?: QName;
 	inverseOf?: QName;
 	equivalentProperty?: QName;
 	minCount?: number;
@@ -181,6 +185,7 @@ export class PropertyClass extends OldapObject {
 		this.maxInclusive = options.maxInclusive;
 		this.lessThan = options.lessThan;
 		this.lessThanOrEquals = options.lessThanOrEquals;
+		this.inversePath = options.inversePath;
 		this.inverseOf = options.inverseOf;
 		this.equivalentProperty = options.equivalentProperty;
 		this.minCount = options.minCount;
@@ -226,6 +231,7 @@ export class PropertyClass extends OldapObject {
 			maxInclusive: this.maxInclusive,
 			lessThan: this.lessThan?.clone(),
 			lessThanOrEquals: this.lessThanOrEquals?.clone(),
+			inversePath: this.inversePath?.clone(),
 			inverseOf: this.inverseOf?.clone(),
 			equivalentProperty: this.equivalentProperty?.clone(),
 			maxCount: this.maxCount,
@@ -273,6 +279,7 @@ export class PropertyClass extends OldapObject {
 		const maxInclusive = json?.maxInclusive;
 		const lessThan = new QName(json?.lessThan);
 		const lessThanOrEquals = new QName(json?.lessThanOrEquals);
+		const inversePath = json?.inversePath ? new QName(json.inversePath) : undefined;
 		const inverseOf = new QName(json?.inverseOf);
 		const equivalentProperty = new QName(json?.equivalentProperty);
 		const maxCount = json?.maxCount;
@@ -308,6 +315,7 @@ export class PropertyClass extends OldapObject {
 			maxInclusive: maxInclusive,
 			lessThan: lessThan,
 			lessThanOrEquals: lessThanOrEquals,
+			inversePath: inversePath,
 			inverseOf: inverseOf,
 			equivalentProperty: equivalentProperty,
 			minCount: minCount,

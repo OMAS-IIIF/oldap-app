@@ -1,3 +1,9 @@
+### Update 2026-11-10 19:26
+- Decisions: Consolidate in OLDAP/oldap-app/main and limit this step to current API compatibility; defer the owner-requested broader bug/feature review to a separate work package.
+- Implementation: Fast-forwarded published 0.2.8 history and installed locked dependencies. Retained/cloned inversePath in PropertyClass; shared create/edit field selection excludes reverse paths and legacy inverseOf while preserving source model order. Added regression coverage and current review documentation.
+- Open: Future patch release/image/deployment; systematic administrative workflow review with the owner. Fulltext configuration and inversePath authoring remain API/tools operations, not completed frontend features.
+- Risks/Assumptions: 21 unit/component tests, four mocked browser tests, build and zero-warning typecheck pass. Eleven production Jena API GET probes pass (empty list search does not verify list-node rendering). No live writes, role changes or deployment; tests do not establish whole-product correctness or completeness.
+
 ### Update 2026-11-09 18:17
 - Decisions: Complete the approved final release; preserve existing tags and database namespace.
 - Implementation: Published exact core 1.0.0 wheels/images and app 0.2.8, mainline commits/tags; scoped production activation changes only API, identity and app. Evidence in oldap-setup/docs/oldap-1.0.0-release-results.json.

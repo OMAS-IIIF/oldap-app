@@ -1,3 +1,4 @@
+import type { PropertyClass } from '$lib/oldap/classes/property';
 import { LangString } from '$lib/oldap/datatypes/langstring';
 import { XsdDate } from '$lib/oldap/datatypes/xsd_date';
 
@@ -33,4 +34,18 @@ export function instanceFormChanges(
 			)
 			.map(([key, value]) => [key, value.length ? value : null])
 	);
+}
+
+/** Select direct fields for create/edit without mutating the shared model order.
+ * Reverse fields must be changed through the related resource's forward relation.
+ * Legacy absent QName values can be empty objects rather than undefined.
+ */
+export function instanceEditableProperties(properties: PropertyClass[]): PropertyClass[] {
+	return properties
+		.filter(
+			(property) =>
+				(!property.inversePath || property.inversePath.isEmpty) &&
+				(!property.inverseOf || property.inverseOf.isEmpty)
+		)
+		.sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999));
 }
