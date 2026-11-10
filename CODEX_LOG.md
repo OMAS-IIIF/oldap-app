@@ -1,3 +1,9 @@
+### Update 2026-11-10 22:39
+- Decisions: Owner explicitly accepts releasing the current incomplete application; publish patch 0.2.9 with the reviewed inversePath correction. Broader defects/features remain a separate work package.
+- Implementation: Increased package/lockfile version from 0.2.8 to 0.2.9; runtime source remains the tested a766113 implementation.
+- Open: Multi-platform image acceptance/publication and scoped deployment.
+- Risks/Assumptions: Prior 21 unit/component tests, four mocked browser workflows, build/typecheck and eleven read-only production API checks pass. This is not whole-product acceptance.
+
 ### Update 2026-11-10 19:26
 - Decisions: Consolidate in OLDAP/oldap-app/main and limit this step to current API compatibility; defer the owner-requested broader bug/feature review to a separate work package.
 - Implementation: Fast-forwarded published 0.2.8 history and installed locked dependencies. Retained/cloned inversePath in PropertyClass; shared create/edit field selection excludes reverse paths and legacy inverseOf while preserving source model order. Added regression coverage and current review documentation.
