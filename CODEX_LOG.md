@@ -1,3 +1,9 @@
+### Update 2026-11-10 22:49
+- Decisions: Complete the 0.2.9 rollout on home using the production-accepted image.
+- Implementation: Home app-only update passed; version/origins, public HTTP/API health and browser shell verified, seven sibling container IDs unchanged. Rollback recorded in sibling setup release evidence.
+- Open: Known functional gaps and broader product review; no fresh authenticated edit/upload acceptance.
+- Risks/Assumptions: No source/image change, API restart or database migration.
+
 ### Update 2026-11-10 22:42
 - Decisions: Publish/deploy owner-accepted current 0.2.9 implementation despite known feature gaps; separate broader remediation.
 - Implementation: Built clean f67cbc2 archive for AMD64/ARM64, verified startup/version/HTTP HTML, pushed immutable v0.2.9 index 0a5bd7223775. Production scoped deployment passed with unchanged sibling container IDs and public/browser smoke. Recorded setup evidence/rollback.
