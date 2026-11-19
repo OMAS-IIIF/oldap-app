@@ -1,3 +1,75 @@
+### Update 2026-11-19 23:48
+- Decisions: Release the current reviewed frontend as 0.2.10 and deploy only oldap-app to production, as requested.
+- Implementation: Bumped package manifests; includes resource pagination, detached property/reifier editors, multiple superproperties and restored-session avatars. Production API 1.2.3/library 1.2.2 already provides the matching backend contract.
+- Open: Immutable image publication, production activation and live read-only acceptance.
+- Risks/Assumptions: Preserve sibling services and data; use the shared image-only updater and retain the previous app digest for rollback. Source validation recorded in release evidence.
+
+### Update 2026-11-18 23:32
+- Decisions: Support complete superproperty sets across the library/API/UI; valid imported DCTERMS hierarchies must not prevent model loading.
+- Implementation: Decode scalar/array parents into detached IRI lists, regenerate the API client, and add/remove parent rows in ordinary and annotation editors. Preserve full IRIs and local constraints, prevent foreign hierarchy edits, and retain unchanged parents in flat patches/full field replacements. Multiple-parent edits never infer an arbitrary parent's value type. Updated model documentation and coordinated sibling library/API/tools compatibility.
+- Open: Coordinated deployment and read-only Salsah model acceptance on the intended server; no live writes or deployment.
+- Risks/Assumptions: 55 unit/component tests and all 28 mocked browser workflows pass; strengthened multi-to-single constraint regression passes separately. Build, typecheck (zero errors/warnings), formatting and diff checks pass. Initial concurrently run frontend checks interfered with generated build artifacts; sequential build/browser verification passes. Independent review findings (type inference and library generic setter) are resolved. Isolated sibling checks pass: library 90 tests (7 skipped), API 18 tests, tools 85 tests plus 3 subtests (5 Jena cases deselected). Real DCTERMS/inherited model regression passes.
+
+### Update 2026-11-18 22:23
+- Decisions: Derive avatar presentation from the current user instead of initializing it only during manual login.
+- Implementation: User.svelte reacts to restored/replaced users and clears presentation for anonymous access; login no longer mutates avatar metadata or redundantly writes the user store. Added a mocked browser regression verifying a loaded avatar before and after reload.
+- Open: No deployment.
+- Risks/Assumptions: Gravatar availability remains external; browser image responses are mocked. All 50 unit/component tests, three session-restoration browser workflows, production build, typecheck (zero errors/warnings), formatting and diff whitespace checks pass.
+
+### Update 2026-11-18 22:16
+- Decisions: Center the pagination bar horizontally within the resource list.
+- Implementation: Added flex justification to center the page controls and page indicator, including wrapped rows.
+- Open: No deployment.
+- Risks/Assumptions: Styling-only change; npm run check passes with zero errors and warnings.
+
+### Update 2026-11-18 11:57
+- Decisions: Replace text-only pagination with a compact grouped page selector.
+- Implementation: First/previous/next/last chevrons, at most five centered page numbers with boundary clamping and omission ellipses, active-page styling and aria-current. Localized accessible names/tooltips; retain loading/boundary disabling and existing request behavior.
+- Open: No deployment.
+- Risks/Assumptions: All 50 unit/component tests, 26 browser workflows, production build, typecheck (zero errors/warnings), and diff whitespace checks pass. Five-/ten-page browser cases verify centered numbers, ellipses, offsets, active-page semantics and boundary disabling; the middle-page screenshot was visually inspected.
+
+### Update 2026-11-18 11:40
+- Decisions: Reduce resource-list latency with local request scheduling only; retain existing API queries and fresh totals.
+- Implementation: Fetch count and requested page concurrently; fetch a corrected page only when the total shrinks past the requested offset. Load media metadata in batches of at most five instead of serially, retaining partial-preview failure tolerance and stale-context guards.
+- Open: No deployment or live latency measurement.
+- Risks/Assumptions: Same ordinary request count, with one extra page read only for a clamped offset. Actual speedup depends on server concurrency and query cost. All 50 unit/component tests, 24 mocked browser workflows, production build, typecheck (zero errors/warnings), and diff whitespace checks pass. Deterministic browser tests verify overlapping count/page requests, bounded media batches (5+5+2), missing-preview tolerance, pagination and session recovery.
+
+### Update 2026-11-18 00:46
+- Decisions: Page the resource list through the existing limit/offset API with a fixed size of 25.
+- Implementation: Localized previous/next controls, page and result-range indicators; fresh counts clamp navigation when totals shrink. Page changes retain submitted columns and commit page/results together only on success; Retrieve and context changes reset to the first page.
+- Open: No deployment or live-service writes.
+- Risks/Assumptions: Offset pagination uses the API's stable ordering; concurrent data changes between count and retrieval are not a snapshot. All 50 unit/component tests, 22 mocked browser workflows, production build, typecheck (zero errors/warnings) and diff whitespace checks pass. Browser coverage verifies three pages, limits/offsets, boundaries, retry with preserved rows, submitted columns, class reset and shrinking totals.
+
+### Update 2026-11-18 00:38
+- Decisions: Restore the home resource-list workflow using the existing class-list API and movable desktop window.
+- Implementation: Deduplicate inherited/reused property choices by IRI, derive class choices without mutating shared models, and clean up subscriptions. Snapshot result columns, reject stale reads on context change/close, retain results across token renewal, and guard project/model ownership. Report loading, empty results, API failures in the standard popup, and the first-100 limit explicitly; preserve numeric text and add an accessible toolbar name.
+- Open: No deployment or live-service writes. Live acceptance against the selected project remains a release check.
+- Risks/Assumptions: Duplicate-property fixture reproduces the original blank/frozen controls; simpler model does not. Existing API limit remains 100; pagination and structured-value rendering are outside this repair. Validation: 50 unit/component tests, all 20 mocked browser workflows, production build, typecheck (zero errors/warnings), and diff whitespace checks pass. Browser coverage includes duplicate choices, class switching, dragging, scalar IDs, numeric text, partial/empty results, popup/retry, token renewal and closed-window stale responses.
+
+### Update 2026-11-18 00:18
+- Decisions: Expose shared predicate hierarchy in annotation fields using the existing shape workflow; foreign predicate hierarchy is read-only.
+- Implementation: Added optional subPropertyOf prefix/local-name controls, translated shared-effect guidance, lossless serialization and regenerated the API client. Added component/domain and mocked browser coverage for persistence, replacement, clearing and ownership. Updated workflow/context documentation.
+- Open: No release/deployment. API and library changes must ship together; native Jena/live acceptance remains separate.
+- Risks/Assumptions: 50 frontend unit/component tests and 16 browser workflows pass; production build and typecheck (zero errors/warnings) pass. Existing full-field replacement semantics apply, without a client ETag.
+
+### Update 2026-11-17 23:43
+- Decisions: Align reifier-shape controls with existing app actions and error presentation.
+- Implementation: Added model-panel spacing and round plus actions; split field identifiers into a prefix selector (including external ontologies) and local name. Shape errors use the shared popup with native modal stacking; closing/Escape preserves drafts, and discarded loads cannot publish late errors. Updated workflow docs.
+- Open: No deployment performed.
+- Risks/Assumptions: Existing unknown prefixes remain selectable to preserve stored identifiers. Validation: 48 unit/component tests and 15 mocked browser workflows pass, including external-prefix payloads, popup dismissal and stale-load cancellation; visual checks cover spacing, prefix controls and popup styling.
+
+### Update 2026-11-17 23:18
+- Decisions: Add RDF 1.2 reifier-shape model management through the existing API; keep definition ownership separate from resource-property policy and defer instance annotation UI.
+- Implementation: Shape domain/round-trip serializer, model shape collection, local/shared CRUD dialogs with full field replacement and advanced constraints, three-state property-use policy, localized copy, and read-only refresh retries after committed writes. Preserve unsupported read constraints but reject lossy replacements; reject fractional/unsafe numeric integer enumerations. Added domain, component and mocked browser regressions.
+- Open: Live acceptance in a disposable project on the intended API/ontology version; instance annotation viewing/editing remains next. API has no client ETag concurrency contract.
+- Risks/Assumptions: No live writes or deployment. Existing dirty files preserved. Independent review issues resolved. Validation: 46 unit/component tests, 14 browser workflows, production build, clean typecheck and visual dialog inspection pass.
+
+### Update 2026-11-17 23:02
+- Decisions: Repair the property editor and current HTTP contract before adding reification UI; remove obsolete OWL controls without deleting stored metadata.
+- Implementation: Independent form drafts and flat deltas; optional QName/number normalization; deduplicated ancestor suggestions; safe zero/removal/bound handling; model refresh after writes; current generated API client and guarded record-schema fixes. Added domain, contract, serializer, component and browser regressions. Corrected property PUT/POST schemas in sibling oldap-api.
+- Open: Verify the deployed API/ontology combination using a disposable project. Reifier-shape and annotation UI remain deferred; the existing generic Property read-schema generator limitation is documented in docs/property-editor.md.
+- Risks/Assumptions: No live writes, service changes or deployment. Temporal bounds remain preserved but are not edited through numeric controls. Validation: 34 unit/component tests, 8 mocked browser workflows, build and typecheck pass; independent review findings resolved.
+
 ### Update 2026-11-10 22:49
 - Decisions: Complete the 0.2.9 rollout on home using the production-accepted image.
 - Implementation: Home app-only update passed; version/origins, public HTTP/API health and browser shell verified, seven sibling container IDs unchanged. Rollback recorded in sibling setup release evidence.

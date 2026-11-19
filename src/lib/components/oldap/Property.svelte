@@ -9,11 +9,11 @@ in relation with a resource class.
 -->
 
 <script lang="ts">
-
 	import { AuthInfo } from '$lib/oldap/classes/authinfo';
 	import { authInfoStore } from '$lib/stores/authinfo';
 	import { onMount, tick, untrack } from 'svelte';
-	import { OwlPropertyType, type OwlPropertyTypeApi, PropertyClass } from '$lib/oldap/classes/property';
+	import { PropertyClass } from '$lib/oldap/classes/property';
+	import ReificationPolicy from './ReificationPolicy.svelte';
 	import Textfield from '$lib/components/basic_gui/inputs/Textfield.svelte';
 	import { datamodelStore } from '$lib/stores/datamodel';
 	import DropdownField from '$lib/components/basic_gui/inputs/DropdownField.svelte';
@@ -25,13 +25,13 @@ in relation with a resource class.
 	import AllowedValues from '$lib/components/oldap/AllowedValues.svelte';
 	import { goto_page } from '$lib/helpers/goto_page';
 	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
-	import LangstringField from '$lib/components/basic_gui/inputs/LangstringField.svelte';
 	import { LangString } from '$lib/oldap/datatypes/langstring';
 	import { convertToLanguage, getLanguageShortname, Language } from '$lib/oldap/enums/language';
 	import { PropType } from '$lib/oldap/enums/proptypes';
 	import DropdownButton from '$lib/components/basic_gui/dropdown/DropdownButton.svelte';
 	import DropdownMenu from '$lib/components/basic_gui/dropdown/DropdownMenu.svelte';
 	import DropdownLinkItem from '$lib/components/basic_gui/dropdown/DropdownLinkItem.svelte';
+	import { Iri } from '$lib/oldap/datatypes/xsd_iri';
 	import { QName } from '$lib/oldap/datatypes/xsd_qname';
 	import { projectStore } from '$lib/stores/project';
 	import { api_config, api_notget_config } from '$lib/helpers/api_config';
@@ -44,46 +44,11 @@ in relation with a resource class.
 	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
 	import Numberfield from '$lib/components/basic_gui/inputs/Numberfield.svelte';
 	import { spinnerStore } from '$lib/stores/spinner';
-	import LangtextareaField from '$lib/components/basic_gui/inputs/LangtextareaField.svelte';
 	import { datamodelSharedStore } from '$lib/stores/datamodel_shared';
 	import LangstringfieldNew from '$lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
 	import { locales } from '$lib/paraglide/runtime';
-	import { setsEqual } from '$lib/helpers/setops';
-
-	interface PropertyData {
-		type?: OwlPropertyTypeApi[] | Partial<Record<'add' | 'del', OwlPropertyTypeApi[]>> | null,
-		subPropertyOf?: string,
-		appliesToProperty?: string,
-		class?: string,
-		nodeKind?: string,
-		datatype?: string,
-		name?: string[] | Partial<Record<'add' | 'del', string[]>> | null,
-		description?: string[] | Partial<Record<'add' | 'del', string[]>> | null,
-		languageIn?: string[] | null,
-		uniqueLang?: boolean,
-		inSet?: string[],
-		minLength?: number | null,
-		maxLength?: number | null,
-		pattern?: string | null,
-		minExclusive?: number | null,
-		minInclusive?: number | null,
-		maxExclusive?: number | null,
-		maxInclusive?: number | null,
-		inverseOf?: string,
-		equivalentProperty?: string,
-		statementProperty?: boolean,
-		transitiveProperty?: boolean,
-		symmetricProperty?: boolean,
-		reflexiveProperty?: boolean,
-		irreflexiveProperty?: boolean,
-		functionalProperty?: boolean,
-		inverseFunctionalProperty?: boolean,
-		maxCount?: number | null,
-		minCount?: number | null,
-		order?: number | null,
-		group?: string,
-		editor?: string,
-	}
+	import { optionalNumber, propertyDelta, type PropertyWrite } from '$lib/helpers/propertyForm';
+	import { datamodelOldapStore } from '$lib/stores/datamodel_oldap';
 
 	let {
 		/** @param {string} propiri The IRI of the property, or the string 'new' */
@@ -99,34 +64,68 @@ in relation with a resource class.
 
 		/** @param {HTMLElement} topwin The top HTML that is used to scroll to the top */
 		topwin
-	} : {
-			propiri: string,
-			resiri?: string,
-			projectid : string,
-			dialogstatus?: boolean,
-			topwin?: HTMLElement,
-		} = $props();
+	}: {
+		propiri: string;
+		resiri?: string;
+		projectid: string;
+		dialogstatus?: boolean;
+		topwin?: HTMLElement;
+	} = $props();
 
 	//const ncnameOrQname_pattern: RegExp = /^([A-Za-z_][\w.-]*(:[A-Za-z_][\w.-]*)?)$/;
 	const ncname_pattern: RegExp = /^[A-Za-z_][A-Za-z0-9._-]*$/;
 
 	const string_datatypes = [
-		'xsd:string', 'rdf:langString', 'xsd:normalizedString', 'xsd:QName', 'xsd:token', 'xsd:name', 'xsd:NCName',
-		'xsd:NMTOKEN', 'xsd:ID', 'xsd:IDREF'
+		'xsd:string',
+		'rdf:langString',
+		'xsd:normalizedString',
+		'xsd:QName',
+		'xsd:token',
+		'xsd:name',
+		'xsd:NCName',
+		'xsd:NMTOKEN',
+		'xsd:ID',
+		'xsd:IDREF'
 	];
 	const numeric_datatypes = [
-		'xsd:integer', 'xsd:nonPositiveInteger', 'xsd:negativeInteger', 'xsd:nonNegativeInteger', 'xsd:positiveInteger',
-		'xsd:long', 'xsd:int', 'xsd:short', 'xsd:byte', 'xsd:unsignedLong', 'xsd:unsignedInt', 'xsd:unsignedShort', 'xsd:unsignedByte',
-		'xsd:decimal', 'xsd:double', 'xsd:float', 'xsd:dateTimeStamp', 'xsd:time',
+		'xsd:integer',
+		'xsd:nonPositiveInteger',
+		'xsd:negativeInteger',
+		'xsd:nonNegativeInteger',
+		'xsd:positiveInteger',
+		'xsd:long',
+		'xsd:int',
+		'xsd:short',
+		'xsd:byte',
+		'xsd:unsignedLong',
+		'xsd:unsignedInt',
+		'xsd:unsignedShort',
+		'xsd:unsignedByte',
+		'xsd:decimal',
+		'xsd:double',
+		'xsd:float'
 	];
+	// Temporal bounds need typed controls; leave their metadata untouched here.
 	const comparable_datatypes = [
-		'xsd:integer', 'xsd:nonPositiveInteger', 'xsd:negativeInteger', 'xsd:nonNegativeInteger', 'xsd:positiveInteger',
-		'xsd:long', 'xsd:int', 'xsd:short', 'xsd:byte', 'xsd:unsignedLong', 'xsd:unsignedInt', 'xsd:unsignedShort', 'xsd:unsignedByte',
-		'xsd:decimal', 'xsd:double', 'xsd:float', 'xsd:dateTime', 'xsd:date', 'xsd:gYearMonth', 'xsd:gYear',
+		'xsd:integer',
+		'xsd:nonPositiveInteger',
+		'xsd:negativeInteger',
+		'xsd:nonNegativeInteger',
+		'xsd:positiveInteger',
+		'xsd:long',
+		'xsd:int',
+		'xsd:short',
+		'xsd:byte',
+		'xsd:unsignedLong',
+		'xsd:unsignedInt',
+		'xsd:unsignedShort',
+		'xsd:unsignedByte',
+		'xsd:decimal',
+		'xsd:double',
+		'xsd:float'
 	];
 
-
-	let authinfo: AuthInfo | null = $authInfoStore;
+	let authinfo = $derived($authInfoStore);
 	let prop = $state<PropertyClass>();
 
 	let propertyIri = $state('');
@@ -134,20 +133,36 @@ in relation with a resource class.
 	let propiri_prefix = $state('');
 	let propiri_fragment = $state('');
 	let all_prefixes = $state<string[]>([]);
-	let subPropertyOf = $state('');
-	let subprop_prefix_is_open = $state(false);
-	let subprop_prefix = $state('');
-	let subprop_fragment = $state('');
-	let superprop_list = $state<string[]>([]);
-	let proptype = $state<PropType>(PropType.LITERAL);
-	let datatype = $state<string|undefined>();
-	let toClass = $state<string|undefined>();
-	let name = $state<LangString>(new LangString());
-	let orig_name: LangString = new LangString();
-	let description = $state<LangString>(new LangString);
-	let orig_description: LangString = new LangString();
 
-	let all_prop_list = $state<string[]>([]);
+	/** Independent parent rows retain every direct relation, including absolute IRIs. */
+	type ParentRow = { prefix: string; fragment: string; full: boolean; open: boolean };
+	function parentRow(value = ''): ParentRow {
+		const separator = value.indexOf(':');
+		const full = /^(https?:|urn:)/.test(value);
+		return {
+			prefix: separator < 0 || full ? projectid : value.slice(0, separator),
+			fragment: full || separator < 0 ? value : value.slice(separator + 1),
+			full,
+			open: false
+		};
+	}
+	let canEditParents = $derived(propiri === 'new' || propiri.split(':')[0] === projectid);
+	let parentRows = $state<ParentRow[]>([parentRow()]);
+	let parentIris = $derived([
+		...new Set(
+			parentRows
+				.filter((row) => row.fragment.trim())
+				.map((row) => (row.full ? row.fragment.trim() : `${row.prefix}:${row.fragment.trim()}`))
+		)
+	]);
+	let subPropertyOf = $derived(parentIris.length === 1 ? parentIris[0] : 'NONE');
+	let proptype = $state<PropType>(PropType.LITERAL);
+	let datatype = $state<string | undefined>();
+	let toClass = $state<string | undefined>();
+	let name = $state<LangString>(new LangString());
+
+	let description = $state<LangString>(new LangString());
+
 	let all_res_list = $state<string[]>([]);
 	let all_lists_list = $state<string[]>([]);
 
@@ -158,20 +173,10 @@ in relation with a resource class.
 	let min_inclusive = $state<boolean>(false);
 	let max_value = $state<string | undefined>(undefined);
 	let max_inclusive = $state<boolean>(false);
-	let inverseOf = $state('');
-	let equivalentProperty = $state<string>('');
-	let statementProperty = $state<boolean>(false);
-	let transitiveProperty = $state<boolean>(false);
-	let symmetricProperty = $state<boolean>(false);
-	let reflexiveProperty = $state<boolean>(false);
-	let irreflexiveProperty = $state<boolean>(false);
-	let functionalProperty = $state<boolean>(false);
-	let inverseFunctionalProperty = $state<boolean>(false);
-
 	let allowedLanguages = $state<string[]>([]);
-	let allowedStrings = $state<Set<string|number>>(new Set());
-	let allowedNumbers = $state<Set<string|number>>(new Set());
-	let datamodel = $state<DatamodelClass | null>(null);
+	let allowedStrings = $state<Set<string | number>>(new Set());
+	let allowedNumbers = $state<Set<string | number>>(new Set());
+	let datamodel = $derived($datamodelStore);
 
 	let minCount = $state<string>();
 	let maxCount = $state<string>();
@@ -180,20 +185,19 @@ in relation with a resource class.
 	let editor = $state<string>('');
 
 	let add_standalone_prop = $state(false);
+	let reifierShapes = $state<string[]>([]);
+	let reificationRequired = $state<boolean | undefined>();
 
+	let baseline: PropertyWrite = {};
+	let previousAncestor = 'NONE';
+	let inferParentType = $state(true);
+	let ready = $state(false);
+	let loadError = $state('');
 	let confirmation_dialog: Confirmation;
 	let confirmation_title = $state('');
 	let confirmation_message = $state('');
 
-	const languages = Array.from(locales).map(lang => convertToLanguage(lang) || Language.DE);
-
-	authInfoStore.subscribe(data => {
-		authinfo = data;
-	});
-
-	datamodelStore.subscribe(data => {
-		datamodel = data;
-	});
+	const languages = Array.from(locales).map((lang) => convertToLanguage(lang) || Language.DE);
 
 	function scrollToTop() {
 		if (topwin) {
@@ -227,211 +231,171 @@ in relation with a resource class.
 		// first we check if are trying to modify an annotation property from within a resource. That not allowed!
 		if (resiri) {
 			if (propiri !== 'new') {
-				const tmp = datamodel?.annotationProperties.find(p => p.propertyIri.toString() === propiri) ||
-					$datamodelSharedStore?.annotationProperties.find(p => p.propertyIri.toString() === propiri);
+				const tmp = models
+					.flatMap((model) => model.annotationProperties)
+					.find((p) => p.propertyIri.toString() === propiri);
 				if (tmp !== undefined) {
 					add_standalone_prop = true;
 				}
 			}
 		}
 
-		// filter the iri of the property from the list, because a property cannot be a subproperty of itself!
-		all_prop_list = datamodel?.annotationProperties.filter(p => p.propertyIri.toString() !== propiri).map(p => p.propertyIri.toString()) || [];
-		const shared_prop_list = $datamodelSharedStore?.annotationProperties.filter(p => p.propertyIri.toString() !== propiri).map(p => p.propertyIri.toString()) || [];
-		all_prop_list = ['NONE', ...shared_prop_list, ...all_prop_list];
-
-		all_prefixes = [$projectStore?.projectShortName.toString() || '']
+		all_prefixes = [$projectStore?.projectShortName.toString() || ''];
 		// if (administrator?.isRoot && projectid !== 'shared') {
 		// 	all_prefixes = [...all_prefixes, 'shared'];
 		// }
-		all_prefixes = [...all_prefixes, 'skos', 'schema', 'dcterms']
-		let extontos: string[] = []
-		datamodel?.externalOntologies.forEach(x => extontos.push(x.prefix.toString()));
+		all_prefixes = [...all_prefixes, 'skos', 'schema', 'dcterms'];
+		let extontos: string[] = [];
+		datamodel?.externalOntologies.forEach((x) => extontos.push(x.prefix.toString()));
 		all_prefixes = [...all_prefixes, ...extontos];
 
 		// get the list of all resource classes that can be the target of a link. These are Resources
 		// that are not list nodes! A list node always has the super-class 'oldap:OldapListNode'
-		const tmp_resources = datamodel?.resources.filter(x => {
-			if (x.superclass) {
-				const gaga = [...x.superclass].map(s => s.toString()) || [];
-				return !gaga.includes('oldap:OldapListNode');
-			}
-			else {
-				return true;
-			}
-		}) || [];
-		all_res_list = tmp_resources.map(r => r.iri.toString()) ?? [];
+		all_res_list = [
+			...new Set(
+				models
+					.flatMap((model) => model.resources)
+					.filter(
+						(r) => ![...(r.superclass ?? [])].some((s) => s.toString() === 'oldap:OldapListNode')
+					)
+					.map((r) => r.iri.toString())
+			)
+		];
 
 		// get the list of hierarchical lists that are available
-		const tmp_lists = datamodel?.resources.filter(x => {
-			if (x.superclass) {
-				const gaga = [...x.superclass].map(s => s.toString()) || [];
-				return gaga.includes('oldap:OldapListNode');
-			}
-			else {
-				return false;
-			}
-		}) || [];
-		all_lists_list = tmp_lists.map(r => r.iri.toString()) ?? [];
+		all_lists_list = [
+			...new Set(
+				models
+					.flatMap((model) => model.resources)
+					.filter((r) =>
+						[...(r.superclass ?? [])].some((s) => s.toString() === 'oldap:OldapListNode')
+					)
+					.map((r) => r.iri.toString())
+			)
+		];
+		all_prefixes = [
+			...new Set([
+				...all_prefixes,
+				'oldap',
+				'shared',
+				...knownProperties.map((p) => p.propertyIri.prefix?.toString() ?? '')
+			])
+		].filter(Boolean);
 
 		if (propiri === 'new') {
 			// initialize a new property to be added to reasonable values...
 
 			propiri_prefix = $projectStore?.projectShortName.toString() || '';
 			propiri_fragment = '';
-			subPropertyOf = 'NONE';
-			subprop_prefix = all_prefixes[0]
-			subprop_fragment = '';
+
+			parentRows = [parentRow()];
 			datatype = 'xsd:string';
 			toClass = undefined;
-			inverseOf = 'NONE';
-			equivalentProperty = 'NONE';
-			statementProperty = false;
-			transitiveProperty = false;
-			symmetricProperty = false;
-			reflexiveProperty = false;
-			irreflexiveProperty = false;
-			functionalProperty = false;
-			inverseFunctionalProperty = false;
 			editor = gui_editor_hints[0];
-		}
-		else {
-		  const tmp = new QName(propiri);
+		} else {
+			const tmp = new QName(propiri);
 			propiri_prefix = tmp.prefix?.toString() || '';
 			propiri_fragment = tmp.fragment?.toString() || '';
 			if (resiri) {
-				const res = datamodel?.resources.find(r => r.iri.toString() === resiri);
+				const res = datamodel?.resources.find((r) => r.iri.toString() === resiri);
 				if (res) {
-					prop = res?.properties?.find(p => p.propertyIri.toString() === propiri);
+					prop = res?.properties?.find((p) => p.propertyIri.toString() === propiri);
 				}
+			} else {
+				prop = datamodel?.annotationProperties.find((p) => p.propertyIri.toString() === propiri);
 			}
-			else {
-				prop = datamodel?.annotationProperties.find(p => p.propertyIri.toString() === propiri);
+			parentRows = prop?.subPropertyOf?.length
+				? prop.subPropertyOf.map((parent) => parentRow(parent.toString()))
+				: [parentRow()];
+			if (!prop && !add_standalone_prop) {
+				loadError = `Property ${propiri} is not available in the current model.`;
+				return;
 			}
-			subprop_prefix = prop?.subPropertyOf?.prefix?.toString() || '';
-			subprop_fragment = prop?.subPropertyOf?.fragment?.toString() || '';
-			subPropertyOf = prop?.subPropertyOf?.toString() || 'NONE';
+			prop = prop?.clone();
 			datatype = prop?.datatype;
-			toClass = prop?.toClass?.toString();
-			inverseOf = prop?.inverseOf?.toString() || 'NONE';
-			equivalentProperty = prop?.equivalentProperty?.toString() || 'NONE';
-			transitiveProperty = OwlPropertyType.TransitiveProperty in (prop?.type || new Set());
-			symmetricProperty = OwlPropertyType.SymmetricProperty in (prop?.type || new Set());
-			reflexiveProperty = OwlPropertyType.ReflexiveProperty in (prop?.type || new Set());
-			irreflexiveProperty = OwlPropertyType.IrreflexiveProperty in (prop?.type || new Set());
-			functionalProperty = OwlPropertyType.FunctionalProperty in (prop?.type || new Set());
-			inverseFunctionalProperty = OwlPropertyType.InverseFunctionalProperty in (prop?.type || new Set());
-			editor = prop?.editor?.toString() || gui_editor_hints[0];
+			toClass = qnameValue(prop?.toClass);
+			name = prop?.name?.clone() ?? new LangString();
+			description = prop?.description?.clone() ?? new LangString();
+			pattern = prop?.pattern ?? '';
+			min_length = prop?.minLength?.toString();
+			max_length = prop?.maxLength?.toString();
+			min_value = (prop?.minInclusive ?? prop?.minExclusive)?.toString();
+			min_inclusive = prop?.minInclusive !== undefined;
+			max_value = (prop?.maxInclusive ?? prop?.maxExclusive)?.toString();
+			max_inclusive = prop?.maxInclusive !== undefined;
+			allowedLanguages = [...(prop?.languageIn ?? [])].map((l) =>
+				getLanguageShortname(l)!.toUpperCase()
+			);
+			allowedStrings = new Set(prop?.inSet ?? []);
+			allowedNumbers = new Set(prop?.inSet ?? []);
+			minCount = prop?.minCount?.toString();
+			maxCount = prop?.maxCount?.toString();
+			order = prop?.order?.toString();
+			editor = qnameValue(prop?.editor) ?? 'None';
+			reifierShapes = [...(prop?.reifierShapes ?? [])];
+			reificationRequired = prop?.reificationRequired;
 		}
+		proptype = datatype
+			? PropType.LITERAL
+			: all_lists_list.includes(toClass ?? '')
+				? PropType.LIST
+				: PropType.LINK;
+		baseline = formValues();
+		previousAncestor = subPropertyOf;
+		ready = true;
 		await tick();
 		scrollToTop();
 	});
 
-	/**
-	 * This callback is fired on initialization, and if the subPropertyOf changes...
-	 */
+	/** Normalize optional references, including older empty QName objects. */
+	function qnameValue(value?: QName): string | undefined {
+		return value && !value.isEmpty ? value.toString() : undefined;
+	}
+	const models = $derived(
+		[datamodel, $datamodelSharedStore, $datamodelOldapStore].filter(
+			(model): model is DatamodelClass => model !== null
+		)
+	);
+	const knownProperties = $derived(
+		models.flatMap((model) => [
+			...model.annotationProperties,
+			...model.resources.flatMap((resource) => resource.properties ?? [])
+		])
+	);
+	function parentSuggestions(prefix: string): string[] {
+		return [
+			...new Set(
+				knownProperties
+					.filter(
+						(p) =>
+							p.propertyIri.prefix?.toString() === prefix && p.propertyIri.toString() !== propiri
+					)
+					.map((p) => p.propertyIri.fragment!.toString())
+			)
+		];
+	}
+	// Preserve local constraints once multiple parents are involved; there is no unique inherited type.
 	$effect(() => {
-		//
-		// if we select the property to be a sub-property, it must have the same data type as the ancestor property!
-		//
-
-		if (subPropertyOf === 'NONE') {
-			untrack(() => {
-				if (propiri === 'new') {
-					datatype = 'xsd:string';
-					toClass = undefined;
-					editor = gui_editor_hints[0]
-				} else {
-					subPropertyOf = prop?.subPropertyOf?.toString() || 'NONE'
-					datatype = prop?.datatype;
-					toClass = prop?.toClass?.toString();
-					name = prop?.name || new LangString();
-					orig_name = name.clone()
-					description = prop?.description || new LangString();
-					orig_description = description.clone();
-					pattern = prop?.pattern?.toString() || '';
-					min_length = prop?.minLength?.toString();
-					max_length = prop?.maxLength?.toString();
-					if (prop?.minExclusive) {
-						min_value = prop?.minExclusive?.toString() || '0';
-						min_inclusive = false;
-					} else if (prop?.minInclusive) {
-						min_value = prop?.minInclusive?.toString() || '0';
-						min_inclusive = true;
-					}
-					if (prop?.maxExclusive) {
-						max_value = prop?.maxExclusive?.toString() || '0';
-						max_inclusive = false;
-					} else if (prop?.minInclusive) {
-						max_value = prop?.maxInclusive?.toString() || '0';
-						max_inclusive = true;
-					}
-					if (prop?.languageIn) {
-						allowedLanguages = Array.from(prop.languageIn).map(l => l.toString());
-					}
-					if (prop?.inSet) {
-						allowedStrings = new Set(Array.from(prop.inSet, x => x.toString()));
-					}
-					minCount = prop?.minCount?.toString();
-					maxCount = prop?.maxCount?.toString();
-					order = prop?.order?.toString();
-					editor = prop?.editor?.toString() || gui_editor_hints[0];
-				}
-			});
-		} else {
-			const ancestorprop = datamodel?.annotationProperties.find(p => p.propertyIri.toString() === subPropertyOf);
-			untrack(() => {
-				datatype = ancestorprop?.datatype;
-				toClass = ancestorprop?.toClass?.toString();
-			});
-		}
+		const ancestorIri = subPropertyOf;
+		if (parentIris.length > 1) inferParentType = false;
+		if (!inferParentType) return;
+		if (!ready) return;
 		untrack(() => {
-			if (datatype !== undefined) {
-				proptype = PropType.LITERAL;
-			} else if (toClass !== undefined) {
-				//
-				// distinguish between link to other resource or link to a list
-				//
-				if (all_res_list.includes(toClass)) {
-					proptype = PropType.LINK;
-				} else if (all_lists_list.includes(toClass)) {
-					proptype = PropType.LIST;
-				}
+			if (ancestorIri === previousAncestor) return;
+			previousAncestor = ancestorIri;
+			if (ancestorIri === 'NONE') return;
+			const ancestor = knownProperties.find((p) => p.propertyIri.toString() === ancestorIri);
+			if (ancestor) {
+				datatype = ancestor.datatype;
+				toClass = qnameValue(ancestor.toClass);
+				proptype = datatype
+					? PropType.LITERAL
+					: all_lists_list.includes(toClass ?? '')
+						? PropType.LIST
+						: PropType.LINK;
 			}
 		});
 	});
-
-	$effect(() => {
-		const tmp: string[] = [];
-		datamodel?.resources?.forEach(resource => {
-			resource?.properties?.forEach(prop => {
-				if (!prop.propertyIri.isEmpty && prop.propertyIri.fragment !== null) {
-					tmp.push(prop.propertyIri.fragment.toString());
-				}
-			});
-		});
-		superprop_list = tmp;
-		console.log("=========>", tmp);
-	});
-
-	/*
-	$effect(() => {
-		const _ = datatype;
-		untrack(() => {
-			if (datatype === 'rdf:langString') {
-				gui_editor_hints = ['None', 'dash:TextFieldWithLangEditor', 'dash:TextAreaWithLangEditor']
-				//editor = gui_editor_hints[0];
-			} else if (datatype === 'xsd:string') {
-				gui_editor_hints=['None', 'dash:TextFieldEditor', 'dash:TextAreaEditor']
-				//editor = gui_editor_hints[0];
-			}
-			else {
-				gui_editor_hints = [];
-			}
-			editor = prop?.editor?.toString() || gui_editor_hints[0];
-		})
-	});
-	 */
 	function getGuiEditorHints(datatype?: string): string[] {
 		if (datatype === 'rdf:langString') {
 			return ['None', 'dash:TextFieldWithLangEditor', 'dash:TextAreaWithLangEditor'];
@@ -443,299 +407,142 @@ in relation with a resource class.
 	}
 
 	$effect(() => {
-		const hints = getGuiEditorHints(datatype);
-		gui_editor_hints = hints;
-		editor = untrack(() => prop?.editor?.toString()) || hints[0];
+		gui_editor_hints = getGuiEditorHints(datatype);
 	});
+
+	/** Serialize only exposed fields; unedited metadata never enters write payloads. */
+	function formValues(): PropertyWrite {
+		const values: PropertyWrite = {};
+		if (!add_standalone_prop) {
+			for (const parent of parentIris) {
+				if (/^(https?:|urn:)/.test(parent)) new Iri(parent);
+				else new QName(parent);
+			}
+			values.subPropertyOf = parentIris.length > 1 ? [...parentIris] : parentIris[0];
+			values.name = name
+				.filter((lang, value) => value.trim() !== '')
+				.map(([lang, value]) => `${value}@${getLanguageShortname(lang)}`);
+			values.description = description
+				.filter((lang, value) => value.trim() !== '')
+				.map(([lang, value]) => `${value}@${getLanguageShortname(lang)}`);
+			if (!values.name.length) values.name = undefined;
+			if (!values.description.length) values.description = undefined;
+			values.datatype = proptype === PropType.LITERAL ? datatype : undefined;
+			values.class = proptype !== PropType.LITERAL ? toClass : undefined;
+			if (proptype === PropType.LITERAL && string_datatypes.includes(datatype ?? '')) {
+				values.minLength = optionalNumber(min_length);
+				values.maxLength = optionalNumber(max_length);
+				values.pattern = pattern || undefined;
+				if (datatype === 'rdf:langString')
+					values.languageIn = allowedLanguages.length
+						? [...new Set(allowedLanguages.map((language) => language.toLowerCase()))]
+						: undefined;
+				else values.inSet = allowedStrings.size ? [...allowedStrings] : undefined;
+			}
+			if (proptype === PropType.LITERAL && numeric_datatypes.includes(datatype ?? ''))
+				values.inSet = allowedNumbers.size ? [...allowedNumbers] : undefined;
+			if (proptype === PropType.LITERAL && comparable_datatypes.includes(datatype ?? '')) {
+				values[min_inclusive ? 'minInclusive' : 'minExclusive'] = optionalNumber(min_value);
+				values[max_inclusive ? 'maxInclusive' : 'maxExclusive'] = optionalNumber(max_value);
+			}
+		}
+		if (resiri) {
+			// Policy belongs to this resource use, including uses of standalone properties.
+			values.reifierShapes = [...new Set(reifierShapes)];
+			values.reificationRequired = reificationRequired;
+			values.minCount = optionalNumber(minCount);
+			values.maxCount = optionalNumber(maxCount);
+			values.order = optionalNumber(order);
+			values.editor = editor && editor !== 'None' ? editor : undefined;
+		}
+		return values;
+	}
+
+	/** Reload the authoritative project model after a successful model write. */
+	async function refreshModel() {
+		if (!authinfo) return;
+		const result = await apiClient.getAdmindatamodelProject(
+			api_config(authinfo, { project: projectid })
+		);
+		const model = DatamodelClass.fromOldapJson(result);
+		datamodelStore.set(model);
+		if (projectid === 'shared') datamodelSharedStore.set(model);
+		if (projectid === 'oldap') datamodelOldapStore.set(model);
+	}
 
 	const add_property = async () => {
 		confirmation_title = m.add_property();
-		confirmation_message = m.confirm_property_add({propiri: propiri_prefix + ":" + propiri_fragment});
+		confirmation_message = m.confirm_property_add({
+			propiri: propiri_prefix + ':' + propiri_fragment
+		});
 		const ok = await confirmation_dialog.open();
 		if (!ok) return;
 
-		const propname = name.map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
-		const propdescription = description.map((lang, val) => `${val}@${getLanguageShortname(lang)}`);
-
-		//const inSet = allowedStrings.size > 0 ? Array.from(allowedStrings.values()) : allowedNumbers.size > 0 ? Array.from(allowedNumbers.values()) : [];
-
-		let inSet: string[] = [];
-		if (string_datatypes.includes(datatype || '')) {
-			inSet = allowedStrings.size > 0 ? Array.from(allowedStrings.values()).map(p => p.toString()) : [];
-		}
-		else if (numeric_datatypes.includes(datatype || '')) {
-			inSet = allowedStrings.size > 0 ? Array.from(allowedStrings.values()).map(p => p.toString()) : [];
-		}
-		let minExclusive: number | undefined = undefined;
-		let minInclusive: number | undefined = undefined;
-		let maxExclusive: number | undefined = undefined;
-		let maxInclusive: number | undefined = undefined;
-		if (min_value) {
-			if (min_inclusive) {
-				minInclusive = Number(min_value);
-			}
-			else {
-				minExclusive = Number(min_value);
-			}
-		}
-		if (max_value) {
-			if (max_inclusive) {
-				maxInclusive = Number(max_value);
-			}
-			else {
-				maxExclusive = Number(max_value);
-			}
-		}
-
-		interface AddPropertyData extends PropertyData {
-			minCount?: number, // only used when resiri is given, non-standalone property!
-			maxCount?: number, // only used when resiri is given, non-standalone property!
-			order?: number, // only used when resiri is given, non-standalone property!
-			editor?: string, // only used when resiri is given, non-standalone property!
-		}
-
-		let propertydata: AddPropertyData = {
-			subPropertyOf: subPropertyOf.length > 0 && subPropertyOf !== 'NONE' ? subPropertyOf : undefined
-		};
-
-		if (resiri) {
-			const minCountNum = Number(minCount);
-			propertydata.minCount = !isNaN(minCountNum) ? minCountNum : undefined;
-			const maxCountNum = Number(maxCount);
-			propertydata.maxCount = !isNaN(maxCountNum) ? maxCountNum : undefined;
-			const orderNum = Number(order);
-			propertydata.order = !isNaN(orderNum) ? orderNum : undefined;
-			const editorStr = editor;
-			propertydata.editor = (editorStr?.length || 0) > 0 ? editorStr : undefined;
-		}
-		propertydata.name = propname.length && (propname?.length > 0) ? propname : undefined;
-		propertydata.description = propdescription.length && (propdescription?.length > 0) ? propdescription : undefined;
-		if (proptype === PropType.LITERAL) {
-			propertydata.datatype = datatype;
-			if (string_datatypes.includes(datatype || '')) {
-				const minLengthNum = Number(min_length);
-				propertydata.minLength = !isNaN(minLengthNum) ? minLengthNum : undefined;
-				const maxLengthNum = Number(max_length);
-				propertydata.maxLength = !isNaN(maxLengthNum) ? maxLengthNum : undefined;
-				propertydata.pattern = pattern.length > 0 ? pattern : undefined;
-				propertydata.inSet = inSet.length > 0 ? inSet : undefined;
-				if (datatype === 'rdf:langString') {
-					propertydata.languageIn = allowedLanguages.length > 0 ? allowedLanguages : undefined;
-					propertydata.uniqueLang = true; // TODO: add GUI element for this!
-				}
-			}
-			else if (comparable_datatypes.includes(datatype || '')) {
-				const minExclusiveNum = Number(minExclusive);
-				propertydata.minExclusive = !isNaN(minExclusiveNum) ? minExclusiveNum : undefined;
-				const minInclusiveNum = Number(minInclusive);
-				propertydata.minInclusive = !isNaN(minInclusiveNum) ? minInclusiveNum : undefined;
-				const maxExclusiveNum = Number(maxExclusive);
-				propertydata.maxExclusive = !isNaN(maxExclusiveNum) ? maxExclusiveNum : undefined;
-				const maxInclusiveNum = Number(maxInclusive);
-				propertydata.maxInclusive = !isNaN(maxInclusiveNum) ? maxInclusiveNum : undefined;
-			}
-		}
-		else if (proptype === PropType.LINK) {
-			propertydata.class = toClass;
-		}
-		else if (proptype === PropType.LIST) {
-			propertydata.class = toClass;
+		let propertydata: { [K in keyof PropertyWrite]: Exclude<PropertyWrite[K], null> };
+		try {
+			propertydata = Object.fromEntries(
+				Object.entries(formValues()).filter(([, value]) => value != null)
+			);
+		} catch (error) {
+			errorInfoStore.set(process_api_error(error as Error));
+			return;
 		}
 		propertyIri = propiri_prefix + ':' + propiri_fragment;
 		if (authinfo) {
 			if (resiri) {
-				// TODO: Implement adding a property to a resource!
-				const property_put = api_notget_config(authinfo, {project: projectid, resource: resiri, property: propertyIri});
-				spinnerStore.set(m.res_add_property({resiri: resiri}));
-				apiClient.putAdmindatamodelProjectResourceProperty(propertydata, property_put).then(() => {
-					// we changed a property, so we need to update the datamodel by re-reading it!
-					let project = $projectStore;
-					const dm_config = api_config(authinfo as AuthInfo, { project: project?.projectShortName.toString() || '' });
-					return apiClient.getAdmindatamodelProject(dm_config);
-				}).then((jsonresult) => {
-					const datamodel = DatamodelClass.fromOldapJson(jsonresult);
-					datamodelStore.set(datamodel); // set the datamodelStore so the reactive mechanisms of svelte will update the UI!
-					spinnerStore.set(null);
-					successInfoStore.set('!' + m.prop_add_success({propiri: propertyIri}));
-					dialogstatus = false;
-				}).catch((error) => {
-					errorInfoStore.set(process_api_error(error as Error));
-					spinnerStore.set(null);
+				const property_put = api_notget_config(authinfo, {
+					project: projectid,
+					resource: resiri,
+					property: propertyIri
 				});
-			}
-			else {
-				const property_put = api_notget_config(authinfo, {project: projectid, property: propertyIri});
-				apiClient.putAdmindatamodelProjectpropertyProperty(propertydata, property_put).then(() => {
-					successInfoStore.set(m.prop_add_success({propiri: propertyIri}));
-					refreshPropertiesListNow();
-				}).catch((error) => {
-					errorInfoStore.set(process_api_error(error as Error));
+				spinnerStore.set(m.res_add_property({ resiri: resiri }));
+				apiClient
+					.putAdmindatamodelProjectResourceProperty(propertydata, property_put)
+					.then(refreshModel)
+					.then(() => {
+						spinnerStore.set(null);
+						successInfoStore.set('!' + m.prop_add_success({ propiri: propertyIri }));
+						dialogstatus = false;
+					})
+					.catch((error) => {
+						errorInfoStore.set(process_api_error(error as Error));
+						spinnerStore.set(null);
+					});
+			} else {
+				const property_put = api_notget_config(authinfo, {
+					project: projectid,
+					property: propertyIri
 				});
+				apiClient
+					.putAdmindatamodelProjectpropertyProperty(propertydata, property_put)
+					.then(refreshModel)
+					.then(() => {
+						successInfoStore.set(m.prop_add_success({ propiri: propertyIri }));
+						refreshPropertiesListNow();
+					})
+					.catch((error) => {
+						errorInfoStore.set(process_api_error(error as Error));
+					});
 			}
 		}
-	}
+	};
 
 	const modify_property = async () => {
 		if (!prop) return;
+		let propertydata: PropertyWrite;
+		try {
+			propertydata = propertyDelta(baseline, formValues());
+		} catch (error) {
+			errorInfoStore.set(process_api_error(error as Error));
+			return;
+		}
+		if (Object.keys(propertydata).length === 0) return;
 		confirmation_title = m.mod_property();
-		confirmation_message = m.confirm_prop_mod({property: propiri_prefix + ":" + propiri_fragment});
+		confirmation_message = m.confirm_prop_mod({
+			property: propiri_prefix + ':' + propiri_fragment
+		});
 		const ok = await confirmation_dialog.open();
 		if (!ok) return;
-
-		console.log("prop?.languageIn", prop?.languageIn, "allowedStrings", allowedStrings);
-
-		let propertydata: PropertyData = {};
-
-		let propertydataWithResiri: {
-			property?: PropertyData,
-			minCount?: number | null, // only used when resiri is given, non-standalone property!
-			maxCount?: number | null, // only used when resiri is given, non-standalone property!
-			order?: number | null, // only used when resiri is given, non-standalone property!
-			editor?: string | null,  // only used when resiri is given, non-standalone property!
-		} = {};
-
-
-		if (subPropertyOf !== prop?.subPropertyOf?.toString() && subPropertyOf !== 'NONE') {
-			propertydata.subPropertyOf = subPropertyOf
-		}
-		const tmp_modname = name.modify_data(orig_name || null);
-		if (tmp_modname !== undefined) {
-			propertydata.name = tmp_modname;
-		}
-		const tmp_moddescription = description?.modify_data(orig_description || null);
-		if (tmp_moddescription !== undefined) {
-			propertydata.description = tmp_moddescription;
-		}
-		if (proptype === PropType.LITERAL) {
-
-			if (prop.datatype !== datatype) {
-				propertydata.datatype = datatype;
-			}
-			if (string_datatypes.includes(datatype || '')) {
-				if (prop?.minLength && !min_length) {
-					propertydata.minLength = null;
-				}
-				else {
-					const min_length_number = Number(min_length);
-					if (!Number.isNaN(min_length_number) && prop.minLength !== min_length_number) {
-						propertydata.minLength = min_length_number;
-					}
-				}
-
-				if (prop?.maxLength && !max_length) {
-					propertydata.maxLength = null;
-				}
-				else {
-					const max_length_number = Number(max_length);
-					if (!Number.isNaN(max_length_number) && prop.maxLength !== max_length_number) {
-						propertydata.maxLength = max_length_number;
-					}
-				}
-
-				if (prop?.pattern && !pattern) {
-					propertydata.pattern = null;
-				}
-				else {
-					if (pattern && (prop?.pattern !== pattern)) {
-						propertydata.pattern = pattern;
-					}
-				}
-
-				if (prop?.languageIn && (allowedLanguages.length === 0)) {
-					propertydata.languageIn = null;
-				}
-				else {
-					if (prop?.languageIn && !setsEqual(prop.languageIn, new Set(allowedLanguages))) {
-						propertydata.languageIn = allowedLanguages;
-					}
-				}
-			} else if (comparable_datatypes.includes(datatype || '')) {
-				if (prop?.minExclusive && !min_value) {
-					propertydata.minExclusive = null;
-				}
-				else {
-					const min_value_number = Number(min_value);
-					if (!Number.isNaN(min_value_number) && prop.minExclusive !== min_value_number) {
-						propertydata.minExclusive = min_value_number;
-					}
-				}
-
-				if (prop?.minInclusive && !min_value) {
-					propertydata.minInclusive = null;
-				}
-				else {
-					const min_value_number = Number(min_value);
-					if (!Number.isNaN(min_value_number) && prop.minInclusive !== min_value_number) {
-						propertydata.minInclusive = min_value_number;
-					}
-				}
-
-				if (prop?.maxExclusive && !max_value) {
-					propertydata.maxExclusive = null;
-				}
-				else {
-					const max_value_number = Number(max_value);
-					if (!Number.isNaN(max_value_number) && prop.maxExclusive !== max_value_number) {
-						propertydata.maxExclusive = max_value_number;
-					}
-				}
-
-				if (prop?.maxInclusive && !max_value) {
-					propertydata.maxInclusive = null;
-				}
-				else {
-					const max_value_number = Number(max_value);
-					if (!Number.isNaN(max_value_number) && prop.maxInclusive !== max_value_number) {
-						propertydata.maxInclusive = max_value_number;
-					}
-				}
-			}
-		} else if (proptype === PropType.LINK || proptype === PropType.LIST) {
-			if (prop.toClass !== toClass) {
-				propertydata.class = toClass;
-			}
-		}
-
-
-		if (prop?.minCount && !minCount) {
-			prop.minCount = undefined;
-		}
-		else {
-			const minCount_number = Number(minCount);
-			if (!isNaN(minCount_number) && prop?.minCount !== minCount_number) {
-				prop.minCount = minCount_number;
-			}
-		}
-
-		if (prop?.maxCount && !maxCount) {
-			prop.maxCount = undefined;
-		}
-		else {
-			const maxCount_number = Number(maxCount);
-			if (!isNaN(maxCount_number) && prop?.maxCount !== maxCount_number) {
-				prop.maxCount = maxCount_number;
-			}
-		}
-
-		if (prop?.order && !order) {
-			prop.order = undefined;
-		}
-		else {
-			const order_number = Number(order);
-			if (!isNaN(order_number) && prop?.order !== order_number) {
-				prop.order = order_number;
-			}
-		}
-
-		if (prop?.editor && !editor) {
-			prop.editor = undefined;
-		}
-		else {
-			const e = new QName(editor);
-			if (prop?.editor !== e) {
-				prop.editor = e;
-			}
-		}
 
 		propertyIri = prop.propertyIri.toString();
 		if (authinfo) {
@@ -745,39 +552,38 @@ in relation with a resource class.
 					resource: resiri,
 					property: propertyIri
 				});
-				spinnerStore.set(m.adding_prop_spinner({resiri: resiri}));
-				apiClient.postAdmindatamodelProjectResourceProperty(propertydataWithResiri, property_post).then(() => {
-					successInfoStore.set('!' + m.prop_add_success({ propiri: propertyIri }));
-					dialogstatus = false;
-				}).then(() => {
-					// we changed a property, so we need to update the datamodel by re-reading it!
-					let project = $projectStore;
-					const dm_config = api_config(authinfo as AuthInfo, { project: project?.projectShortName.toString() || '' });
-					return apiClient.getAdmindatamodelProject(dm_config);
-				}).then((jsonresult) => {
-					const datamodel = DatamodelClass.fromOldapJson(jsonresult);
-					datamodelStore.set(datamodel); // set the datamodelStore so the reactive mechanisms of svelte will update the UI!
-					spinnerStore.set(null);
-				}).catch((error) => {
-					errorInfoStore.set(process_api_error(error as Error));
-					spinnerStore.set(null);
-				});
+				spinnerStore.set(m.adding_prop_spinner({ resiri: resiri }));
+				apiClient
+					.postAdmindatamodelProjectResourceProperty(propertydata, property_post)
+					.then(refreshModel)
+					.then(() => {
+						successInfoStore.set('!' + m.prop_add_success({ propiri: propertyIri }));
+						dialogstatus = false;
+						spinnerStore.set(null);
+					})
+					.catch((error) => {
+						errorInfoStore.set(process_api_error(error as Error));
+						spinnerStore.set(null);
+					});
 			} else {
 				const property_post = api_notget_config(authinfo, {
 					project: projectid,
 					property: propertyIri
 				});
-				apiClient.postAdmindatamodelProjectpropertyProperty(propertydata, property_post).then(() => {
-					successInfoStore.set(m.prop_add_success({ propiri: propertyIri }));
-					refreshPropertiesListNow();
-				}).catch((error) => {
-					errorInfoStore.set(process_api_error(error as Error));
-				});
+				apiClient
+					.postAdmindatamodelProjectpropertyProperty(propertydata, property_post)
+					.then(refreshModel)
+					.then(() => {
+						baseline = formValues();
+						successInfoStore.set(m.prop_add_success({ propiri: propertyIri }));
+						refreshPropertiesListNow();
+					})
+					.catch((error) => {
+						errorInfoStore.set(process_api_error(error as Error));
+					});
 			}
 		}
-	}
-
-
+	};
 </script>
 
 <!--
@@ -785,157 +591,298 @@ The property IRI consists of a prefix (usually the project shortname) or a commo
 and the actual property id (which is a xs:NCName
 -->
 {#snippet propiri_prefixes()}
-	<DropdownButton bind:isOpen={propiri_prefix_is_open} buttonText={propiri_prefix} name="prefixselsel" disabled={propiri !== 'new' || add_standalone_prop} class="text-xs">
-		<DropdownMenu bind:isOpen={propiri_prefix_is_open} position="left" name="prefixselsel" id="prefixselsel_id">
+	<DropdownButton
+		bind:isOpen={propiri_prefix_is_open}
+		buttonText={propiri_prefix}
+		name="prefixselsel"
+		disabled={propiri !== 'new' || add_standalone_prop}
+		class="text-xs"
+	>
+		<DropdownMenu
+			bind:isOpen={propiri_prefix_is_open}
+			position="left"
+			name="prefixselsel"
+			id="prefixselsel_id"
+		>
 			{#each all_prefixes as p (p)}
-				<DropdownLinkItem bind:isOpen={propiri_prefix_is_open}
-													onclick={() => {propiri_prefix = p; propiri_prefix_is_open = false;}}
-													selected={p === propiri_prefix}>
+				<DropdownLinkItem
+					bind:isOpen={propiri_prefix_is_open}
+					onclick={() => {
+						propiri_prefix = p;
+						propiri_prefix_is_open = false;
+					}}
+					selected={p === propiri_prefix}
+				>
 					{p}
 				</DropdownLinkItem>
 			{/each}
 		</DropdownMenu>
 	</DropdownButton>
 {/snippet}
-
-{#snippet subprop_prefixes()}
-	<DropdownButton bind:isOpen={subprop_prefix_is_open} buttonText={propiri_prefix} name="prefixselsel" disabled={propiri !== 'new' || add_standalone_prop} class="text-xs">
-		<DropdownMenu bind:isOpen={subprop_prefix_is_open} position="left" name="prefixselsel" id="prefixselsel_id">
-			{#each all_prefixes as p (p)}
-				<DropdownLinkItem bind:isOpen={propiri_prefix_is_open}
-				                  onclick={() => {propiri_prefix = p; propiri_prefix_is_open = false;}}
-				                  selected={p === propiri_prefix}>
-					{p}
-				</DropdownLinkItem>
-			{/each}
-		</DropdownMenu>
-	</DropdownButton>
-{/snippet}
-
-
 
 {#snippet proj_prefix()}
 	<span class="text-xs">{$projectStore?.projectShortName.toString() || ''}:</span>
 {/snippet}
 
 <div>
-	<div>{propiri === 'new' ?  m.add_prop() : m.edit_prop()} <span class="italic">{propiri}</span> </div>
-	<form class="max-w-128 min-w-64">
-		<LabeledDivider>{m.basic_attr()}:</LabeledDivider>
-		<Textfield type='text' label={m.prop_iri()} name="fragment" id="fragment" placeholder="property ID" required={true}
-		           bind:value={propiri_fragment} pattern={ncname_pattern} disabled={propiri !== 'new' || add_standalone_prop}
-		           additional_snippet={resiri ? proj_prefix : propiri_prefixes}
-		/>
-		{#if !add_standalone_prop}
-			<Textfield type='text' label={m.subprop_of()} name="subprop" id="subprop" placeholder="subPropertyOf fragment"
-								 required={false} bind:value={subprop_fragment} pattern={ncname_pattern}
-								 suggestions={ propiri_prefix === datamodel?.projectid.toString() ? superprop_list : undefined} additional_snippet={subprop_prefixes}
+	<div>
+		{propiri === 'new' ? m.add_prop() : m.edit_prop()} <span class="italic">{propiri}</span>
+	</div>
+	<form class="max-w-128 min-w-64" onsubmit={(event) => event.preventDefault()}>
+		{#if loadError}<p role="alert">{loadError}</p>{/if}
+		<fieldset disabled={!ready || !!loadError}>
+			<LabeledDivider>{m.basic_attr()}:</LabeledDivider>
+			<Textfield
+				type="text"
+				label={m.prop_iri()}
+				name="fragment"
+				id="fragment"
+				placeholder="property ID"
+				required={true}
+				bind:value={propiri_fragment}
+				pattern={ncname_pattern}
+				disabled={propiri !== 'new' || add_standalone_prop}
+				additional_snippet={resiri ? proj_prefix : propiri_prefixes}
 			/>
+			{#if !add_standalone_prop}
+				{#each parentRows as row, index}
+					{#snippet parentPrefix()}
+						<DropdownButton
+							bind:isOpen={row.open}
+							buttonText={row.prefix}
+							disabled={!canEditParents}
+							name={`parent-prefix-${index}`}
+							class="text-xs"
+						>
+							<DropdownMenu
+								bind:isOpen={row.open}
+								position="left"
+								name={`parent-prefix-${index}`}
+								id={`parent-prefix-${index}`}
+							>
+								{#each [...new Set([...all_prefixes, row.prefix])] as prefix}
+									<DropdownLinkItem
+										bind:isOpen={row.open}
+										onclick={() => {
+											row.prefix = prefix;
+											row.open = false;
+										}}
+										selected={prefix === row.prefix}>{prefix}</DropdownLinkItem
+									>
+								{/each}
+							</DropdownMenu>
+						</DropdownButton>
+					{/snippet}
+					<div class="flex items-end gap-2">
+						<div class="grow">
+							<Textfield
+								type="text"
+								label={m.subprop_of()}
+								name={index === 0 ? 'subprop' : `subprop-${index}`}
+								id={index === 0 ? 'subprop' : `subprop-${index}`}
+								placeholder="subPropertyOf fragment"
+								required={false}
+								bind:value={row.fragment}
+								disabled={!canEditParents}
+								pattern={row.full ? undefined : ncname_pattern}
+								suggestions={row.full ? [] : parentSuggestions(row.prefix)}
+								additional_snippet={row.full ? undefined : parentPrefix}
+							/>
+						</div>
+						{#if canEditParents && parentRows.length > 1}<button
+								type="button"
+								class="oldap-button mb-2"
+								title={m.superproperty_remove()}
+								onclick={() => (parentRows = parentRows.filter((_, i) => i !== index))}>−</button
+							>{/if}
+					</div>
+				{/each}
+				<button
+					type="button"
+					class="oldap-button mb-2"
+					disabled={!canEditParents}
+					title={m.superproperty_add()}
+					onclick={() => (parentRows = [...parentRows, parentRow()])}>+</button
+				>
 
-			<!-- <DropdownField items={all_prop_list} id="allprops_id" name="allprops" label={m.subprop_of()} bind:selectedItem={subPropertyOf} /> -->
-			<PropTypeSelector
-				label={m.property()}
-				{projectid}
-				{propiri}
-				bind:proptype={proptype}
-				bind:datatype={datatype}
-				bind:toClass={toClass}
-				{all_res_list}
-				{all_lists_list}
-				disabled={subPropertyOf !== 'NONE'} />
-			<LangstringfieldNew
-				label={m.name()}
-				name="name"
-				id="name"
-				languages={languages}
-				placeholder="name"
-				bind:value={name}
-			/>
-			<LangstringfieldNew
-				label={m.description()}
-				name="description"
-				id="description"
-				languages={languages}
-				placeholder="description"
-				input_type="textarea"
-				bind:value={description}
-			/>
-			{#if proptype === PropType.LITERAL}
-				<LabeledDivider>{m.restrictions()}:</LabeledDivider>
-				{#if string_datatypes.includes(datatype || '')}
-					<Textfield label={m.regex_pattern()} name="pattern" id="pattern" placeholder="pattern" type="text" bind:value={pattern} validate={isValidRegex}/>
-					<Textfield label={m.min_length()} name="minlength" id="minlength" placeholder="min length" type="number" bind:value={min_length} />
-					<Textfield label={m.max_length()} name="maxlength" id="maxlength" placeholder="max length" type="number" bind:value={max_length} />
-					{#if datatype === 'rdf:langString'}
-						<AllowedLangSelector
-							bind:selectedLanguages={allowedLanguages}
-							label={m.allowed_langs_sel()}
-							id="allowed-languages"
-							name="allowedLanguages"
-							placeholder={m.sel_lang()}
-							searchLabel={m.search_lang()}
+				<PropTypeSelector
+					label={m.property()}
+					{projectid}
+					{propiri}
+					bind:proptype
+					bind:datatype
+					bind:toClass
+					{all_res_list}
+					{all_lists_list}
+					disabled={inferParentType && parentIris.length === 1}
+				/>
+				<LangstringfieldNew
+					label={m.name()}
+					name="name"
+					id="name"
+					{languages}
+					placeholder="name"
+					bind:value={name}
+				/>
+				<LangstringfieldNew
+					label={m.description()}
+					name="description"
+					id="description"
+					{languages}
+					placeholder="description"
+					input_type="textarea"
+					bind:value={description}
+				/>
+				{#if proptype === PropType.LITERAL}
+					<LabeledDivider>{m.restrictions()}:</LabeledDivider>
+					{#if string_datatypes.includes(datatype || '')}
+						<Textfield
+							label={m.regex_pattern()}
+							name="pattern"
+							id="pattern"
+							placeholder="pattern"
+							type="text"
+							bind:value={pattern}
+							validate={isValidRegex}
 						/>
-					{:else}
+						<Textfield
+							label={m.min_length()}
+							name="minlength"
+							id="minlength"
+							placeholder="min length"
+							type="number"
+							bind:value={min_length}
+						/>
+						<Textfield
+							label={m.max_length()}
+							name="maxlength"
+							id="maxlength"
+							placeholder="max length"
+							type="number"
+							bind:value={max_length}
+						/>
+						{#if datatype === 'rdf:langString'}
+							<AllowedLangSelector
+								bind:selectedLanguages={allowedLanguages}
+								label={m.allowed_langs_sel()}
+								id="allowed-languages"
+								name="allowedLanguages"
+								placeholder={m.sel_lang()}
+								searchLabel={m.search_lang()}
+							/>
+						{:else}
+							<AllowedValues
+								bind:values={allowedStrings}
+								valueType="string"
+								label={m.allowed_textvals()}
+								placeholder={m.enter_text()}
+							/>
+						{/if}
+					{/if}
+					{#if comparable_datatypes.includes(datatype || '')}
+						<Textfield
+							label={m.min_val()}
+							name="minValue"
+							id="minValue"
+							placeholder="min value"
+							type="number"
+							bind:value={min_value}
+						/>
+						<Checkbox
+							label={m.inclusive()}
+							class="text-xs"
+							bind:checked={min_inclusive}
+							name="min_inclusive"
+						/>
+						<Textfield
+							label={m.max_val()}
+							name="maxValue"
+							id="maxValue"
+							placeholder="max value"
+							type="number"
+							bind:value={max_value}
+						/>
+						<Checkbox
+							label={m.inclusive()}
+							class="text-xs"
+							bind:checked={max_inclusive}
+							name="max_inclusive"
+						/>
+					{/if}
+					{#if numeric_datatypes.includes(datatype || '')}
 						<AllowedValues
-							bind:values={allowedStrings}
-							valueType="string"
-							label={m.allowed_textvals()}
-							placeholder={m.enter_text()}
+							bind:values={allowedNumbers}
+							valueType="number"
+							label={m.allowed_numvals()}
+							placeholder={m.enter_num()}
 						/>
 					{/if}
 				{/if}
-				{#if comparable_datatypes.includes(datatype || '')}
-					<Textfield label={m.min_val()} name="minValue" id="minValue" placeholder="min value" type="number" bind:value={min_value} />
-					<Checkbox label={m.inclusive()} class="text-xs" bind:checked={min_inclusive} name="min_inclusive"/>
-					<Textfield label={m.max_val()} name="maxValue" id="maxValue" placeholder="max value" type="number" bind:value={max_value} />
-					<Checkbox label={m.inclusive()} class="text-xs" bind:checked={max_inclusive} name="max_inclusive"/>
-				{/if}
-				{#if numeric_datatypes.includes(datatype || '')}
-					<AllowedValues
-						bind:values={allowedNumbers}
-						valueType="number"
-						label={m.allowed_numvals()}
-						placeholder={m.enter_num()}
-					/>
-				{/if}
 			{/if}
-		{/if}
-		{#if resiri !== undefined}
-			<LabeledDivider>HAS PROPERTY PARAMS:</LabeledDivider>
-			<Numberfield label="minCount" bind:value={minCount} min={0.0} step={1.0} name="minCount" placeholder="undefined"/>
-			<Numberfield label="maxCount" bind:value={maxCount} min={0.0} step={1.0} name="maxCount" placeholder="undefined"/>
-			<Numberfield label="order" bind:value={order} name="order" min={0.0} step={0.1} placeholder="undefined"/>
-		{/if}
-		{#if resiri === undefined || !add_standalone_prop}
-			<LabeledDivider>OWL STUFF</LabeledDivider>
-			<DropdownField items={all_prop_list} id="allprops_id2" name="allprops" label="INVERSE OF" bind:selectedItem={inverseOf} />
-			<DropdownField items={all_prop_list} id="allprops_id3" name="allprops" label="EQUIVALEND_PROPERTY" bind:selectedItem={equivalentProperty} />
-			<Checkbox label="Statement property" position="right" bind:checked={statementProperty} name="statementProperty"/>
-			<Checkbox label="Transitive property" position="right" bind:checked={transitiveProperty} name="transitiveProperty"/>
-			<Checkbox label="Symmetric property" position="right" bind:checked={symmetricProperty} name="symmetricProperty"/>
-			<Checkbox label="Reflexive property" position="right" bind:checked={reflexiveProperty} name="reflexiveProperty"/>
-			<Checkbox label="Irreflexive property" position="right" bind:checked={irreflexiveProperty} name="irreflexiveProperty"/>
-			<Checkbox label="Functional property" position="right" bind:checked={functionalProperty} name="functionalProperty"/>
-			<Checkbox label="Inverse functional property" position="right" bind:checked={inverseFunctionalProperty} name="inverseFunctionalProperty"/>
-		{/if}
-		{#if gui_editor_hints.length > 0 && resiri}
-			<LabeledDivider>GUI HINTS</LabeledDivider>
-			<DropdownField items={gui_editor_hints} label="GUI_HINTS" id="gui_hints" name="gui_hints" bind:selectedItem={editor}/>
-		{/if}
+			{#if resiri !== undefined}
+				<ReificationPolicy
+					shapes={[$datamodelStore, $datamodelSharedStore].flatMap(
+						(model) => model?.reifierShapes ?? []
+					)}
+					bind:selected={reifierShapes}
+					bind:required={reificationRequired}
+				/>
+				<LabeledDivider>HAS PROPERTY PARAMS:</LabeledDivider>
+				<Numberfield
+					label="minCount"
+					bind:value={minCount}
+					min={0.0}
+					step={1.0}
+					name="minCount"
+					placeholder="undefined"
+				/>
+				<Numberfield
+					label="maxCount"
+					bind:value={maxCount}
+					min={0.0}
+					step={1.0}
+					name="maxCount"
+					placeholder="undefined"
+				/>
+				<Numberfield
+					label="order"
+					bind:value={order}
+					name="order"
+					min={0.0}
+					step={0.1}
+					placeholder="undefined"
+				/>
+			{/if}
+			{#if gui_editor_hints.length > 0 && resiri}
+				<LabeledDivider>GUI HINTS</LabeledDivider>
+				<DropdownField
+					items={gui_editor_hints}
+					label="GUI_HINTS"
+					id="gui_hints"
+					name="gui_hints"
+					bind:selectedItem={editor}
+				/>
+			{/if}
 
-		<div class="flex justify-center gap-4 mt-6">
-			{#if dialogstatus !== undefined}
-				<Button class="mx-4 my-2" onclick={() => {dialogstatus = false}}>{m.cancel()}</Button>
-			{:else}
-				<Button class="mx-4 my-2" onclick={goto_page('/admin')}>{m.cancel()}</Button>
-			{/if}
-			{#if propiri === 'new' || prop === undefined} <!-- prop === undefined: We're starting from the resource page -->
-				<Button class="mx-4 my-2" onclick={() => add_property()}>{m.add()}</Button>
-			{:else}
-				<Button class="mx-4 my-2" onclick={() => modify_property()}>{m.modify()}</Button>
-			{/if}
-		</div>
-
+			<div class="mt-6 flex justify-center gap-4">
+				{#if dialogstatus !== undefined}
+					<Button
+						class="mx-4 my-2"
+						onclick={() => {
+							dialogstatus = false;
+						}}>{m.cancel()}</Button
+					>
+				{:else}
+					<Button class="mx-4 my-2" onclick={goto_page('/admin')}>{m.cancel()}</Button>
+				{/if}
+				{#if propiri === 'new' || prop === undefined}
+					<!-- prop === undefined: We're starting from the resource page -->
+					<Button class="mx-4 my-2" onclick={() => add_property()}>{m.add()}</Button>
+				{:else}
+					<Button class="mx-4 my-2" onclick={() => modify_property()}>{m.modify()}</Button>
+				{/if}
+			</div>
+		</fieldset>
 	</form>
 </div>
 

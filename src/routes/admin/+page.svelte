@@ -28,6 +28,7 @@
 	import { datamodelStore } from '$lib/stores/datamodel';
 	import ResourcesList from '$lib/components/oldap/ResourcesList.svelte';
 	import ExternalOntologies from '$lib/components/oldap/ExternalOntologies.svelte';
+	import ReifierShapes from '$lib/components/oldap/ReifierShapes.svelte';
 
 	let tabs: TabsType = $state({}); // info about the tabs: key and (lang-dependent) name
 	let administrator: OldapUser | null = $state($userStore);  // the admin user...
@@ -159,10 +160,13 @@
 	</DialogWin>
 {/if}
 {#if selected_tab === 'models'}
-	<div class="grid grid-cols-2 gap-4 h-full">
-		<div class="min-w-0">
-			<ExternalOntologies table_height={table_height/2} {project} />
-			<PropsList table_height={table_height/2} {project} />
+	<div class="grid grid-cols-2 gap-x-8 h-full">
+		<div class="min-w-0 flex flex-col gap-6">
+			<ExternalOntologies table_height={(table_height - 48)/3} {project} />
+			<PropsList table_height={(table_height - 48)/3} {project} />
+			{#key project?.projectShortName.toString()}
+				<ReifierShapes table_height={(table_height - 48)/3} {project} />
+			{/key}
 		</div>
 		<div class="min-w-0">
 			<ResourcesList {table_height} {project} />

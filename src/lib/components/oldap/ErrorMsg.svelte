@@ -1,25 +1,23 @@
 <script lang="ts">
+	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
+	import { errorInfoStore } from '$lib/stores/errorinfo';
+	import type { OldapError } from '$lib/oldap/errors/OldapError';
 
-import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
-import { errorInfoStore } from '$lib/stores/errorinfo';
-import type { OldapError } from '$lib/oldap/errors/OldapError';
+	let show_error = $state(false);
+	let errormsg = $state('');
 
-let show_error = $state(false);
-let errormsg = $state('')
+	errorInfoStore.subscribe((error: OldapError | null) => {
+		if (error !== null) {
+			errormsg = error?.message || 'Unknown error';
+			show_error = true;
+		}
+	});
 
-errorInfoStore.subscribe((error: OldapError | null) => {
-	if (error !== null) {
-		errormsg = error?.message || 'Unknown error';
-		show_error = true;
-	}
-});
-
-const closing = (): void => {
-	errorInfoStore.set(null);
-}
-
+	const closing = (): void => {
+		errorInfoStore.set(null);
+	};
 </script>
 
-<DialogWin alert={true} title="ERROR" bind:isopen={show_error} onclose={closing}>
+<DialogWin nativeModal={true} alert={true} title="ERROR" bind:isopen={show_error} onclose={closing}>
 	{errormsg}
 </DialogWin>

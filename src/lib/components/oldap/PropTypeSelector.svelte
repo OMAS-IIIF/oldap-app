@@ -117,39 +117,18 @@
 			});
 	});
 
-	$effect(() => {
-		if (propiri === 'new') return;
-
-		if (datatype !== undefined && datatype !== '') {
-			proptype = PropType.LITERAL;
-		} else if (toClass && all_res_list.includes(toClass)) {
-			proptype = PropType.LINK;
-		} else if (toClass && all_lists_list.includes(toClass)) {
-			proptype = PropType.LIST;
+	/** User-driven type changes clear the incompatible target and choose a valid default. */
+	function selectType(next: PropType) {
+		proptype = next;
+		if (next === PropType.LITERAL) {
+			datatype = datatype || 'xsd:string';
+			toClass = undefined;
+		} else {
+			datatype = undefined;
+			const targets = next === PropType.LIST ? all_lists_list : all_res_list;
+			if (!toClass || !targets.includes(toClass)) toClass = targets[0];
 		}
-	});
-
-	$effect(() => {
-		if (proptype === PropType.LITERAL) {
-			untrack(() => {
-				if (datatype === undefined) {
-					datatype = datatypeOptions[0];
-				}
-			});
-		} else if (proptype === PropType.LINK) {
-			untrack(() => {
-				if (toClass === undefined) {
-					toClass = all_res_list[0];
-				}
-			});
-		} else if (proptype === PropType.LIST) {
-			untrack(() => {
-				if (toClass === undefined) {
-					toClass = all_lists_list[0];
-				}
-			});
-		}
-	});
+	}
 </script>
 
 <div class="mt-3">
@@ -176,7 +155,7 @@
 					bind:isOpen={proptype_is_open}
 					value={propTypeFromString(type)}
 					onclick={(x: PropType) => {
-						proptype = x;
+						selectType(x);
 					}}
 					selected={type === proptype}
 				>

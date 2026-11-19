@@ -8,7 +8,6 @@
 	import { OldapUser } from '$lib/oldap/classes/user';
 	import { getGravatarUrl } from '$lib/helpers/getgravatar';
 	import { process_api_error } from '$lib/helpers/process_api_error';
-	import { userStore } from '$lib/stores/user';
 	import { errorInfoStore } from '$lib/stores/errorinfo';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -18,18 +17,20 @@
 	let { user = $bindable() }: { user: OldapUser | null } = $props();
 
 	let avatarIsOpen = $state(false);
-	let initials: string | undefined = $state(undefined);
-	let src: string | undefined = $state($userStore?.avatarSrc);
+	// Derive presentation from the current user for both login and asynchronous session restoration.
+	let namedUser = $derived(user && user.userId.toString() !== 'unknown' ? user : null);
+	let initials = $derived(
+		namedUser ? (namedUser.givenName[0] ?? '') + (namedUser.familyName[0] ?? '') : undefined
+	);
+	let src = $derived(
+		namedUser ? (namedUser.avatarSrc ?? getGravatarUrl(namedUser.email, 200)) : undefined
+	);
 	let loginIsOpen = $state(false);
 
 	let do_login = (userid: string, password: string) => {
 		loginAuthenticatedUser(userid, password)
 			.then((authenticatedUser) => {
 				user = authenticatedUser;
-				src = getGravatarUrl(user.email, 200);
-				user.avatarSrc = src;
-				initials = user.givenName[0] + user.familyName[0];
-				userStore.set(user);
 			})
 			.catch((err) => {
 				const errobj = process_api_error(err);
@@ -44,8 +45,6 @@
 			console.error('Logout request failed; local session was cleared.', error);
 		}
 		user = null;
-		initials = undefined;
-		src = undefined;
 		await goto(resolve('/'));
 		await loginUnknownUser();
 	};

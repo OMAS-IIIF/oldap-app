@@ -5,6 +5,7 @@ import { PropertyClass } from '$lib/oldap/classes/property';
 import { ResourceClass } from '$lib/oldap/classes/resource';
 import { ExternalOntology } from '$lib/oldap/classes/extonto';
 import { XsdDateTime } from '$lib/oldap/datatypes/xsd_datetime';
+import { reifierShapeFromJson, type ReifierShape } from '$lib/oldap/classes/reifierShape';
 
 export type DatamodelClassOptions = {
 	creator: Iri;
@@ -15,6 +16,7 @@ export type DatamodelClassOptions = {
 	externalOntologies: ExternalOntology[];
 	annotationProperties: PropertyClass[];
 	resources: ResourceClass[];
+	reifierShapes?: ReifierShape[];
 };
 
 export class DatamodelClass extends OldapObject {
@@ -22,6 +24,7 @@ export class DatamodelClass extends OldapObject {
 	#externalOntologies: ExternalOntology[];
 	#annotationProperties: PropertyClass[];
 	#resouces: ResourceClass[];
+	#reifierShapes: ReifierShape[];
 
 	constructor(options: DatamodelClassOptions) {
 		super(options.creator, options.created, options.contributor, options.modified);
@@ -29,6 +32,7 @@ export class DatamodelClass extends OldapObject {
 		this.#externalOntologies = options.externalOntologies;
 		this.#annotationProperties = options.annotationProperties;
 		this.#resouces = options.resources;
+		this.#reifierShapes = options.reifierShapes ?? [];
 	}
 
 	get projectid() {
@@ -41,6 +45,11 @@ export class DatamodelClass extends OldapObject {
 
 	get annotationProperties() {
 		return this.#annotationProperties;
+	}
+
+	/** Named annotation shapes owned by this model, separate from resource classes. */
+	get reifierShapes(): ReifierShape[] {
+		return this.#reifierShapes;
 	}
 
 	get resources() {
@@ -77,7 +86,8 @@ export class DatamodelClass extends OldapObject {
 			projectid: projectid,
 			externalOntologies: externalOntologies,
 			annotationProperties: annotationProperties,
-			resources: resources
+			resources: resources,
+			reifierShapes: (json.reifierShapes ?? []).map(reifierShapeFromJson)
 		});
 	}
 }

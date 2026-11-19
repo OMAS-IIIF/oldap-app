@@ -165,6 +165,7 @@
 				</Button>
 				<Button round={true} onclick={create_listinstances_window}>
 					<List size="16" strokeWidth="1" />
+					<span class="sr-only">List Instances</span>
 				</Button>
 			{/if}
 			{#if project && searchResourceClasses.length > 0}

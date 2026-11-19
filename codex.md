@@ -1,5 +1,15 @@
 # OLDAP App Context
 
+- Release 0.2.10 preparation (2026-11-19): current model editors, pagination and avatar fixes packaged for production. Required multi-parent/reifier backend support is already installed as API 1.2.3/library 1.2.2. Image acceptance and deployment pending.
+
+- Multiple superproperties (2026-11-18): library/API preserve complete direct parent sets, including imported DCTERMS hierarchies. Property and reifier editors support multiple parents with lossless drafts and owner-only hierarchy writes. Legacy scalar API input/singleton output remains supported; coordinated sibling deployment required. See docs/property-editor.md and docs/reifier-shapes.md.
+
+- Annotation fields support shared `subPropertyOf` editing through the existing shape API. Predicate hierarchy is edited only in its owning project; field constraints remain local. Requires the matching sibling library/API change; see docs/reifier-shapes.md.
+
+- Reifier-shape model UI (2026-11-17): data-model administration supports project-owned shape CRUD, shared read-only inspection, full annotation-field definitions, and resource-property-use shape references plus tri-state required policy. Detached drafts and read-only refresh retries protect changes on failed requests. Domain definitions live in `src/lib/oldap/classes/reifierShape.ts`; UI is in `ReifierShapes.svelte`, `ReifierShapeEditor.svelte`, `ReifierFieldEditor.svelte`, and `ReificationPolicy.svelte`. Contracts and verification: docs/reifier-shapes.md. Instance annotation editing remains deferred; no deployment.
+
+- Property editor cleanup (2026-11-17): independent drafts and flat API patches replace mutation-based editing; zero/removal semantics, ancestor selection and duplicate suggestions are covered by regression tests. Obsolete OWL controls are removed; existing metadata and SHACL reverse-path handling remain. The generated client follows the corrected sibling OpenAPI PUT/POST contracts. Instance annotation UI remains deferred; model-level reification management is documented in docs/reifier-shapes.md. Details and verification boundaries: docs/property-editor.md.
+
 - Release 0.2.9 (2026-11-10): owner explicitly accepts publishing/deploying the current implementation with known functional gaps. Multi-platform image 0a5bd7223775 built from f67cbc2, both architectures pass startup/version/HTML checks, production deployment and public browser shell pass. Only oldap-app replaced; seven sibling container IDs unchanged. Home now runs the same digest with HTTP/API health and browser shell checks passing; other containers unchanged. Evidence/rollback: ../oldap-setup/docs/oldap-app-0.2.9-release.md.
 
 - Consolidation (2026-11-10): `OLDAP/oldap-app` on `main` is the primary development checkout, now including the previously published 0.2.8 Jena/security history. PropertyClass retains/clones SHACL inversePath metadata; instance create/edit excludes derived reverse fields (inversePath and legacy inverseOf) without modifying shared model ordering. 21 unit/component tests, four mocked browser workflows, build/typecheck and eleven read-only production Jena API probes pass. No new release/deployment in this step.
@@ -47,6 +57,8 @@
 - `src/lib/apischema/zod.ts`: generated OpenAPI client; regenerate with `npm run zod`.
 
 ## Roadmap
+
+- Accept reifier-shape and property-policy workflows against the intended API; next add explicit instance annotation viewing/editing.
 
 - Validate the browser behavior against a compatible deployed `oldap-api` during release integration.
 - Coordinate work package 7 release and migration with the compatible `oldaplib`, `oldap-api`, deployment secrets, and browser clients.
