@@ -1,3 +1,9 @@
+### Update 2026-11-19 23:52
+- Decisions: Completed the authorized 0.2.10 publication and production deployment.
+- Implementation: Published source e094743/tag v0.2.10 and accepted AMD64/ARM64 image 47cbd36466e6. Shared updater replaced only oldap-app; seven sibling containers unchanged. Recorded immutable selection, rollback and receipt in sibling setup repository.
+- Open: Authenticated user workflow acceptance; no live content writes or home deployment.
+- Risks/Assumptions: 55 unit/component tests, 28 mocked browser workflows, typecheck, build, both image smoke checks, public browser/HTTP/API health and final no-change deployment plan pass. See ../oldap-setup/docs/oldap-app-0.2.10-release.md.
+
 ### Update 2026-11-19 23:48
 - Decisions: Release the current reviewed frontend as 0.2.10 and deploy only oldap-app to production, as requested.
 - Implementation: Bumped package manifests; includes resource pagination, detached property/reifier editors, multiple superproperties and restored-session avatars. Production API 1.2.3/library 1.2.2 already provides the matching backend contract.

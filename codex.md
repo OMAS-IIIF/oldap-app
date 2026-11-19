@@ -1,6 +1,6 @@
 # OLDAP App Context
 
-- Release 0.2.10 preparation (2026-11-19): current model editors, pagination and avatar fixes packaged for production. Required multi-parent/reifier backend support is already installed as API 1.2.3/library 1.2.2. Image acceptance and deployment pending.
+- Release 0.2.10 live (2026-11-19): published v0.2.10 and multi-platform image 47cbd36466e6; deployed only oldap-app on production. Seven sibling containers unchanged; image/runtime, public browser/HTTP and API health checks pass. Backend API 1.2.3/library 1.2.2 supports the model editors. Home unchanged. Evidence/rollback: ../oldap-setup/docs/oldap-app-0.2.10-release.md.
 
 - Multiple superproperties (2026-11-18): library/API preserve complete direct parent sets, including imported DCTERMS hierarchies. Property and reifier editors support multiple parents with lossless drafts and owner-only hierarchy writes. Legacy scalar API input/singleton output remains supported; coordinated sibling deployment required. See docs/property-editor.md and docs/reifier-shapes.md.
 
