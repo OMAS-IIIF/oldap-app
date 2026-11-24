@@ -1,3 +1,9 @@
+### Update 2026-11-25 00:04
+- Decisions: Promote the Home-accepted 0.2.11 image to production after explicit user authorization and refreshed sudo credentials.
+- Implementation: Routine plan/apply/final unchanged plan, runtime versions and seven read-only browser checks pass. Only oldap-app/FasnachtsPage replaced; six siblings and API/Jena 1.2.4 retained. Published deployment receipt and rollback selection.
+- Open: Named-user live editing not exercised; production disk capacity maintenance remains advisable (2.9 GiB free, 94% used).
+- Risks/Assumptions: Removed only registry-verified unused Fasnacht 0.1.41/42/43 caches before pull; current rollback images, data and volumes retained. No rebuild or backend change.
+
 ### Update 2026-11-24 23:51
 - Decisions: Record the authorized home-only activation of oldap-app 0.2.11 together with FasnachtsPage 0.1.54; production remains untouched.
 - Implementation: Home container versions and seven read-only browser URLs pass with no uncaught exceptions. Six sibling container IDs and API 1.2.4 remain unchanged; Jena is reachable. Added shared selection, rollback and Compose backup references to the release receipt.

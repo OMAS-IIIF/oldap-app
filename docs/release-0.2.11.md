@@ -39,3 +39,11 @@ Combined evidence: `../oldap-setup/docs/home-frontends-20261124.md` and its JSON
 After image pull exhausted the host root filesystem, only unused, registry-verified
 Fasnacht v0.1.41/v0.1.42/v0.1.43 image caches were removed. The current and rollback
 images remain available; the root filesystem has approximately 2.7 GB free (94% used).
+
+## Production promotion — 2026-11-25
+
+The exact Home-accepted image is now active on production. Runtime versions,
+seven read-only browser checks and the final unchanged plan pass. Only the two
+frontends changed; six sibling IDs and API/Jena 1.2.4 health are retained.
+Named-user live editing was not exercised. Evidence and image-only rollback:
+`../oldap-setup/docs/production-frontends-20261125.md`.
