@@ -1,3 +1,9 @@
+### Update 2026-11-24 23:51
+- Decisions: Record the authorized home-only activation of oldap-app 0.2.11 together with FasnachtsPage 0.1.54; production remains untouched.
+- Implementation: Home container versions and seven read-only browser URLs pass with no uncaught exceptions. Six sibling container IDs and API 1.2.4 remain unchanged; Jena is reachable. Added shared selection, rollback and Compose backup references to the release receipt.
+- Open: None for the requested home rollout. Final plan has no configuration changes (ok=4, changed=0, failed=0); authenticated live content editing was not exercised.
+- Risks/Assumptions: Home root space exhausted after pull; only unused registry-verified historical Fasnacht image caches were removed, preserving current/rollback images. Approximately 2.7 GB is free at 94% use. No live content writes or database restore.
+
 ### Update 2026-11-24 23:45
 - Decisions: Complete authorized 0.2.11 source/tag and version-only Docker publication; home activation is coordinated by the parent deployment task.
 - Implementation: Pushed c6338c3/tag v0.2.11 and immutable multi-platform image 3e084fe78b30. Both architectures pass startup/version/English-German HTML/runtime-env isolation checks on Node 24.22.3. Added sanitized image receipt and release evidence.

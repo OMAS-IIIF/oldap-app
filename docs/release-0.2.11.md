@@ -20,3 +20,22 @@ image/rollback selection are recorded by the sibling `oldap-setup` deployment ta
 
 Release validation: typecheck (zero errors/warnings), 65 unit/component tests,
 29 mocked browser workflows, production build and diff whitespace checks pass.
+
+## Home deployment
+
+Home now runs the accepted 0.2.11 image above, alongside FasnachtsPage 0.1.54.
+Container package versions and read-only browser acceptance across seven frontend
+URLs pass with no uncaught exceptions. Six sibling container IDs are unchanged;
+API health remains 1.2.4 and Jena is reachable. The final deployment plan reports
+no configuration changes (Ansible: ok=4, changed=0, failed=0). Production is untouched.
+
+Selection: `../oldap-setup/releases/home-frontends-20261124.json`.
+Rollback: `../oldap-setup/releases/home-frontends-20261124-rollback.json`, using
+`make plan-home` then `make deploy-home` with the absolute `RELEASE_FILE` and the
+established protected `ANSIBLE_BECOME_ARGS`. No database restore is involved.
+Compose backup: `/opt/oldap/compose/routine-update-20261124T224917713276Z`.
+Combined evidence: `../oldap-setup/docs/home-frontends-20261124.md` and its JSON receipt.
+
+After image pull exhausted the host root filesystem, only unused, registry-verified
+Fasnacht v0.1.41/v0.1.42/v0.1.43 image caches were removed. The current and rollback
+images remain available; the root filesystem has approximately 2.7 GB free (94% used).
