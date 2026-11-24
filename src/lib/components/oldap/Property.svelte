@@ -9,46 +9,46 @@ in relation with a resource class.
 -->
 
 <script lang="ts">
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { authInfoStore } from '$lib/stores/authinfo';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
 	import { onMount, tick, untrack } from 'svelte';
-	import { PropertyClass } from '$lib/oldap/classes/property';
+	import { PropertyClass } from '#lib/oldap/classes/property.ts';
 	import ReificationPolicy from './ReificationPolicy.svelte';
-	import Textfield from '$lib/components/basic_gui/inputs/Textfield.svelte';
-	import { datamodelStore } from '$lib/stores/datamodel';
-	import DropdownField from '$lib/components/basic_gui/inputs/DropdownField.svelte';
-	import PropTypeSelector from '$lib/components/oldap/PropTypeSelector.svelte';
-	import LabeledDivider from '$lib/components/basic_gui/inputs/LabeledDivider.svelte';
-	import Checkbox from '$lib/components/basic_gui/checkbox/Checkbox.svelte';
-	import AllowedLangSelector from '$lib/components/oldap/AllowedLangSelector.svelte';
-	import * as m from '$lib/paraglide/messages';
-	import AllowedValues from '$lib/components/oldap/AllowedValues.svelte';
-	import { goto_page } from '$lib/helpers/goto_page';
-	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
-	import { LangString } from '$lib/oldap/datatypes/langstring';
-	import { convertToLanguage, getLanguageShortname, Language } from '$lib/oldap/enums/language';
-	import { PropType } from '$lib/oldap/enums/proptypes';
-	import DropdownButton from '$lib/components/basic_gui/dropdown/DropdownButton.svelte';
-	import DropdownMenu from '$lib/components/basic_gui/dropdown/DropdownMenu.svelte';
-	import DropdownLinkItem from '$lib/components/basic_gui/dropdown/DropdownLinkItem.svelte';
-	import { Iri } from '$lib/oldap/datatypes/xsd_iri';
-	import { QName } from '$lib/oldap/datatypes/xsd_qname';
-	import { projectStore } from '$lib/stores/project';
-	import { api_config, api_notget_config } from '$lib/helpers/api_config';
-	import { apiClient } from '$lib/shared/apiClient';
-	import { successInfoStore } from '$lib/stores/successinfo';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { process_api_error } from '$lib/helpers/process_api_error';
-	import { refreshPropertiesListNow } from '$lib/stores/refresh_propertieslist.svelte';
-	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
-	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
-	import Numberfield from '$lib/components/basic_gui/inputs/Numberfield.svelte';
-	import { spinnerStore } from '$lib/stores/spinner';
-	import { datamodelSharedStore } from '$lib/stores/datamodel_shared';
-	import LangstringfieldNew from '$lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
-	import { locales } from '$lib/paraglide/runtime';
-	import { optionalNumber, propertyDelta, type PropertyWrite } from '$lib/helpers/propertyForm';
-	import { datamodelOldapStore } from '$lib/stores/datamodel_oldap';
+	import Textfield from '#lib/components/basic_gui/inputs/Textfield.svelte';
+	import { datamodelStore } from '#lib/stores/datamodel.ts';
+	import DropdownField from '#lib/components/basic_gui/inputs/DropdownField.svelte';
+	import PropTypeSelector from '#lib/components/oldap/PropTypeSelector.svelte';
+	import LabeledDivider from '#lib/components/basic_gui/inputs/LabeledDivider.svelte';
+	import Checkbox from '#lib/components/basic_gui/checkbox/Checkbox.svelte';
+	import AllowedLangSelector from '#lib/components/oldap/AllowedLangSelector.svelte';
+	import * as m from '#lib/paraglide/messages.js';
+	import AllowedValues from '#lib/components/oldap/AllowedValues.svelte';
+	import { goto_page } from '#lib/helpers/goto_page.ts';
+	import Button from '#lib/components/basic_gui/buttons/Button.svelte';
+	import { LangString } from '#lib/oldap/datatypes/langstring.ts';
+	import { convertToLanguage, getLanguageShortname, Language } from '#lib/oldap/enums/language.ts';
+	import { PropType } from '#lib/oldap/enums/proptypes.ts';
+	import DropdownButton from '#lib/components/basic_gui/dropdown/DropdownButton.svelte';
+	import DropdownMenu from '#lib/components/basic_gui/dropdown/DropdownMenu.svelte';
+	import DropdownLinkItem from '#lib/components/basic_gui/dropdown/DropdownLinkItem.svelte';
+	import { Iri } from '#lib/oldap/datatypes/xsd_iri.ts';
+	import { QName } from '#lib/oldap/datatypes/xsd_qname.ts';
+	import { projectStore } from '#lib/stores/project.ts';
+	import { api_config, api_notget_config } from '#lib/helpers/api_config.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import { successInfoStore } from '#lib/stores/successinfo.ts';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
+	import { refreshPropertiesListNow } from '#lib/stores/refresh_propertieslist.svelte.ts';
+	import { DatamodelClass } from '#lib/oldap/classes/datamodel.ts';
+	import Confirmation from '#lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import Numberfield from '#lib/components/basic_gui/inputs/Numberfield.svelte';
+	import { spinnerStore } from '#lib/stores/spinner.ts';
+	import { datamodelSharedStore } from '#lib/stores/datamodel_shared.ts';
+	import LangstringfieldNew from '#lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
+	import { locales } from '#lib/paraglide/runtime.js';
+	import { optionalNumber, propertyDelta, type PropertyWrite } from '#lib/helpers/propertyForm.ts';
+	import { datamodelOldapStore } from '#lib/stores/datamodel_oldap.ts';
 
 	let {
 		/** @param {string} propiri The IRI of the property, or the string 'new' */
@@ -461,7 +461,7 @@ in relation with a resource class.
 	/** Reload the authoritative project model after a successful model write. */
 	async function refreshModel() {
 		if (!authinfo) return;
-		const result = await apiClient.getAdmindatamodelProject(
+		const result = await apiClient.getAdminDatamodelByProject(
 			api_config(authinfo, { project: projectid })
 		);
 		const model = DatamodelClass.fromOldapJson(result);
@@ -497,7 +497,7 @@ in relation with a resource class.
 				});
 				spinnerStore.set(m.res_add_property({ resiri: resiri }));
 				apiClient
-					.putAdmindatamodelProjectResourceProperty(propertydata, property_put)
+					.putAdminDatamodelByProjectByResourceByProperty({ ...property_put, body: propertydata })
 					.then(refreshModel)
 					.then(() => {
 						spinnerStore.set(null);
@@ -514,7 +514,7 @@ in relation with a resource class.
 					property: propertyIri
 				});
 				apiClient
-					.putAdmindatamodelProjectpropertyProperty(propertydata, property_put)
+					.putAdminDatamodelByProjectPropertyByProperty({ ...property_put, body: propertydata })
 					.then(refreshModel)
 					.then(() => {
 						successInfoStore.set(m.prop_add_success({ propiri: propertyIri }));
@@ -554,7 +554,7 @@ in relation with a resource class.
 				});
 				spinnerStore.set(m.adding_prop_spinner({ resiri: resiri }));
 				apiClient
-					.postAdmindatamodelProjectResourceProperty(propertydata, property_post)
+					.postAdminDatamodelByProjectByResourceByProperty({ ...property_post, body: propertydata })
 					.then(refreshModel)
 					.then(() => {
 						successInfoStore.set('!' + m.prop_add_success({ propiri: propertyIri }));
@@ -571,7 +571,7 @@ in relation with a resource class.
 					property: propertyIri
 				});
 				apiClient
-					.postAdmindatamodelProjectpropertyProperty(propertydata, property_post)
+					.postAdminDatamodelByProjectPropertyByProperty({ ...property_post, body: propertydata })
 					.then(refreshModel)
 					.then(() => {
 						baseline = formValues();

@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store';
-import type { AuthInfo } from '$lib/oldap/classes/authinfo';
+import type { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
 
 //export const authInfoStore = persistentWritable('authInfoStore', null);
 

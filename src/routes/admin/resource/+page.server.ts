@@ -4,8 +4,8 @@
 
 
 import { redirect } from '@sveltejs/kit';
-import { i18n } from '$lib/i18n';
-import { getLocale } from '$lib/paraglide/runtime';
+import { i18n } from '#lib/i18n.ts';
+import { getLocale } from '#lib/paraglide/runtime.js';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url }) => {

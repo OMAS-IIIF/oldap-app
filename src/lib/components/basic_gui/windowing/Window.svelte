@@ -5,7 +5,7 @@
 <script lang="ts">
 	import { onMount, onDestroy, setContext } from 'svelte';
 	import type { Snippet } from 'svelte';
-	import type { WindowGeometry } from '$lib/helpers/WindowData';
+	import type { WindowGeometry } from '#lib/helpers/WindowData.ts';
 
 	// ---- Event API (now callbacks passed via props) ----
 	type WindowCallbacks = {

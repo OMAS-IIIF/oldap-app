@@ -1,6 +1,6 @@
-import type { PropertyClass } from '$lib/oldap/classes/property';
-import { LangString } from '$lib/oldap/datatypes/langstring';
-import { XsdDate } from '$lib/oldap/datatypes/xsd_date';
+import type { PropertyClass } from '#lib/oldap/classes/property.ts';
+import { LangString } from '#lib/oldap/datatypes/langstring.ts';
+import { XsdDate } from '#lib/oldap/datatypes/xsd_date.ts';
 
 /** Serialize the editor's strings, dates and multilingual values to API arrays. */
 export function instanceFormValues(values: Record<string, unknown>): Record<string, string[]> {

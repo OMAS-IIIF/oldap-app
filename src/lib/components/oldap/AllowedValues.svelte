@@ -7,7 +7,7 @@
 -->
 <script lang="ts">
 	import { PlusCircle, X } from '@lucide/svelte';
-	import * as m from '$lib/paraglide/messages';
+	import * as m from '#lib/paraglide/messages.js';
 
 	type ValueType = 'string' | 'number';
 

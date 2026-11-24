@@ -1,7 +1,7 @@
 <script lang="ts">
 
-	import { LangString } from '$lib/oldap/datatypes/langstring';
-	import { XsdDate } from '$lib/oldap/datatypes/xsd_date';
+	import { LangString } from '#lib/oldap/datatypes/langstring.ts';
+	import { XsdDate } from '#lib/oldap/datatypes/xsd_date.ts';
 
 	let {
 		/** @param {string} label The label to be used for the text field */

@@ -1,8 +1,8 @@
 <script lang="ts">
 
-	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
-	import { spinnerStore } from '$lib/stores/spinner';
-	import * as m from '$lib/paraglide/messages';
+	import Button from '#lib/components/basic_gui/buttons/Button.svelte';
+	import { spinnerStore } from '#lib/stores/spinner.ts';
+	import * as m from '#lib/paraglide/messages.js';
 
 	export type UploadFunc =  (f: File) => undefined
 

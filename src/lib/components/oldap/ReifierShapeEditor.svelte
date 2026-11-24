@@ -1,18 +1,18 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import * as m from '$lib/paraglide/messages';
+	import * as m from '#lib/paraglide/messages.js';
 	import { Plus } from '@lucide/svelte';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { OldapError } from '$lib/oldap/errors/OldapError';
-	import { authInfoStore } from '$lib/stores/authinfo';
-	import { api_config, api_notget_config } from '$lib/helpers/api_config';
-	import { apiClient } from '$lib/shared/apiClient';
-	import { process_api_error } from '$lib/helpers/process_api_error';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { OldapError } from '#lib/oldap/errors/OldapError.ts';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
+	import { api_config, api_notget_config } from '#lib/helpers/api_config.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
 	import {
 		reifierShapeFromJson,
 		reifierShapeToWrite,
 		type ReifierField
-	} from '$lib/oldap/classes/reifierShape';
+	} from '#lib/oldap/classes/reifierShape.ts';
 	import ReifierFieldEditor from './ReifierFieldEditor.svelte';
 
 	/** Owns one fresh, detached definition draft; failed requests retain every field. */
@@ -58,7 +58,7 @@
 			if (shapeIri) {
 				const auth = $authInfoStore;
 				if (!auth) throw new Error('Authentication required.');
-				const response = await apiClient.getAdmindatamodelProjectreifierShapeShape(
+				const response = await apiClient.getAdminDatamodelByProjectReifierShapeByShape(
 					api_config(auth, { project: projectid, shape: shapeIri })
 				);
 				// A cancelled editor must not publish late responses into a newer dialog.
@@ -105,8 +105,8 @@
 				project: projectid,
 				shape: shapeIri ?? `${projectid}:${localName}`
 			});
-			if (shapeIri) await apiClient.postAdmindatamodelProjectreifierShapeShape(body, config);
-			else await apiClient.putAdmindatamodelProjectreifierShapeShape(body, config);
+			if (shapeIri) await apiClient.postAdminDatamodelByProjectReifierShapeByShape({ ...config, body: body });
+			else await apiClient.putAdminDatamodelByProjectReifierShapeByShape({ ...config, body: body });
 			saved = true;
 			await finishRefresh();
 		} catch (cause) {

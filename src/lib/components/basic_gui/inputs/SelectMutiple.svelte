@@ -14,11 +14,11 @@
 -->
 <script lang="ts">
 	import { PlusCircle, X } from '@lucide/svelte';
-	import * as m from '$lib/paraglide/messages';
-	import DropdownButton from '$lib/components/basic_gui/dropdown/DropdownButton.svelte';
-	import { difference } from '$lib/helpers/setops';
-	import DropdownMenu from '$lib/components/basic_gui/dropdown/DropdownMenu.svelte';
-	import DropdownLinkItem from '$lib/components/basic_gui/dropdown/DropdownLinkItem.svelte';
+	import * as m from '#lib/paraglide/messages.js';
+	import DropdownButton from '#lib/components/basic_gui/dropdown/DropdownButton.svelte';
+	import { difference } from '#lib/helpers/setops.ts';
+	import DropdownMenu from '#lib/components/basic_gui/dropdown/DropdownMenu.svelte';
+	import DropdownLinkItem from '#lib/components/basic_gui/dropdown/DropdownLinkItem.svelte';
 
 
 	let {

@@ -6,9 +6,9 @@
 -->
 <script lang="ts">
 
-	import { locales } from '$lib/paraglide/runtime';
-	import { LangString } from '$lib/oldap/datatypes/langstring';
-	import { convertToLanguage, getLanguageShortname, Language } from '$lib/oldap/enums/language';
+	import { locales } from '#lib/paraglide/runtime.js';
+	import { LangString } from '#lib/oldap/datatypes/langstring.ts';
+	import { convertToLanguage, getLanguageShortname, Language } from '#lib/oldap/enums/language.ts';
 	import { onMount } from 'svelte';
 
 	let {

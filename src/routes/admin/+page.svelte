@@ -1,34 +1,34 @@
 <script lang="ts">
 
-	import Tabs, { type TabsType } from '$lib/components/basic_gui/tabs/Tabs.svelte';
-	import { userStore } from '$lib/stores/user';
-	import { projectStore } from '$lib/stores/project';
-	import type { OldapUser } from '$lib/oldap/classes/user';
-	import { contentAreaHeight } from '$lib/stores/contentarea_h';
-	import type { OldapProject } from '$lib/oldap/classes/project';
-	import * as m from '$lib/paraglide/messages.js'
-	import { AdminPermission } from '$lib/oldap/enums/admin_permissions';
-	import UsersList from '$lib/components/oldap/UsersList.svelte';
+	import Tabs, { type TabsType } from '#lib/components/basic_gui/tabs/Tabs.svelte';
+	import { userStore } from '#lib/stores/user.ts';
+	import { projectStore } from '#lib/stores/project.ts';
+	import type { OldapUser } from '#lib/oldap/classes/user.ts';
+	import { contentAreaHeight } from '#lib/stores/contentarea_h.ts';
+	import type { OldapProject } from '#lib/oldap/classes/project.ts';
+	import * as m from '#lib/paraglide/messages.js'
+	import { AdminPermission } from '#lib/oldap/enums/admin_permissions.ts';
+	import UsersList from '#lib/components/oldap/UsersList.svelte';
 	import { get } from 'svelte/store';
-	import ProjectsList from '$lib/components/oldap/ProjectsList.svelte';
-	import { adminTabState } from '$lib/stores/admintabstate';
-	import HlistsList from '$lib/components/oldap/HlistsList.svelte';
-	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
-	import HList from '$lib/components/oldap/HList.svelte';
-	import RolesList from '$lib/components/oldap/RolesList.svelte';
-	import PropsList from '$lib/components/oldap/PropsList.svelte';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { authInfoStore } from '$lib/stores/authinfo';
-	import { api_config, api_get_config } from '$lib/helpers/api_config';
-	import { spinnerStore } from '$lib/stores/spinner';
-	import { apiClient } from '$lib/shared/apiClient';
-	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { process_api_error } from '$lib/helpers/process_api_error';
-	import { datamodelStore } from '$lib/stores/datamodel';
-	import ResourcesList from '$lib/components/oldap/ResourcesList.svelte';
-	import ExternalOntologies from '$lib/components/oldap/ExternalOntologies.svelte';
-	import ReifierShapes from '$lib/components/oldap/ReifierShapes.svelte';
+	import ProjectsList from '#lib/components/oldap/ProjectsList.svelte';
+	import { adminTabState } from '#lib/stores/admintabstate.ts';
+	import HlistsList from '#lib/components/oldap/HlistsList.svelte';
+	import DialogWin from '#lib/components/basic_gui/dialogs/DialogWin.svelte';
+	import HList from '#lib/components/oldap/HList.svelte';
+	import RolesList from '#lib/components/oldap/RolesList.svelte';
+	import PropsList from '#lib/components/oldap/PropsList.svelte';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
+	import { api_config, api_get_config } from '#lib/helpers/api_config.ts';
+	import { spinnerStore } from '#lib/stores/spinner.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import { DatamodelClass } from '#lib/oldap/classes/datamodel.ts';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
+	import { datamodelStore } from '#lib/stores/datamodel.ts';
+	import ResourcesList from '#lib/components/oldap/ResourcesList.svelte';
+	import ExternalOntologies from '#lib/components/oldap/ExternalOntologies.svelte';
+	import ReifierShapes from '#lib/components/oldap/ReifierShapes.svelte';
 
 	let tabs: TabsType = $state({}); // info about the tabs: key and (lang-dependent) name
 	let administrator: OldapUser | null = $state($userStore);  // the admin user...
@@ -93,7 +93,7 @@
 		if (authinfo) {
 			const dm_config = api_config(authinfo, { project: project?.projectShortName?.toString() || '' });
 			spinnerStore.set(m.retrieve_dm());
-			apiClient.getAdmindatamodelProject(dm_config).then((jsonresult) => {
+			apiClient.getAdminDatamodelByProject(dm_config).then((jsonresult) => {
 				console.log('datamodel-json', jsonresult);
 				const datamodel = DatamodelClass.fromOldapJson(jsonresult);
 				datamodelStore.set(datamodel);

@@ -4,7 +4,7 @@
 
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
-	import { withMediaToken } from '$lib/shared/mediaUrl';
+	import { withMediaToken } from '#lib/shared/mediaUrl.ts';
 
 	type VideoSource = {
 		src: string;

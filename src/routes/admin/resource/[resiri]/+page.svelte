@@ -3,54 +3,54 @@
 -->
 <script lang="ts">
 
-	//import Property from '$lib/components/oldap/Property.svelte';
+	//import Property from '#lib/components/oldap/Property.svelte';
 	import type { PageProps } from './$types';
-	import { projectStore } from '$lib/stores/project';
-	import * as m from '$lib/paraglide/messages';
-	import { datamodelStore } from '$lib/stores/datamodel';
-	import type { DatamodelClass } from '$lib/oldap/classes/datamodel';
-	import { authInfoStore } from '$lib/stores/authinfo';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
+	import { projectStore } from '#lib/stores/project.ts';
+	import * as m from '#lib/paraglide/messages.js';
+	import { datamodelStore } from '#lib/stores/datamodel.ts';
+	import type { DatamodelClass } from '#lib/oldap/classes/datamodel.ts';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
 	import { onMount } from 'svelte';
-	import { getLocale, locales } from '$lib/paraglide/runtime';
-	import { convertToLanguage, getLanguageShortname, Language } from '$lib/oldap/enums/language';
-	import SelectMutiple from '$lib/components/basic_gui/inputs/SelectMutiple.svelte';
-	import LangstringField from '$lib/components/basic_gui/inputs/LangstringField.svelte';
-	import { LangString } from '$lib/oldap/datatypes/langstring';
-	import { userStore } from '$lib/stores/user';
-	import { OldapUser } from '$lib/oldap/classes/user';
-	import Togglefield from '$lib/components/basic_gui/inputs/Togglefield.svelte';
-	import Table from '$lib/components/basic_gui/table/Table.svelte';
-	import DropdownButton from '$lib/components/basic_gui/dropdown/DropdownButton.svelte';
-	import DropdownMenu from '$lib/components/basic_gui/dropdown/DropdownMenu.svelte';
-	import DropdownButtonItem from '$lib/components/basic_gui/dropdown/DropdownButtonItem.svelte';
-	import TableHeader from '$lib/components/basic_gui/table/TableHeader.svelte';
-	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
-	import TableBody from '$lib/components/basic_gui/table/TableBody.svelte';
-	import TableItem from '$lib/components/basic_gui/table/TableItem.svelte';
-	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
-	import { goto_page } from '$lib/helpers/goto_page';
-	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
+	import { getLocale, locales } from '#lib/paraglide/runtime.js';
+	import { convertToLanguage, getLanguageShortname, Language } from '#lib/oldap/enums/language.ts';
+	import SelectMutiple from '#lib/components/basic_gui/inputs/SelectMutiple.svelte';
+	import LangstringField from '#lib/components/basic_gui/inputs/LangstringField.svelte';
+	import { LangString } from '#lib/oldap/datatypes/langstring.ts';
+	import { userStore } from '#lib/stores/user.ts';
+	import { OldapUser } from '#lib/oldap/classes/user.ts';
+	import Togglefield from '#lib/components/basic_gui/inputs/Togglefield.svelte';
+	import Table from '#lib/components/basic_gui/table/Table.svelte';
+	import DropdownButton from '#lib/components/basic_gui/dropdown/DropdownButton.svelte';
+	import DropdownMenu from '#lib/components/basic_gui/dropdown/DropdownMenu.svelte';
+	import DropdownButtonItem from '#lib/components/basic_gui/dropdown/DropdownButtonItem.svelte';
+	import TableHeader from '#lib/components/basic_gui/table/TableHeader.svelte';
+	import TableColumnTitle from '#lib/components/basic_gui/table/TableColumnTitle.svelte';
+	import TableBody from '#lib/components/basic_gui/table/TableBody.svelte';
+	import TableItem from '#lib/components/basic_gui/table/TableItem.svelte';
+	import TableRow from '#lib/components/basic_gui/table/TableRow.svelte';
+	import { goto_page } from '#lib/helpers/goto_page.ts';
+	import Button from '#lib/components/basic_gui/buttons/Button.svelte';
 	import { Pencil, Plus, Trash2 } from '@lucide/svelte';
-	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
-	import Property from '$lib/components/oldap/Property.svelte';
-	import { Iri } from '$lib/oldap/datatypes/xsd_iri';
-	import ToolInfo from '$lib/components/basic_gui/ToolInfo.svelte';
-	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
-	import DropdownLinkItem from '$lib/components/basic_gui/dropdown/DropdownLinkItem.svelte';
-	import Textfield from '$lib/components/basic_gui/inputs/Textfield.svelte';
-	import { QName } from '$lib/oldap/datatypes/xsd_qname';
-	import { api_notget_config } from '$lib/helpers/api_config';
-	import { apiClient } from '$lib/shared/apiClient';
-	import { successInfoStore } from '$lib/stores/successinfo';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { process_api_error } from '$lib/helpers/process_api_error';
-	import { refreshResourcesListNow } from '$lib/stores/refresh_resourceslist.svelte';
-	import { datamodelSharedStore } from '$lib/stores/datamodel_shared';
-	import LangstringfieldNew from '$lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
-	import type { PropertyClass } from '$lib/oldap/classes/property';
-	import type { ResourceClass } from '$lib/oldap/classes/resource';
-	import { RepeatableField } from '$lib/components/basic_gui/repeatable';
+	import DialogWin from '#lib/components/basic_gui/dialogs/DialogWin.svelte';
+	import Property from '#lib/components/oldap/Property.svelte';
+	import { Iri } from '#lib/oldap/datatypes/xsd_iri.ts';
+	import ToolInfo from '#lib/components/basic_gui/ToolInfo.svelte';
+	import Confirmation from '#lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import DropdownLinkItem from '#lib/components/basic_gui/dropdown/DropdownLinkItem.svelte';
+	import Textfield from '#lib/components/basic_gui/inputs/Textfield.svelte';
+	import { QName } from '#lib/oldap/datatypes/xsd_qname.ts';
+	import { api_notget_config } from '#lib/helpers/api_config.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import { successInfoStore } from '#lib/stores/successinfo.ts';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
+	import { refreshResourcesListNow } from '#lib/stores/refresh_resourceslist.svelte.ts';
+	import { datamodelSharedStore } from '#lib/stores/datamodel_shared.ts';
+	import LangstringfieldNew from '#lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
+	import type { PropertyClass } from '#lib/oldap/classes/property.ts';
+	import type { ResourceClass } from '#lib/oldap/classes/resource.ts';
+	import { RepeatableField } from '#lib/components/basic_gui/repeatable/index.ts';
 
 	type Superclass = {
 		prefix: string;
@@ -223,7 +223,7 @@
 		const resourceIri = prefix + ':' + fragment;
 		if (authinfo) {
 			const resource_put = api_notget_config(authinfo, {project: projectid, resource: resourceIri});
-			apiClient.putAdmindatamodelProjectResource(resourcedata, resource_put).then(() => {
+			apiClient.putAdminDatamodelByProjectByResource({ ...resource_put, body: resourcedata }).then(() => {
 				refreshResourcesListNow();
 				successInfoStore.set(m.add_res_success({resiri: resourceIri}));
 			}).catch((error) => {
@@ -263,7 +263,7 @@
 		const resourceIri = prefix + ':' + fragment;
 		if (authinfo) {
 			const resource_post = api_notget_config(authinfo, {project: projectid, resource: resourceIri});
-			apiClient.postAdmindatamodelProjectResource(resourcedata, resource_post).then(() => {
+			apiClient.postAdminDatamodelByProjectByResource({ ...resource_post, body: resourcedata }).then(() => {
 				refreshResourcesListNow();
 				successInfoStore.set(m.mod_res_success({resiri: resourceIri}));
 			}).catch((error) => {
@@ -295,7 +295,7 @@
 				resource: resourceIri,
 				property: iri
 			});
-			apiClient.deleteAdmindatamodelProjectResourceProperty(undefined, resource_delete).then(() => {
+			apiClient.deleteAdminDatamodelByProjectByResourceByProperty(resource_delete).then(() => {
 				refreshResourcesListNow();
 				successInfoStore.set(m.mod_res_success({resiri: resourceIri}));
 			}).catch((error) => {

@@ -3,7 +3,7 @@ import {
 	expireAuthenticatedSession,
 	hasRefreshableSession,
 	refreshAccessToken
-} from '$lib/auth/accessToken';
+} from '#lib/auth/accessToken.ts';
 
 export type AuthenticatedXhrOptions = {
 	initialToken: string;

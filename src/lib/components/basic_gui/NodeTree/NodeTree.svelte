@@ -1,22 +1,22 @@
 <script lang="ts">
 
-	import * as m from '$lib/paraglide/messages';
+	import * as m from '#lib/paraglide/messages.js';
 	import NodeTree from './NodeTree.svelte';
-	import type { TreeNodeInterface } from '$lib/helpers/treenodeinterface';
+	import type { TreeNodeInterface } from '#lib/helpers/treenodeinterface.ts';
 	import { Plus, ArrowDown, ArrowUp, CornerDownRight, Trash2, Pencil } from '@lucide/svelte';
-	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
-	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
-	import Node from '$lib/components/oldap/Node.svelte';
-	import { api_config } from '$lib/helpers/api_config';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { authInfoStore } from '$lib/stores/authinfo';
-	import { projectStore } from '$lib/stores/project';
-	import { apiClient } from '$lib/shared/apiClient';
-	import { successInfoStore } from '$lib/stores/successinfo';
+	import Tooltip from '#lib/components/basic_gui/tooltip/Tooltip.svelte';
+	import DialogWin from '#lib/components/basic_gui/dialogs/DialogWin.svelte';
+	import Node from '#lib/components/oldap/Node.svelte';
+	import { api_config } from '#lib/helpers/api_config.ts';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
+	import { projectStore } from '#lib/stores/project.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import { successInfoStore } from '#lib/stores/successinfo.ts';
 	import { refreshNodeTreeNow } from '../../../stores/refresh_nodetree.svelte.js';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { process_api_error } from '$lib/helpers/process_api_error';
-	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
+	import Confirmation from '#lib/components/basic_gui/dialogs/Confirmation.svelte';
 	import { draggable, droppable, type DragDropState } from '@thisux/sveltednd';
 
 	let { node, hlistid } : {node?: TreeNodeInterface, hlistid: string } = $props();
@@ -79,7 +79,7 @@
 			}, {
 				recursive: "true"
 			});
-			apiClient.deleteAdminhlistProjectHlistidNodeid(undefined, node_delete).then(res => {
+			apiClient.deleteAdminHlistByProjectByHlistidByNodeid(node_delete).then(res => {
 				successInfoStore.set(`!${res.message}`);
 				refreshNodeTreeNow();
 			}).catch(error => {
@@ -104,7 +104,7 @@
 			const [position, nodeid] = targetContainer?.split(':') || ['', ''];
 			type Position = 'leftOf' | 'rightOf' | 'belowOf';
 			const data: Record<Position, string> = {[position as Position]: nodeid} as Record<Position, string>;
-			apiClient.postAdminhlistProjectHlistidNodeidmove(data, node_move).then((re) => {
+			apiClient.postAdminHlistByProjectByHlistidByNodeidMove({ ...node_move, body: data }).then((re) => {
 				successInfoStore.set(`!${re.message}`);
 				refreshNodeTreeNow();
 			}).catch(error => {

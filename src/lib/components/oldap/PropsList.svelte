@@ -1,33 +1,33 @@
 <script lang="ts">
 
-	import { goto_page } from '$lib/helpers/goto_page';
-	import * as m from '$lib/paraglide/messages';
-	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
-	import Table from '$lib/components/basic_gui/table/Table.svelte';
-	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
-	import TableHeader from '$lib/components/basic_gui/table/TableHeader.svelte';
-	import TableBody from '$lib/components/basic_gui/table/TableBody.svelte';
-	import TableItem from '$lib/components/basic_gui/table/TableItem.svelte';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { getLocale } from '$lib/paraglide/runtime';
-	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
-	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
-	import { authInfoStore } from '$lib/stores/authinfo';
-	import type { OldapProject } from '$lib/oldap/classes/project';
-	import { api_notget_config } from '$lib/helpers/api_config';
-	import { apiClient } from '$lib/shared/apiClient';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { process_api_error } from '$lib/helpers/process_api_error';
-	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
-	import { PropertyClass } from '$lib/oldap/classes/property';
+	import { goto_page } from '#lib/helpers/goto_page.ts';
+	import * as m from '#lib/paraglide/messages.js';
+	import Button from '#lib/components/basic_gui/buttons/Button.svelte';
+	import Table from '#lib/components/basic_gui/table/Table.svelte';
+	import TableColumnTitle from '#lib/components/basic_gui/table/TableColumnTitle.svelte';
+	import TableHeader from '#lib/components/basic_gui/table/TableHeader.svelte';
+	import TableBody from '#lib/components/basic_gui/table/TableBody.svelte';
+	import TableItem from '#lib/components/basic_gui/table/TableItem.svelte';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import { getLocale } from '#lib/paraglide/runtime.js';
+	import { convertToLanguage, Language } from '#lib/oldap/enums/language.ts';
+	import Confirmation from '#lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
+	import type { OldapProject } from '#lib/oldap/classes/project.ts';
+	import { api_notget_config } from '#lib/helpers/api_config.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
+	import TableRow from '#lib/components/basic_gui/table/TableRow.svelte';
+	import { PropertyClass } from '#lib/oldap/classes/property.ts';
 	import { Pencil, Plus, Trash2 } from '@lucide/svelte';
-	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
-	import { datamodelStore } from '$lib/stores/datamodel';
-	import { refreshPropertiesList, refreshPropertiesListNow } from '$lib/stores/refresh_propertieslist.svelte';
-	import { refreshProjectsList } from '$lib/stores/refresh_projectslist.svelte';
+	import { DatamodelClass } from '#lib/oldap/classes/datamodel.ts';
+	import { datamodelStore } from '#lib/stores/datamodel.ts';
+	import { refreshPropertiesList, refreshPropertiesListNow } from '#lib/stores/refresh_propertieslist.svelte.ts';
+	import { refreshProjectsList } from '#lib/stores/refresh_projectslist.svelte.ts';
 
-	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
-	import { datamodelSharedStore } from '$lib/stores/datamodel_shared';
+	import Tooltip from '#lib/components/basic_gui/tooltip/Tooltip.svelte';
+	import { datamodelSharedStore } from '#lib/stores/datamodel_shared.ts';
 
 	let { table_height, project = null }: {
 		table_height: number,
@@ -81,7 +81,7 @@
 				project: project?.projectShortName.toString() || '',
 				property: propIri
 			})
-			apiClient.deleteAdmindatamodelProjectpropertyProperty(undefined, prop_delete).then(() => {
+			apiClient.deleteAdminDatamodelByProjectPropertyByProperty(prop_delete).then(() => {
 				delete properties[propIri];
 				prop_list = prop_list.filter((id) => id !== propIri);
 			}).catch((err) => {

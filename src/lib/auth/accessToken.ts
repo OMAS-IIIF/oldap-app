@@ -1,11 +1,11 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import { get } from 'svelte/store';
 
-import { SingleFlight } from '$lib/auth/singleFlight';
-import { AuthInfo } from '$lib/oldap/classes/authinfo';
-import { getApiBaseUrl } from '$lib/shared/apiBaseUrl';
-import { authInfoStore } from '$lib/stores/authinfo';
-import { userStore } from '$lib/stores/user';
+import { SingleFlight } from '#lib/auth/singleFlight.ts';
+import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+import { getApiBaseUrl } from '#lib/shared/apiBaseUrl.ts';
+import { authInfoStore } from '#lib/stores/authinfo.ts';
+import { userStore } from '#lib/stores/user.ts';
 
 export const AUTH_SESSION_EXPIRED_EVENT = 'oldap:auth-session-expired';
 

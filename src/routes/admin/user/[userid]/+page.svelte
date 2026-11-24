@@ -1,42 +1,42 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import Textfield from '$lib/components/basic_gui/inputs/Textfield.svelte';
-	import { apiClient } from '$lib/shared/apiClient';
-	import { OldapUser } from '$lib/oldap/classes/user';
-	import { userStore } from '$lib/stores/user';
-	import { api_get_config, api_notget_config } from '$lib/helpers/api_config';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import Togglefield from '$lib/components/basic_gui/inputs/Togglefield.svelte';
-	import TableHeader from '$lib/components/basic_gui/table/TableHeader.svelte';
-	import Table from '$lib/components/basic_gui/table/Table.svelte';
-	import TableBody from '$lib/components/basic_gui/table/TableBody.svelte';
-	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
-	import TableItem from '$lib/components/basic_gui/table/TableItem.svelte';
-	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
-	import * as m from '$lib/paraglide/messages';
-	import { AdminPermission } from '$lib/oldap/enums/admin_permissions';
-	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
-	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
+	import Textfield from '#lib/components/basic_gui/inputs/Textfield.svelte';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import { OldapUser } from '#lib/oldap/classes/user.ts';
+	import { userStore } from '#lib/stores/user.ts';
+	import { api_get_config, api_notget_config } from '#lib/helpers/api_config.ts';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import Togglefield from '#lib/components/basic_gui/inputs/Togglefield.svelte';
+	import TableHeader from '#lib/components/basic_gui/table/TableHeader.svelte';
+	import Table from '#lib/components/basic_gui/table/Table.svelte';
+	import TableBody from '#lib/components/basic_gui/table/TableBody.svelte';
+	import TableRow from '#lib/components/basic_gui/table/TableRow.svelte';
+	import TableItem from '#lib/components/basic_gui/table/TableItem.svelte';
+	import Button from '#lib/components/basic_gui/buttons/Button.svelte';
+	import * as m from '#lib/paraglide/messages.js';
+	import { AdminPermission } from '#lib/oldap/enums/admin_permissions.ts';
+	import TableColumnTitle from '#lib/components/basic_gui/table/TableColumnTitle.svelte';
+	import Tooltip from '#lib/components/basic_gui/tooltip/Tooltip.svelte';
 	import { onMount, tick } from 'svelte';
-	import { OldapProject } from '$lib/oldap/classes/project';
-	import DropdownButton from '$lib/components/basic_gui/dropdown/DropdownButton.svelte';
-	import DropdownButtonItem from '$lib/components/basic_gui/dropdown/DropdownButtonItem.svelte';
-	import DropdownMenu from '$lib/components/basic_gui/dropdown/DropdownMenu.svelte';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { process_api_error } from '$lib/helpers/process_api_error';
-	import Checkbox from '$lib/components/basic_gui/checkbox/Checkbox.svelte';
-	import { OldapRole } from '$lib/oldap/classes/role';
-	import { getLocale } from '$lib/paraglide/runtime';
-	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
-	import { DataPermission, dataPermissionAsString } from '$lib/oldap/enums/data_permissions';
-	import { OldapErrorInvalidValue } from '$lib/oldap/errors/OldapErrorInvalidValue';
-	import { successInfoStore } from '$lib/stores/successinfo';
-	import { difference, intersection } from '$lib/helpers/setops';
-	import { authInfoStore } from '$lib/stores/authinfo';
-	import { goto_page } from '$lib/helpers/goto_page';
-	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
-	import { getProjectsOfUser } from '$lib/helpers/get_projects_of_user';
-	import DropdownField from '$lib/components/basic_gui/inputs/DropdownField.svelte';
+	import { OldapProject } from '#lib/oldap/classes/project.ts';
+	import DropdownButton from '#lib/components/basic_gui/dropdown/DropdownButton.svelte';
+	import DropdownButtonItem from '#lib/components/basic_gui/dropdown/DropdownButtonItem.svelte';
+	import DropdownMenu from '#lib/components/basic_gui/dropdown/DropdownMenu.svelte';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
+	import Checkbox from '#lib/components/basic_gui/checkbox/Checkbox.svelte';
+	import { OldapRole } from '#lib/oldap/classes/role.ts';
+	import { getLocale } from '#lib/paraglide/runtime.js';
+	import { convertToLanguage, Language } from '#lib/oldap/enums/language.ts';
+	import { DataPermission, dataPermissionAsString } from '#lib/oldap/enums/data_permissions.ts';
+	import { OldapErrorInvalidValue } from '#lib/oldap/errors/OldapErrorInvalidValue.ts';
+	import { successInfoStore } from '#lib/stores/successinfo.ts';
+	import { difference, intersection } from '#lib/helpers/setops.ts';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
+	import { goto_page } from '#lib/helpers/goto_page.ts';
+	import Confirmation from '#lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import { getProjectsOfUser } from '#lib/helpers/get_projects_of_user.ts';
+	import DropdownField from '#lib/components/basic_gui/inputs/DropdownField.svelte';
 
 	type ProjRef = {iri: string, sname: string};
 	type CheckedState = {[key: string]: Record<AdminPermission, boolean>};
@@ -103,7 +103,7 @@
 
 	const data_permission_list: string[] = ["None", ...Object.keys(DataPermission)] as const;
 	//let selected_data_permission = $state<string>(data_permission_list[0]);
-	let selected_dperm = $state<Record<string, string>>({});
+	let selected_dperm = $state<Record<string, DataPermissionString | "None">>({});
 
 	function scrollToTop() {
 		if (topwin) {
@@ -125,7 +125,7 @@
 		}
 		const promises2 = tmp.map(async (in_project) => { // get all role iris for all projects the user is in
 			const role_config = api_get_config(authinfo as AuthInfo, {definedByProject: in_project.iri});
-			const jsondata = await apiClient.getAdminrolesearch(role_config);
+			const jsondata = await apiClient.getAdminRoleSearch(role_config);
 			return jsondata;
 		});
 		let role_iris: string[] = [];
@@ -138,7 +138,7 @@
 		}
 		const promises3 = role_iris.map(async ps_iri => { // get the complete role data for all roles
 			const dataperm_config = api_get_config(authinfo as AuthInfo, {iri: ps_iri});
-			return await apiClient.getAdminroleget(dataperm_config);
+			return await apiClient.getAdminRoleGet(dataperm_config);
 		});
 		try {
 			const results3 = await Promise.all(promises3);
@@ -186,7 +186,7 @@
 			//
 			const config_userdata = api_notget_config(authinfo as AuthInfo, { userId: data.userid });
 			try {
-				const jsondata = await apiClient.getAdminuserUserId(config_userdata);
+				const jsondata = await apiClient.getAdminUserByUserId(config_userdata);
 				user = OldapUser.fromOldapJson(jsondata);
 				if (user) {
 					userIri = user.userIri.toString();
@@ -246,7 +246,9 @@
 				roles.map(r => {
 					const iri = r.roleIri.toString();
 					const v = (user?.hasRole as any)?.[iri] as string | null | undefined; // e.g. "oldap:DATA_VIEW"
-					return [iri, user_roles[iri] ? (v ? v.split(':')[1] : 'None') : 'None'];
+					const permission = (Object.keys(DataPermission) as DataPermissionString[])
+						.find((key) => key === v?.replace(/^oldap:/, ''));
+					return [iri, user_roles[iri] ? permission ?? 'None' : 'None'] as const;
 				})
 			);
 		}).catch(error => {
@@ -345,7 +347,7 @@
 			password: string,
 			isActive: boolean,
 			inProjects: {project: string, permissions: AdminPerm[]}[],
-			hasRole: Record<string, string | null>
+			hasRole: HasRoleMap
 		} = {
 			givenName: givenName,
 			familyName: familyName,
@@ -365,7 +367,7 @@
 			}
 		});
 		const user_put = api_notget_config(authinfo as AuthInfo, {userId: userId});
-		apiClient.putAdminuserUserId(userdata, user_put).then((res) => {
+		apiClient.putAdminUserByUserId({ ...user_put, body: userdata }).then((res) => {
 			successInfoStore.set(`User "${res.userId}" added successfully!`);
 		}).catch((error) => {
 			errorInfoStore.set(process_api_error(error as Error));
@@ -524,8 +526,8 @@
 		}
 
 		const user_post = api_notget_config(authinfo as AuthInfo, {userId: user?.userId.toString() || ''});
-		apiClient.postAdminuserUserId(userdata, user_post).then((res) => {
-			successInfoStore.set(`User "${res.userId}" modified successfully!`);
+		apiClient.postAdminUserByUserId({ ...user_post, body: userdata }).then((res) => {
+			successInfoStore.set(`User "${userId}" modified successfully!`);
 		}).catch((error) => {
 			errorInfoStore.set(process_api_error(error as Error));
 		});

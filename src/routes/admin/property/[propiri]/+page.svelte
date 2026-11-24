@@ -1,8 +1,8 @@
 <script lang="ts">
 
-	import Property from '$lib/components/oldap/Property.svelte';
+	import Property from '#lib/components/oldap/Property.svelte';
 	import type { PageProps } from './$types';
-	import { projectStore } from '$lib/stores/project';
+	import { projectStore } from '#lib/stores/project.ts';
 
 	let topwin = $state<HTMLElement>();
 

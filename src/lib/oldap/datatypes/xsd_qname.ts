@@ -1,5 +1,5 @@
-import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
-import { OldapErrorInvalidValue } from '$lib/oldap/errors/OldapErrorInvalidValue';
+import { NCName } from '#lib/oldap/datatypes/xsd_ncname.ts';
+import { OldapErrorInvalidValue } from '#lib/oldap/errors/OldapErrorInvalidValue.ts';
 
 export class QName {
 	#prefix: NCName | null = null;

@@ -1,27 +1,27 @@
 <script lang="ts">
 
-	import * as m from '$lib/paraglide/messages';
-	import LangstringField from '$lib/components/basic_gui/inputs/LangstringField.svelte';
-	import { LangString } from '$lib/oldap/datatypes/langstring';
-	import Textfield from '$lib/components/basic_gui/inputs/Textfield.svelte';
-	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
+	import * as m from '#lib/paraglide/messages.js';
+	import LangstringField from '#lib/components/basic_gui/inputs/LangstringField.svelte';
+	import { LangString } from '#lib/oldap/datatypes/langstring.ts';
+	import Textfield from '#lib/components/basic_gui/inputs/Textfield.svelte';
+	import Button from '#lib/components/basic_gui/buttons/Button.svelte';
 	import { onMount } from 'svelte';
-	import { api_config } from '$lib/helpers/api_config';
-	import { authInfoStore } from '$lib/stores/authinfo';
-	import { projectStore } from '$lib/stores/project';
-	import { apiClient } from '$lib/shared/apiClient';
-	import { OldapListNode } from '$lib/oldap/classes/listnode';
-	import { convertToLanguage, getLanguageShortname, Language } from '$lib/oldap/enums/language';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { process_api_error } from '$lib/helpers/process_api_error';
-	import { successInfoStore } from '$lib/stores/successinfo';
-	import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { OldapError } from '$lib/oldap/errors/OldapError';
+	import { api_config } from '#lib/helpers/api_config.ts';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
+	import { projectStore } from '#lib/stores/project.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import { OldapListNode } from '#lib/oldap/classes/listnode.ts';
+	import { convertToLanguage, getLanguageShortname, Language } from '#lib/oldap/enums/language.ts';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
+	import { successInfoStore } from '#lib/stores/successinfo.ts';
+	import { NCName } from '#lib/oldap/datatypes/xsd_ncname.ts';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import { OldapError } from '#lib/oldap/errors/OldapError.ts';
 	import { refreshNodeTreeNow } from '../../stores/refresh_nodetree.svelte.js';
-	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
-	import LangstringfieldNew from '$lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
-	import { locales } from '$lib/paraglide/runtime';
+	import Confirmation from '#lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import LangstringfieldNew from '#lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
+	import { locales } from '#lib/paraglide/runtime.js';
 
 	const ncname_pattern: RegExp = /^[A-Za-z_][A-Za-z0-9._-]*$/;
 
@@ -52,7 +52,7 @@
 				hlistid: hlistid,
 				nodeid: nodeid
 			});
-			apiClient.getAdminhlistProjectHlistidNodeid(config_nodedata).then((jsondata) => {
+			apiClient.getAdminHlistByProjectByHlistidByNodeid(config_nodedata).then((jsondata) => {
 				node = OldapListNode.fromOldapJson(jsondata, new NCName(hlistid));
 				prefLabel = node.prefLabel || new LangString();
 				orig_prefLabel = prefLabel.clone();
@@ -113,7 +113,7 @@
 					hlistid: hlistid,
 					nodeid: nodeid
 				});
-				apiClient.postAdminhlistProjectHlistidNodeid(nodedata, node_post).then((res) => {
+				apiClient.postAdminHlistByProjectByHlistidByNodeid({ ...node_post, body: nodedata }).then((res) => {
 					successInfoStore.set(`!${res.message}`);
 					refreshNodeTreeNow();
 				}).catch((error) => {
@@ -154,7 +154,7 @@
 				hlistid: hlistid,
 				nodeid: nodeid || ''
 			});
-			apiClient.putAdminhlistProjectHlistidNodeid(nodedata, node_post).then((res) => {
+			apiClient.putAdminHlistByProjectByHlistidByNodeid({ ...node_post, body: nodedata }).then((res) => {
 				successInfoStore.set(`!${res.message}`);
 				refreshNodeTreeNow();
 			}).catch((error) => {

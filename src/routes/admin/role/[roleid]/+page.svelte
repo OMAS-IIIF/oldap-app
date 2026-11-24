@@ -1,33 +1,33 @@
 <script lang="ts">
 
 	import type { PageProps } from './$types';
-	import * as m from '$lib/paraglide/messages';
-	import { authInfoStore } from '$lib/stores/authinfo';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import Textfield from '$lib/components/basic_gui/inputs/Textfield.svelte';
-	import DropdownField from '$lib/components/basic_gui/inputs/DropdownField.svelte';
-	import LangstringField from '$lib/components/basic_gui/inputs/LangstringField.svelte';
-	import { LangString } from '$lib/oldap/datatypes/langstring';
-	import { dataPermissionAsString, strippedDataPermission } from '$lib/oldap/enums/data_permissions';
+	import * as m from '#lib/paraglide/messages.js';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import Textfield from '#lib/components/basic_gui/inputs/Textfield.svelte';
+	import DropdownField from '#lib/components/basic_gui/inputs/DropdownField.svelte';
+	import LangstringField from '#lib/components/basic_gui/inputs/LangstringField.svelte';
+	import { LangString } from '#lib/oldap/datatypes/langstring.ts';
+	import { dataPermissionAsString, strippedDataPermission } from '#lib/oldap/enums/data_permissions.ts';
 	import { onMount, tick } from 'svelte';
-	import { api_notget_config } from '$lib/helpers/api_config';
-	import { apiClient } from '$lib/shared/apiClient';
-	import { OldapRole } from '$lib/oldap/classes/role';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { process_api_error } from '$lib/helpers/process_api_error';
-	import { goto_page } from '$lib/helpers/goto_page';
-	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
-	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
-	import { successInfoStore } from '$lib/stores/successinfo';
-	import { convertToLanguage, getLanguageShortname, Language } from '$lib/oldap/enums/language';
-	import { userStore } from '$lib/stores/user';
-	import { OldapUser } from '$lib/oldap/classes/user';
-	import { OldapProject } from '$lib/oldap/classes/project';
-	import { getProjectsOfUser } from '$lib/helpers/get_projects_of_user';
+	import { api_notget_config } from '#lib/helpers/api_config.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import { OldapRole } from '#lib/oldap/classes/role.ts';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
+	import { goto_page } from '#lib/helpers/goto_page.ts';
+	import Button from '#lib/components/basic_gui/buttons/Button.svelte';
+	import Confirmation from '#lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import { successInfoStore } from '#lib/stores/successinfo.ts';
+	import { convertToLanguage, getLanguageShortname, Language } from '#lib/oldap/enums/language.ts';
+	import { userStore } from '#lib/stores/user.ts';
+	import { OldapUser } from '#lib/oldap/classes/user.ts';
+	import { OldapProject } from '#lib/oldap/classes/project.ts';
+	import { getProjectsOfUser } from '#lib/helpers/get_projects_of_user.ts';
 	import { page } from '$app/state';
-	import { projectStore } from '$lib/stores/project';
-	import LangstringfieldNew from '$lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
-	import { locales } from '$lib/paraglide/runtime';
+	import { projectStore } from '#lib/stores/project.ts';
+	import LangstringfieldNew from '#lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
+	import { locales } from '#lib/paraglide/runtime.js';
 
 	let { data } : PageProps = $props();
 
@@ -94,7 +94,7 @@
 				definedByProject: definedByProject || '',
 				roleId: data.roleid
 			});
-			apiClient.getAdminroleDefinedByProjectRoleId(config_role).then((data) => {
+			apiClient.getAdminRoleByDefinedByProjectByRoleId(config_role).then((data) => {
 				role = OldapRole.fromOldapJson(data);
 				if (role) {
 					roleId = role.roleId.toString();
@@ -135,7 +135,7 @@
 			definedByProject: selectedProjectId,
 			roleId: roleId
 		});
-		apiClient.putAdminroleDefinedByProjectRoleId(roledata, role_put).then((res) => {
+		apiClient.putAdminRoleByDefinedByProjectByRoleId({ ...role_put, body: roledata }).then((res) => {
 			successInfoStore.set(`Rle "${roleId}" added successfully!`);
 		}).catch((error) => {
 			errorInfoStore.set(process_api_error(error as Error));
@@ -158,11 +158,11 @@
 
 		if (roledata) {
 			const role_post = api_notget_config(authinfo as AuthInfo, {
-				definedByProject: encodeURIComponent(definedByProject || ''),
+				definedByProject: definedByProject || '',
 				roleId: data.roleid
 			});
-			apiClient.postAdminroleDefinedByProjectRoleId(roledata, role_post).then((res) => {
-				successInfoStore.set(`Permission set "${res.roleid}" modified successfully!`);
+			apiClient.postAdminRoleByDefinedByProjectByRoleId({ ...role_post, body: roledata }).then((res) => {
+				successInfoStore.set(`Permission set "${data.roleid}" modified successfully!`);
 			}).catch((error) => {
 				errorInfoStore.set(process_api_error(error as Error));
 			});

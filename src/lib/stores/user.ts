@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store';
-import type { OldapUser } from '$lib/oldap/classes/user';
+import type { OldapUser } from '#lib/oldap/classes/user.ts';
 
 
 //export const userStore = persistentWritable<OldapUser | null>('user', null);

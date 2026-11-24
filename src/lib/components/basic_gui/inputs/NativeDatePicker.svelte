@@ -8,7 +8,7 @@
 -->
 <script lang="ts">
 
-	import { XsdDate } from '$lib/oldap/datatypes/xsd_date';
+	import { XsdDate } from '#lib/oldap/datatypes/xsd_date.ts';
 
 	let {
 		/** Label shown above the field */

@@ -1,6 +1,6 @@
 import { goto } from '$app/navigation';
-import { i18n } from '$lib/i18n';
-import { getLocale } from '$lib/paraglide/runtime';
+import { i18n } from '#lib/i18n.ts';
+import { getLocale } from '#lib/paraglide/runtime.js';
 
 export const goto_page = (url: string, queryParams?: Record<string, string>) => {
 	return () => {

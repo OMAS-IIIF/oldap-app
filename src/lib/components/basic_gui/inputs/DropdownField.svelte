@@ -1,8 +1,8 @@
 <script lang="ts">
 
-	import DropdownMenu from '$lib/components/basic_gui/dropdown/DropdownMenu.svelte';
-	import DropdownLinkItem from '$lib/components/basic_gui/dropdown/DropdownLinkItem.svelte';
-	import DropdownButton from '$lib/components/basic_gui/dropdown/DropdownButton.svelte';
+	import DropdownMenu from '#lib/components/basic_gui/dropdown/DropdownMenu.svelte';
+	import DropdownLinkItem from '#lib/components/basic_gui/dropdown/DropdownLinkItem.svelte';
+	import DropdownButton from '#lib/components/basic_gui/dropdown/DropdownButton.svelte';
 
 	let { items, id, name, label, selectedItem = $bindable(), disabled = false } = $props();
 

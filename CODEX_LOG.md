@@ -1,3 +1,15 @@
+### Update 2026-11-24 23:43
+- Decisions: Release the reviewed security migration as 0.2.11, push source/tag and version-only Docker images, and deploy to home first as explicitly requested.
+- Implementation: Prepare the Kit 3/Vite 8/TypeScript 6 and generated Axios/Zod 4 client changes for release. Typecheck has zero errors/warnings; 65 unit/component tests, 29 mocked browser workflows and production build pass. Image acceptance is recorded in the release receipt.
+- Open: Multi-platform image publication and home activation; parent deployment task owns the immutable selection and rollback.
+- Risks/Assumptions: No production activation or live content writes. Preserve existing image tags/latest; application transport targets the existing API contract. See docs/release-0.2.11.md.
+
+### Update 2026-11-24 22:56
+- Decisions: Replace vulnerable SvelteKit 2/Zodios/Zod 3 dependencies with SvelteKit 3 and a generated Hey API/Axios/Zod 4 client; preserve existing HTTP/authentication contracts. No release or deployment.
+- Implementation: Coordinated Vite 8/TypeScript 6/Node 24 Docker migration, #lib imports and explicit runtime environment declarations. Native SDK options, bracketed array queries, bounded auth retries, lossless RDF validation and checked generator adaptations. Corrected sibling OpenAPI metadata/reference descriptions, realistic browser fixtures and client-navigation HTML language. Scoped js-yaml override removes generator advisories; obsolete esbuild approval removed, optional fsevents hook denied. See docs/dependency-security-review-20261124.md.
+- Open: Acceptance against the intended deployed API before release; AMD64 image verification remains a release step.
+- Risks/Assumptions: Full/production npm audit: zero findings. Clean npm ci, reproducible generation, typecheck (zero errors/warnings), 65 unit/component tests, 29 mocked browser workflows, production build, changed-tool formatting and diff checks pass. Independent review regressions resolved. Local ARM64 Docker build and isolated Node 24.22.3 startup/English-German HTML/runtime-env isolation smoke pass; temporary container removed. Sibling OpenAPI validation passes; no live backend writes.
+
 ### Update 2026-11-19 23:52
 - Decisions: Completed the authorized 0.2.10 publication and production deployment.
 - Implementation: Published source e094743/tag v0.2.10 and accepted AMD64/ARM64 image 47cbd36466e6. Shared updater replaced only oldap-app; seven sibling containers unchanged. Recorded immutable selection, rollback and receipt in sibling setup repository.

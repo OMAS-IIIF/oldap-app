@@ -1,4 +1,4 @@
-import { OldapErrorInvalidValue } from '$lib/oldap/errors/OldapErrorInvalidValue';
+import { OldapErrorInvalidValue } from '#lib/oldap/errors/OldapErrorInvalidValue.ts';
 
 
 export class NCName {

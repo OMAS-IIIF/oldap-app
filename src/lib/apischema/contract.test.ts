@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { schemas } from './zod';
+import * as schemas from './generated/zod.gen';
 
 it('retains flat property patches, including zero, null and false', () => {
 	const patch = {
@@ -13,14 +13,14 @@ it('retains flat property patches, including zero, null and false', () => {
 		reifierShapes: [],
 		reificationRequired: false
 	};
-	expect(schemas.postAdmindatamodelProjectResourceProperty_Body.parse(patch)).toEqual(patch);
+	expect(schemas.zPostAdminDatamodelByProjectByResourceByPropertyBody.parse(patch)).toEqual(patch);
 	const standalone = {
 		subPropertyOf: null,
 		nodeKind: 'sh:IRI',
 		reifierShapes: [],
 		reificationRequired: false
 	};
-	expect(schemas.postAdmindatamodelProjectpropertyProperty_Body.parse(standalone)).toEqual(
+	expect(schemas.zPostAdminDatamodelByProjectPropertyByPropertyBody.parse(standalone)).toEqual(
 		standalone
 	);
 });
@@ -34,8 +34,8 @@ it('requires instance audit fields while preserving dynamic RDF values and roles
 		'test:title': ['Title'],
 		'oldap:attachedToRole': { 'test:Reader': 'DATA_VIEW' }
 	};
-	expect(schemas.InstanceData.parse(data)).toEqual(data);
-	expect(schemas.InstanceData.safeParse({ 'test:title': ['Title'] }).success).toBe(false);
+	expect(schemas.zInstanceData.parse(data)).toEqual(data);
+	expect(schemas.zInstanceData.safeParse({ 'test:title': ['Title'] }).success).toBe(false);
 });
 
 it('retains literal and object create fields and enforces their exclusive type choice', () => {
@@ -57,11 +57,11 @@ it('retains literal and object create fields and enforces their exclusive type c
 		group: 'oldap:SystemGroup',
 		reifierShapes: ['test:SourceShape']
 	};
-	expect(schemas.PropertyCreate.parse(literal)).toEqual(literal);
-	expect(schemas.PropertyCreate.parse(object)).toEqual(object);
-	expect(schemas.PropertyCreate.safeParse({ name: ['Missing type@en'] }).success).toBe(false);
+	expect(schemas.zPropertyCreate.parse(literal)).toEqual(literal);
+	expect(schemas.zPropertyCreate.parse(object)).toEqual(object);
+	expect(schemas.zPropertyCreate.safeParse({ name: ['Missing type@en'] }).success).toBe(false);
 	expect(
-		schemas.PropertyCreate.safeParse({ datatype: 'xsd:string', class: 'shared:ArchiveUnit' })
+		schemas.zPropertyCreate.safeParse({ datatype: 'xsd:string', class: 'shared:ArchiveUnit' })
 			.success
 	).toBe(false);
 });
@@ -75,18 +75,62 @@ it('preserves resource summary metadata while requiring asserted types', () => {
 			'test:title': ['Title']
 		}
 	};
-	expect(schemas.ResourceSummary.parse(summary)).toEqual(summary);
+	expect(schemas.zResourceSummary.parse(summary)).toEqual(summary);
 	expect(
-		schemas.ResourceSummary.safeParse({ ...summary, data: { 'test:title': ['Title'] } }).success
+		schemas.zResourceSummary.safeParse({ ...summary, data: { 'test:title': ['Title'] } }).success
 	).toBe(false);
 });
 
 it('accepts and preserves multiple superproperties in flat writes', () => {
 	const patch = { subPropertyOf: ['dc:coverage', 'dcterms:coverage'] };
-	expect(schemas.postAdmindatamodelProjectResourceProperty_Body.parse(patch)).toEqual(patch);
-	expect(schemas.postAdmindatamodelProjectpropertyProperty_Body.parse(patch)).toEqual(patch);
-	expect(schemas.PropertyCreate.parse({ ...patch, datatype: 'xsd:string' })).toEqual({
+	expect(schemas.zPostAdminDatamodelByProjectByResourceByPropertyBody.parse(patch)).toEqual(patch);
+	expect(schemas.zPostAdminDatamodelByProjectPropertyByPropertyBody.parse(patch)).toEqual(patch);
+	expect(schemas.zPropertyCreate.parse({ ...patch, datatype: 'xsd:string' })).toEqual({
 		...patch,
 		datatype: 'xsd:string'
 	});
+});
+
+it('accepts timezone offsets in API audit timestamps without rewriting values', () => {
+	const data = {
+		'oldap:createdBy': ['urn:creator'],
+		'oldap:lastModifiedBy': ['urn:creator'],
+		'oldap:creationDate': ['2026-11-17T12:00:00+00:00'],
+		'oldap:lastModificationDate': ['2026-11-17T13:00:00+01:00'],
+		'test:title': ['Title']
+	};
+	expect(schemas.zInstanceData.parse(data)).toEqual(data);
+	expect(
+		schemas.zInstanceData.safeParse({ ...data, 'oldap:creationDate': ['not-a-date'] }).success
+	).toBe(false);
+});
+
+it('preserves unspecified OpenAPI extension fields but rejects explicitly closed object extras', () => {
+	const project = {
+		projectIri: 'urn:test',
+		projectShortName: 'test',
+		futureMetadata: { preserved: true }
+	};
+	expect(schemas.zGetAdminProjectGetResponse.parse(project)).toEqual(project);
+	expect(
+		schemas.zPropertyCreate.safeParse({ datatype: 'xsd:string', unexpected: true }).success
+	).toBe(false);
+});
+
+it('accepts deployed annotation type names and absolute property references', () => {
+	const annotation = {
+		iri: 'test:note',
+		datatype: 'xsd:string',
+		type: ['OwlAnnotationProperty'],
+		lessThan: 'https://example.org/ns/upper',
+		lessThanOrEquals: 'urn:test:upper'
+	};
+	expect(schemas.zProperty.parse(annotation)).toEqual(annotation);
+	const inverse = {
+		iri: 'test:parent',
+		toClass: 'test:Item',
+		inversePath: 'https://example.org/ns/child'
+	};
+	expect(schemas.zProperty.parse(inverse)).toEqual(inverse);
+	expect(schemas.zPropertyReference.safeParse('not an iri').success).toBe(false);
 });

@@ -3,8 +3,8 @@ import {
 	expireAuthenticatedSession,
 	hasRefreshableSession,
 	refreshAccessToken
-} from '$lib/auth/accessToken';
-import { retryOnceAfterUnauthorized } from '$lib/auth/retryOnce';
+} from '#lib/auth/accessToken.ts';
+import { retryOnceAfterUnauthorized } from '#lib/auth/retryOnce.ts';
 
 function withCurrentBearer(init: RequestInit): RequestInit {
 	const headers = new Headers(init.headers);

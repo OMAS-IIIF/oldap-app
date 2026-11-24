@@ -3,10 +3,10 @@
   -->
 
 <script lang="ts">
-	import { getLocale } from '$lib/paraglide/runtime';
-	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
-	import type { OldapList } from '$lib/oldap/classes/list';
-	import type { OldapListNode } from '$lib/oldap/classes/listnode';
+	import { getLocale } from '#lib/paraglide/runtime.js';
+	import { convertToLanguage, Language } from '#lib/oldap/enums/language.ts';
+	import type { OldapList } from '#lib/oldap/classes/list.ts';
+	import type { OldapListNode } from '#lib/oldap/classes/listnode.ts';
 
 	let {
 		label,

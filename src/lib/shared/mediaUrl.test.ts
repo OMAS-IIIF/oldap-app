@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { mediaAssetDerivativeUrl, withMediaToken } from '$lib/shared/mediaUrl';
+import { mediaAssetDerivativeUrl, withMediaToken } from '#lib/shared/mediaUrl.ts';
 
 describe('withMediaToken', () => {
 	it('adds an encoded media capability token', () => {

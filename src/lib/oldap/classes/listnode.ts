@@ -1,8 +1,8 @@
-import { OldapObject } from '$lib/oldap/classes/object';
-import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
-import { LangString } from '$lib/oldap/datatypes/langstring';
-import { Iri } from '$lib/oldap/datatypes/xsd_iri';
-import { XsdDateTime } from '$lib/oldap/datatypes/xsd_datetime';
+import { OldapObject } from '#lib/oldap/classes/object.ts';
+import { NCName } from '#lib/oldap/datatypes/xsd_ncname.ts';
+import { LangString } from '#lib/oldap/datatypes/langstring.ts';
+import { Iri } from '#lib/oldap/datatypes/xsd_iri.ts';
+import { XsdDateTime } from '#lib/oldap/datatypes/xsd_datetime.ts';
 
 export class OldapListNode extends OldapObject {
 	#listId: NCName;

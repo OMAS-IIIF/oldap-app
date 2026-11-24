@@ -1,6 +1,6 @@
 <script lang="ts">
 
-	import Toggle from '$lib/components/basic_gui/buttons/Toggle.svelte';
+	import Toggle from '#lib/components/basic_gui/buttons/Toggle.svelte';
 
 	let { id, label, toggle_state = $bindable(), readonly = false, disabled = false, required = undefined } = $props();
 

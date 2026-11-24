@@ -3,18 +3,18 @@
   -->
 <script lang="ts">
 	import { onDestroy, untrack } from 'svelte';
-	import * as m from '$lib/paraglide/messages';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { process_api_error } from '$lib/helpers/process_api_error';
-	import { searchResults } from '$lib/helpers/searchResults';
-	import { getLocale } from '$lib/paraglide/runtime';
-	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { authInfoStore } from '$lib/stores/authinfo';
-	import { authenticatedFetch } from '$lib/auth/authenticatedFetch';
-	import { datamodelStore } from '$lib/stores/datamodel';
-	import { projectStore } from '$lib/stores/project';
-	import DropdownField from '$lib/components/basic_gui/inputs/DropdownField.svelte';
+	import * as m from '#lib/paraglide/messages.js';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
+	import { searchResults } from '#lib/helpers/searchResults.ts';
+	import { getLocale } from '#lib/paraglide/runtime.js';
+	import { convertToLanguage, Language } from '#lib/oldap/enums/language.ts';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
+	import { authenticatedFetch } from '#lib/auth/authenticatedFetch.ts';
+	import { datamodelStore } from '#lib/stores/datamodel.ts';
+	import { projectStore } from '#lib/stores/project.ts';
+	import DropdownField from '#lib/components/basic_gui/inputs/DropdownField.svelte';
 	import {
 		Pencil,
 		Trash2,
@@ -24,18 +24,18 @@
 		ChevronsLeft,
 		ChevronsRight
 	} from '@lucide/svelte';
-	import { api_config } from '$lib/helpers/api_config';
-	import { apiClient } from '$lib/shared/apiClient';
-	import SelectMutiple from '$lib/components/basic_gui/inputs/SelectMutiple.svelte';
-	import { extractLang, LangString } from '$lib/oldap/datatypes/langstring';
-	import { createWindow } from '$lib/stores/windows.js';
-	import InstanceEditor from '$lib/components/oldap/InstanceEditor.svelte';
-	import { is_mediaobject } from '$lib/helpers/is_mediaobject';
-	import { env as publicEnv } from '$env/dynamic/public';
-	import { MediaObject } from '$lib/oldap/classes/mediaobject';
-	import IIIFViewer from '$lib/components/basic_gui/IIIFViewer.svelte';
-	import VideoViewer from '$lib/components/basic_gui/VideoViewer.svelte';
-	import { mediaAssetDerivativeUrl, withMediaToken } from '$lib/shared/mediaUrl';
+	import { api_config } from '#lib/helpers/api_config.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import SelectMutiple from '#lib/components/basic_gui/inputs/SelectMutiple.svelte';
+	import { extractLang, LangString } from '#lib/oldap/datatypes/langstring.ts';
+	import { createWindow } from '#lib/stores/windows.ts';
+	import InstanceEditor from '#lib/components/oldap/InstanceEditor.svelte';
+	import { is_mediaobject } from '#lib/helpers/is_mediaobject.ts';
+	import * as publicEnv from '$app/env/public';
+	import { MediaObject } from '#lib/oldap/classes/mediaobject.ts';
+	import IIIFViewer from '#lib/components/basic_gui/IIIFViewer.svelte';
+	import VideoViewer from '#lib/components/basic_gui/VideoViewer.svelte';
+	import { mediaAssetDerivativeUrl, withMediaToken } from '#lib/shared/mediaUrl.ts';
 
 	type Values = (string | number | boolean | null)[];
 	type Result = Record<string, Record<string, Values | MediaObject | null>>;
@@ -217,11 +217,11 @@
 		if (!ok) return;
 
 		const delete_data = api_config(authinfo || new AuthInfo('unknown', ''), {
-			project: encodeURIComponent(project?.projectShortName?.toString() || ''),
-			instiri: encodeURIComponent(iri)
+			project: project?.projectShortName?.toString() || '',
+			instiri: iri
 		});
 		apiClient
-			.deleteDataProjectInstiri(undefined, delete_data)
+			.deleteDataByProjectByInstiri(delete_data)
 			.then(() => {
 				delete results[iri];
 				window.alert('Instance deleted successfully');
@@ -285,12 +285,12 @@
 		try {
 			const config = {
 				...api_config(credentials),
-				params: { project: encodeURIComponent(projectId) }
+				path: { project: projectId }
 			};
 			const fetchPage = (page: number) =>
-				apiClient.getDataofclassProject({
+				apiClient.getDataOfclassByProject({
 					...config,
-					queries: {
+					query: {
 						resClass: classId,
 						countOnly: false,
 						includeProperties: columns,
@@ -300,9 +300,9 @@
 				});
 			// Independent reads share one network wait; neither depends on the other's response.
 			const [countResponse, requestedData] = await Promise.all([
-				apiClient.getDataofclassProject({
+				apiClient.getDataOfclassByProject({
 					...config,
-					queries: { resClass: classId, countOnly: true }
+					query: { resClass: classId, countOnly: true }
 				}),
 				fetchPage(requestedPage)
 			]);
@@ -338,8 +338,8 @@
 						iris.slice(start, start + 5).map(async (iri) => {
 							try {
 								rows[iri].mo = MediaObject.fromOldapJson(
-									await apiClient.getDatamediaobjectiriIri(
-										api_config(credentials, { iri: encodeURIComponent(iri) })
+									await apiClient.getDataMediaobjectIriByIri(
+										api_config(credentials, { iri: iri })
 									)
 								);
 							} catch (cause) {

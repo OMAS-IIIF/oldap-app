@@ -8,21 +8,21 @@
 
 -->
 <script lang="ts">
-	import DropdownMenu from '$lib/components/basic_gui/dropdown/DropdownMenu.svelte';
-	import DropdownButton from '$lib/components/basic_gui/dropdown/DropdownButton.svelte';
-	import DropdownLinkItem from '$lib/components/basic_gui/dropdown/DropdownLinkItem.svelte';
+	import DropdownMenu from '#lib/components/basic_gui/dropdown/DropdownMenu.svelte';
+	import DropdownButton from '#lib/components/basic_gui/dropdown/DropdownButton.svelte';
+	import DropdownLinkItem from '#lib/components/basic_gui/dropdown/DropdownLinkItem.svelte';
 	import { onMount, untrack } from 'svelte';
-	import { XsdDatatypes } from '$lib/oldap/enums/xsd_datatypes';
-	import { PropType, propTypeFromString } from '$lib/oldap/enums/proptypes';
-	import { api_get_config } from '$lib/helpers/api_config';
-	import { authInfoStore } from '$lib/stores/authinfo';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { apiClient } from '$lib/shared/apiClient';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { process_api_error } from '$lib/helpers/process_api_error';
-	import { OldapList } from '$lib/oldap/classes/list';
-	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
-	import { getLocale } from '$lib/paraglide/runtime';
+	import { XsdDatatypes } from '#lib/oldap/enums/xsd_datatypes.ts';
+	import { PropType, propTypeFromString } from '#lib/oldap/enums/proptypes.ts';
+	import { api_get_config } from '#lib/helpers/api_config.ts';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
+	import { OldapList } from '#lib/oldap/classes/list.ts';
+	import { convertToLanguage, Language } from '#lib/oldap/enums/language.ts';
+	import { getLocale } from '#lib/paraglide/runtime.js';
 
 	let {
 		/** @param {string} propjectid The project ID (shortname) */
@@ -93,11 +93,11 @@
 			project: projectid
 		});
 		apiClient
-			.getAdminhlistsearch(config_hlist_search)
+			.getAdminHlistSearch(config_hlist_search)
 			.then((hlistiris) => {
 				const promises = hlistiris.map((hl) => {
 					const config_hlist_get = api_get_config(authinfo || new AuthInfo('', ''), { iri: hl });
-					return apiClient.getAdminhlistget(config_hlist_get);
+					return apiClient.getAdminHlistGet(config_hlist_get);
 				});
 				Promise.all(promises)
 					.then((results) => {

@@ -3,6 +3,6 @@
  */
 
 import { writable } from 'svelte/store';
-import { getLocale } from '$lib/paraglide/runtime.js';
+import { getLocale } from '#lib/paraglide/runtime.js';
 
 export const localeStore = writable(getLocale());

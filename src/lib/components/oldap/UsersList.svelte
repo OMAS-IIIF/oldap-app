@@ -1,27 +1,27 @@
 <script lang="ts">
-	import Table from '$lib/components/basic_gui/table/Table.svelte';
-	import { OldapUser } from '$lib/oldap/classes/user';
-	import type { OldapProject } from '$lib/oldap/classes/project';
-	import { api_get_config, api_notget_config } from '$lib/helpers/api_config';
-	import { apiClient } from '$lib/shared/apiClient';
-	import Checkbox from '$lib/components/basic_gui/checkbox/Checkbox.svelte';
-	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
-	import * as m from '$lib/paraglide/messages.js';
+	import Table from '#lib/components/basic_gui/table/Table.svelte';
+	import { OldapUser } from '#lib/oldap/classes/user.ts';
+	import type { OldapProject } from '#lib/oldap/classes/project.ts';
+	import { api_get_config, api_notget_config } from '#lib/helpers/api_config.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import Checkbox from '#lib/components/basic_gui/checkbox/Checkbox.svelte';
+	import Button from '#lib/components/basic_gui/buttons/Button.svelte';
+	import * as m from '#lib/paraglide/messages.js';
 	import { Pencil, Plus, Trash2 } from '@lucide/svelte';
-	import TableHeader from '$lib/components/basic_gui/table/TableHeader.svelte';
-	import TableBody from '$lib/components/basic_gui/table/TableBody.svelte';
-	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
-	import TableItem from '$lib/components/basic_gui/table/TableItem.svelte';
-	import Toggle from '$lib/components/basic_gui/buttons/Toggle.svelte';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
-	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { process_api_error } from '$lib/helpers/process_api_error';
-	import { authInfoStore } from '$lib/stores/authinfo';
-	import { getLocale } from '$lib/paraglide/runtime';
-	import { goto_page } from '$lib/helpers/goto_page';
-	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
+	import TableHeader from '#lib/components/basic_gui/table/TableHeader.svelte';
+	import TableBody from '#lib/components/basic_gui/table/TableBody.svelte';
+	import TableRow from '#lib/components/basic_gui/table/TableRow.svelte';
+	import TableItem from '#lib/components/basic_gui/table/TableItem.svelte';
+	import Toggle from '#lib/components/basic_gui/buttons/Toggle.svelte';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import Confirmation from '#lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import TableColumnTitle from '#lib/components/basic_gui/table/TableColumnTitle.svelte';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
+	import { getLocale } from '#lib/paraglide/runtime.js';
+	import { goto_page } from '#lib/helpers/goto_page.ts';
+	import Tooltip from '#lib/components/basic_gui/tooltip/Tooltip.svelte';
 
 
 	let { table_height, administrator = null, project = null }: {
@@ -50,16 +50,13 @@
 	$effect(() => {
 		user_list = [];
 		if (authinfo) {
-			let usersearch = api_get_config(authinfo);
-			if (!show_all_users) {
-				usersearch = { ...usersearch, queries: { inProject: project?.projectIri?.toString() } };
-			}
-			apiClient.getAdminusersearch(usersearch)
+			const usersearch = api_get_config(authinfo, { inProject: show_all_users ? undefined : project?.projectIri?.toString() });
+			apiClient.getAdminUserSearch(usersearch)
 				.then((iris) => {
 					users = {} as Record<string, OldapUser>;
 					const promises = iris.map(iri => {
 						const config_userdata = api_get_config(authinfo as AuthInfo, { iri: iri });
-						return apiClient.getAdminuserget(config_userdata);
+						return apiClient.getAdminUserGet(config_userdata);
 					});
 					Promise.all(promises)
 						.then((results) => {
@@ -91,9 +88,9 @@
 			const data = { isActive: on };
 			const config_change_isActive = {
 				headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + authinfo?.token },
-				params: { userId: id }
+				path: { userId: id }
 			};
-			apiClient.postAdminuserUserId(data, config_change_isActive)
+			apiClient.postAdminUserByUserId({ ...config_change_isActive, body: data })
 				.then((result) => {
 					console.log(result);
 				})
@@ -111,7 +108,7 @@
 		const ok = await confirmation_dialog.open();
 		if (ok && authinfo) {
 			const config_data = api_notget_config(authinfo, {userId: user_id});
-			apiClient.deleteAdminuserUserId (undefined, config_data).then(() => {
+			apiClient.deleteAdminUserByUserId (config_data).then(() => {
 				delete users[user_id];
 				user_list = user_list.filter((id) => id !== user_id);
 			}).catch((err) => {

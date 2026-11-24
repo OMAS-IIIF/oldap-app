@@ -1,35 +1,35 @@
 <script lang="ts">
-	import * as m from '$lib/paraglide/messages';
+	import * as m from '#lib/paraglide/messages.js';
 	import type { PageProps } from './$types';
-	import { userStore } from '$lib/stores/user';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { OldapUser } from '$lib/oldap/classes/user';
-	import { AdminPermission } from '$lib/oldap/enums/admin_permissions';
-	import { projectStore } from '$lib/stores/project';
-	import { OldapProject } from '$lib/oldap/classes/project';
-	import { api_notget_config } from '$lib/helpers/api_config';
-	import { apiClient } from '$lib/shared/apiClient';
-	import type { TreeNodeInterface } from '$lib/helpers/treenodeinterface';
-	import NodeTree from '$lib/components/basic_gui/NodeTree/NodeTree.svelte';
-	import { OldapList } from '$lib/oldap/classes/list';
-	import type { OldapListNode } from '$lib/oldap/classes/listnode';
-	import { getLocale, locales } from '$lib/paraglide/runtime';
-	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
-	import { authInfoStore } from '$lib/stores/authinfo';
-	import { refreshNodeTree } from '$lib/stores/refresh_nodetree.svelte.js';
-	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
-	import { goto_page } from '$lib/helpers/goto_page';
-	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
-	import HList from '$lib/components/oldap/HList.svelte';
-	import LabeledDivider from '$lib/components/basic_gui/inputs/LabeledDivider.svelte';
-	import LangstringField from '$lib/components/basic_gui/inputs/LangstringField.svelte';
-	import { LangString } from '$lib/oldap/datatypes/langstring';
-	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
-	import { successInfoStore } from '$lib/stores/successinfo';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { process_api_error } from '$lib/helpers/process_api_error';
+	import { userStore } from '#lib/stores/user.ts';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import { OldapUser } from '#lib/oldap/classes/user.ts';
+	import { AdminPermission } from '#lib/oldap/enums/admin_permissions.ts';
+	import { projectStore } from '#lib/stores/project.ts';
+	import { OldapProject } from '#lib/oldap/classes/project.ts';
+	import { api_notget_config } from '#lib/helpers/api_config.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import type { TreeNodeInterface } from '#lib/helpers/treenodeinterface.ts';
+	import NodeTree from '#lib/components/basic_gui/NodeTree/NodeTree.svelte';
+	import { OldapList } from '#lib/oldap/classes/list.ts';
+	import type { OldapListNode } from '#lib/oldap/classes/listnode.ts';
+	import { getLocale, locales } from '#lib/paraglide/runtime.js';
+	import { convertToLanguage, Language } from '#lib/oldap/enums/language.ts';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
+	import { refreshNodeTree } from '#lib/stores/refresh_nodetree.svelte.ts';
+	import Button from '#lib/components/basic_gui/buttons/Button.svelte';
+	import { goto_page } from '#lib/helpers/goto_page.ts';
+	import DialogWin from '#lib/components/basic_gui/dialogs/DialogWin.svelte';
+	import HList from '#lib/components/oldap/HList.svelte';
+	import LabeledDivider from '#lib/components/basic_gui/inputs/LabeledDivider.svelte';
+	import LangstringField from '#lib/components/basic_gui/inputs/LangstringField.svelte';
+	import { LangString } from '#lib/oldap/datatypes/langstring.ts';
+	import Confirmation from '#lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import { successInfoStore } from '#lib/stores/successinfo.ts';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
 	import { onMount, tick } from 'svelte';
-	import LangstringfieldNew from '$lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
+	import LangstringfieldNew from '#lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
 
 	let { data }: PageProps = $props();
 	let current_project = $state<OldapProject | null>(null);
@@ -106,7 +106,7 @@
 						project: current_project?.projectShortName.toString() || '',
 						hlistid: data.hlistid
 					});
-					const jsondata = await apiClient.getAdminhlistProjectHlistid(config_hlistdata);
+					const jsondata = await apiClient.getAdminHlistByProjectByHlistid(config_hlistdata);
 					console.log(jsondata);
 					hlist = OldapList.fromOldapJson(jsondata);
 					prefLabel = hlist.prefLabel || new LangString();
@@ -152,7 +152,7 @@
 				project: current_project?.projectShortName.toString() || '',
 				hlistid: data.hlistid
 			});
-				apiClient.postAdminhlistProjectHlistid(hlistdata, hlist_post).then((res) => {
+				apiClient.postAdminHlistByProjectByHlistid({ ...hlist_post, body: hlistdata }).then((res) => {
 					const hlistName = hlist?.oldapListId?.toString() || '';
 					successInfoStore.set(m.mod_hlist3({ hlist: hlistName, liste: hlistName, lista: hlistName }));
 				}).catch((error) => {

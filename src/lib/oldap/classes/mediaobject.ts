@@ -2,10 +2,10 @@
  * Copyright (©) 2026. This software is licenced under the GNU General Public License v3.0 (https://www.gnu.org/licenses/gpl-3.0.en.html)
  */
 
-import type { QName } from '$lib/oldap/datatypes/xsd_qname';
-import { OldapObject } from '$lib/oldap/classes/object';
-import { Iri } from '$lib/oldap/datatypes/xsd_iri';
-import { XsdDateTime } from '$lib/oldap/datatypes/xsd_datetime';
+import type { QName } from '#lib/oldap/datatypes/xsd_qname.ts';
+import { OldapObject } from '#lib/oldap/classes/object.ts';
+import { Iri } from '#lib/oldap/datatypes/xsd_iri.ts';
+import { XsdDateTime } from '#lib/oldap/datatypes/xsd_datetime.ts';
 
 const DCMI_TYPES = [
 	'dcmitype:Collection',

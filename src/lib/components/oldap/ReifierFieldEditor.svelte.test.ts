@@ -1,13 +1,13 @@
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { datamodelStore } from '$lib/stores/datamodel';
-import { datamodelOldapStore } from '$lib/stores/datamodel_oldap';
-import { datamodelSharedStore } from '$lib/stores/datamodel_shared';
-import { projectStore } from '$lib/stores/project';
-import { DatamodelClass } from '$lib/oldap/classes/datamodel';
-import { reifierFieldToWrite } from '$lib/oldap/classes/reifierShape';
+import { datamodelStore } from '#lib/stores/datamodel.ts';
+import { datamodelOldapStore } from '#lib/stores/datamodel_oldap.ts';
+import { datamodelSharedStore } from '#lib/stores/datamodel_shared.ts';
+import { projectStore } from '#lib/stores/project.ts';
+import { DatamodelClass } from '#lib/oldap/classes/datamodel.ts';
+import { reifierFieldToWrite } from '#lib/oldap/classes/reifierShape.ts';
 import Harness from './ReifierFieldEditorHarness.svelte';
-import * as m from '$lib/paraglide/messages';
+import * as m from '#lib/paraglide/messages.js';
 
 const draft = () => JSON.parse(screen.getByTestId('field-value').textContent ?? '{}');
 const control = (label: string) => screen.getByLabelText(`${label} 1`);

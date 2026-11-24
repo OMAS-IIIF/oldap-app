@@ -1,5 +1,5 @@
 <script lang="ts">
-	import AvatarButton from '$lib/components/basic_gui/buttons/AvatarButton.svelte';
+	import AvatarButton from '#lib/components/basic_gui/buttons/AvatarButton.svelte';
 
 	let { children = () => {}, isOpen = $bindable(), src = null, initials = "", name = "", id = null} = $props();
 

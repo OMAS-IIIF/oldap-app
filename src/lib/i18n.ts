@@ -1,4 +1,4 @@
-import { localizeHref, deLocalizeHref, getLocale } from '$lib/paraglide/runtime.js';
+import { localizeHref, deLocalizeHref, getLocale } from '#lib/paraglide/runtime.js';
 
 export const i18n = {
 	/**

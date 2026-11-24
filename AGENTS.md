@@ -7,3 +7,6 @@
 - Keep the frontend backend-neutral: consume HTTP contracts rather than SPARQL or reasoner assumptions.
 
 - Follow `docs/reifier-shapes.md` for full-field replacement, shared ownership and property-use policy semantics when changing reifier-shape workflows.
+
+- Use Node.js >=22.18 (Docker: Node 24). SvelteKit configuration lives in `vite.config.ts`; local imports use `#lib/*` with explicit file extensions.
+- Preserve generated request/response validation and Axios authentication retry/error semantics when changing API generation. Generator adaptations belong in `openapi-ts.config.ts` or `tools/fix-generated-schema.mjs`, backed by contract tests.

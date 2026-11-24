@@ -1,14 +1,14 @@
 <script lang="ts">
 
-	import DropdownMenu from '$lib/components/basic_gui/dropdown/DropdownMenu.svelte';
-	import DropdownButton from '$lib/components/basic_gui/dropdown/DropdownButton.svelte';
-	import DropdownButtonItem from '$lib/components/basic_gui/dropdown/DropdownButtonItem.svelte';
-	import { locales, getLocale, setLocale } from '$lib/paraglide/runtime';
+	import DropdownMenu from '#lib/components/basic_gui/dropdown/DropdownMenu.svelte';
+	import DropdownButton from '#lib/components/basic_gui/dropdown/DropdownButton.svelte';
+	import DropdownButtonItem from '#lib/components/basic_gui/dropdown/DropdownButtonItem.svelte';
+	import { locales, getLocale, setLocale } from '#lib/paraglide/runtime.js';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { i18n } from '$lib/i18n';
-	import { resolve, resolveRoute } from '$app/paths';
-	import { localeStore } from '$lib/stores/locale';
+	import { i18n } from '#lib/i18n.ts';
+	import { resolve } from '$app/paths';
+	import { localeStore } from '#lib/stores/locale.ts';
 
 
 	let langSelOpen = $state(false);

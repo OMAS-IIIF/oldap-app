@@ -4,10 +4,10 @@ import {
 	instanceFormChanges,
 	instanceEditableProperties
 } from './instanceForm';
-import { LangString } from '$lib/oldap/datatypes/langstring';
-import { XsdDate } from '$lib/oldap/datatypes/xsd_date';
-import { schemas } from '$lib/apischema/zod';
-import { OldapList } from '$lib/oldap/classes/list';
+import { LangString } from '#lib/oldap/datatypes/langstring.ts';
+import { XsdDate } from '#lib/oldap/datatypes/xsd_date.ts';
+import * as schemas from '#lib/apischema/generated/zod.gen.ts';
+import { OldapList } from '#lib/oldap/classes/list.ts';
 
 it('serializes editable values without granting or replacing roles', () => {
 	expect(
@@ -35,9 +35,9 @@ it('retains RDF fields while requiring the declared instance metadata', () => {
 		'oldap:lastModificationDate': ['2026-11-04T12:00:00Z']
 	};
 	expect(
-		schemas.InstanceData.parse({ ...metadata, 'test:title': ['Title'] })['test:title']
+		schemas.zInstanceData.parse({ ...metadata, 'test:title': ['Title'] })['test:title']
 	).toEqual(['Title']);
-	expect(schemas.InstanceData.safeParse({ 'test:title': ['Title'] }).success).toBe(false);
+	expect(schemas.zInstanceData.safeParse({ 'test:title': ['Title'] }).success).toBe(false);
 });
 it('reads list identifiers both as full IRIs and QNames', () => {
 	for (const iri of ['https://example.org/list', 'test:List']) {
@@ -53,13 +53,13 @@ it('reads list identifiers both as full IRIs and QNames', () => {
 	}
 });
 
-import { jsonToRole } from '$lib/oldap/classes/user';
+import { jsonToRole } from '#lib/oldap/classes/user.ts';
 it('accepts omitted optional roles without breaking session restoration', () => {
 	expect(jsonToRole(undefined)).toEqual({});
 	expect(jsonToRole(null)).toEqual({});
 });
 
-import { PropertyClass } from '$lib/oldap/classes/property';
+import { PropertyClass } from '#lib/oldap/classes/property.ts';
 
 it('retains reverse-path metadata through cloning and excludes it from editable fields', () => {
 	const direct = PropertyClass.fromOldapJson({ projectid: 'test', iri: 'test:title', order: 2 });

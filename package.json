@@ -15,44 +15,60 @@
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run && npm run test:e2e",
 		"test:e2e": "playwright test",
-		"zod": "npx openapi-zod-client ../oldap-api/API-def/oldap-api.yaml --with-docs -o src/lib/apischema/zod.ts --export-types && node tools/fix-generated-schema.mjs"
+		"zod": "openapi-ts && node tools/fix-generated-schema.mjs"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^2.0.2",
 		"@eslint/js": "^9.18.0",
+		"@hey-api/openapi-ts": "0.99.0",
 		"@inlang/paraglide-js": "^2.9.1",
 		"@lucide/svelte": "^0.563.1",
 		"@playwright/test": "^1.49.1",
-		"@sveltejs/adapter-node": "^5.2.11",
-		"@sveltejs/kit": "^2.49.5",
-		"@sveltejs/vite-plugin-svelte": "^6.2.4",
+		"@sveltejs/adapter-node": "^6.0.5",
+		"@sveltejs/kit": "^3.4.0",
+		"@sveltejs/vite-plugin-svelte": "^7.3.2",
 		"@tailwindcss/vite": "^4.0.0",
 		"@testing-library/jest-dom": "^6.6.3",
 		"@testing-library/svelte": "^5.2.4",
+		"@types/node": "^24.19.2",
 		"eslint": "^9.18.0",
 		"eslint-config-prettier": "^10.0.1",
 		"eslint-plugin-svelte": "^3.14.0",
 		"globals": "^17.2.0",
 		"jsdom": "^27.4.0",
-		"openapi-zod-client": "^1.18.3",
 		"prettier": "^3.8.1",
 		"prettier-plugin-svelte": "^3.3.3",
 		"prettier-plugin-tailwindcss": "^0.7.2",
-		"svelte": "^5.0.0",
+		"svelte": "^5.59.1",
 		"svelte-check": "^4.0.0",
 		"svelte-loading-spinners": "^0.3.6",
 		"tailwindcss": "^4.1.4",
-		"typescript": "^5.0.0",
+		"typescript": "~6.0.3",
 		"typescript-eslint": "^8.20.0",
-		"vite": "^6.0.0",
+		"vite": "^8.3.8",
 		"vitest": "^4.1.12"
 	},
 	"dependencies": {
 		"@thisux/sveltednd": "^0.0.20",
-		"@zodios/core": "^10.9.6",
+		"axios": "^1.21.1",
 		"crypto-js": "^4.2.0",
 		"luxon": "^3.7.2",
 		"oldap-guilib": "^0.0.27",
-		"openseadragon": "^6.0.1"
+		"openseadragon": "^6.0.1",
+		"zod": "^4.6.6"
+	},
+	"engines": {
+		"node": ">=22.18.0"
+	},
+	"overrides": {
+		"@hey-api/json-schema-ref-parser": {
+			"js-yaml": "4.3.2"
+		}
+	},
+	"imports": {
+		"#lib/*": "./src/lib/*"
+	},
+	"allowScripts": {
+		"fsevents": false
 	}
 }

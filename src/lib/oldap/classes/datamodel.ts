@@ -1,11 +1,11 @@
-import { OldapObject } from '$lib/oldap/classes/object';
-import { Iri } from '$lib/oldap/datatypes/xsd_iri';
-import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
-import { PropertyClass } from '$lib/oldap/classes/property';
-import { ResourceClass } from '$lib/oldap/classes/resource';
-import { ExternalOntology } from '$lib/oldap/classes/extonto';
-import { XsdDateTime } from '$lib/oldap/datatypes/xsd_datetime';
-import { reifierShapeFromJson, type ReifierShape } from '$lib/oldap/classes/reifierShape';
+import { OldapObject } from '#lib/oldap/classes/object.ts';
+import { Iri } from '#lib/oldap/datatypes/xsd_iri.ts';
+import { NCName } from '#lib/oldap/datatypes/xsd_ncname.ts';
+import { PropertyClass } from '#lib/oldap/classes/property.ts';
+import { ResourceClass } from '#lib/oldap/classes/resource.ts';
+import { ExternalOntology } from '#lib/oldap/classes/extonto.ts';
+import { XsdDateTime } from '#lib/oldap/datatypes/xsd_datetime.ts';
+import { reifierShapeFromJson, type ReifierShape } from '#lib/oldap/classes/reifierShape.ts';
 
 export type DatamodelClassOptions = {
 	creator: Iri;

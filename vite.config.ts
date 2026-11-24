@@ -2,11 +2,13 @@ import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import tailwindcss from '@tailwindcss/vite';
 import { svelteTesting } from '@testing-library/svelte/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
+import adapter from '@sveltejs/adapter-node';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
 	plugins: [
-		sveltekit(),
+		sveltekit({ adapter: adapter(), preprocess: vitePreprocess() }),
 		tailwindcss(),
 		paraglideVitePlugin({
 			project: './project.inlang',

@@ -1,14 +1,14 @@
-import { refreshAccessToken, setAccessToken } from '$lib/auth/accessToken';
-import { AuthInfo } from '$lib/oldap/classes/authinfo';
-import { OldapUser } from '$lib/oldap/classes/user';
-import { getApiBaseUrl } from '$lib/shared/apiBaseUrl';
-import { apiClient } from '$lib/shared/apiClient';
-import { authInfoStore } from '$lib/stores/authinfo';
-import { userStore } from '$lib/stores/user';
+import { refreshAccessToken, setAccessToken } from '#lib/auth/accessToken.ts';
+import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+import { OldapUser } from '#lib/oldap/classes/user.ts';
+import { getApiBaseUrl } from '#lib/shared/apiBaseUrl.ts';
+import { apiClient } from '#lib/shared/apiClient.ts';
+import { authInfoStore } from '#lib/stores/authinfo.ts';
+import { userStore } from '#lib/stores/user.ts';
 
 function userRequestConfig(authinfo: AuthInfo) {
 	return {
-		params: { userId: authinfo.userid },
+		path: { userId: authinfo.userid },
 		headers: {
 			Accept: 'application/json',
 			Authorization: `Bearer ${authinfo.token}`
@@ -17,22 +17,20 @@ function userRequestConfig(authinfo: AuthInfo) {
 }
 
 async function loadAuthenticatedUser(authinfo: AuthInfo): Promise<OldapUser> {
-	const userdata = await apiClient.getAdminuserUserId(userRequestConfig(authinfo));
+	const userdata = await apiClient.getAdminUserByUserId(userRequestConfig(authinfo));
 	return OldapUser.fromOldapJson(userdata);
 }
 
 /** Authenticate a named user and retain its short-lived access token in memory. */
 export async function loginAuthenticatedUser(userid: string, password: string): Promise<OldapUser> {
-	const authdata = await apiClient.postAdminauthUserId(
-		{ password },
-		{
-			headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/json; utf-8'
-			},
-			params: { userId: userid }
-		}
-	);
+	const authdata = await apiClient.postAdminAuthByUserId({
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json; utf-8'
+		},
+		path: { userId: userid },
+		body: { password }
+	});
 	const accessToken = authdata.accessToken;
 	if (!accessToken) throw new Error('The login response contained no access token.');
 

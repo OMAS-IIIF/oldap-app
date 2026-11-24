@@ -3,7 +3,7 @@
  */
 
 import { writable } from 'svelte/store';
-import type { WindowData, WindowGeometry, WindowSnippet, WindowSnippetArgs } from '$lib/helpers/WindowData';
+import type { WindowData, WindowGeometry, WindowSnippet, WindowSnippetArgs } from '#lib/helpers/WindowData.ts';
 
 export const windowsStore = writable<WindowData[]>([]);
 let nextWindowZ = 1000;

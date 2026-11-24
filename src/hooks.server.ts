@@ -1,15 +1,14 @@
-import type { Handle } from '@sveltejs/kit';
-import { paraglideMiddleware } from '$lib/paraglide/server';
+import type { Handle } from '@sveltejs/kit/hooks';
+import { paraglideMiddleware } from '#lib/paraglide/server.js';
 
 export const handle: Handle = ({ event, resolve }) => {
 	return paraglideMiddleware(event.request, ({ request, locale }) => {
-		// ensure downstream sees the localized request
-		event.request = request;
-
-		return resolve(event, {
-			transformPageChunk: ({ html }) => html
-				.replace('%lang%', locale)
-				.replace('%dir%', 'ltr')
-		});
+		// SvelteKit 3 keeps the original event immutable; resolve the localized request.
+		return resolve(
+			{ ...event, request },
+			{
+				transformPageChunk: ({ html }) => html.replace('%lang%', locale).replace('%dir%', 'ltr')
+			}
+		);
 	});
 };

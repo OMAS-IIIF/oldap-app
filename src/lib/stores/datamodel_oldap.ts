@@ -3,7 +3,7 @@
  */
 
 import { writable } from 'svelte/store';
-import { DatamodelClass} from '$lib/oldap/classes/datamodel';
+import { DatamodelClass} from '#lib/oldap/classes/datamodel.ts';
 
 
 export const datamodelOldapStore = writable<DatamodelClass | null>(null);

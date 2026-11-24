@@ -1,8 +1,8 @@
-import { OldapObject } from '$lib/oldap/classes/object';
-import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
-import { Iri } from '$lib/oldap/datatypes/xsd_iri';
-import { LangString } from '$lib/oldap/datatypes/langstring';
-import { XsdDateTime } from '$lib/oldap/datatypes/xsd_datetime';
+import { OldapObject } from '#lib/oldap/classes/object.ts';
+import { NCName } from '#lib/oldap/datatypes/xsd_ncname.ts';
+import { Iri } from '#lib/oldap/datatypes/xsd_iri.ts';
+import { LangString } from '#lib/oldap/datatypes/langstring.ts';
+import { XsdDateTime } from '#lib/oldap/datatypes/xsd_datetime.ts';
 
 export class ExternalOntology extends OldapObject {
 	#prefix: NCName;

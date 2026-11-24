@@ -1,103 +1,57 @@
-# OLDAP APP
+# OLDAP App
 
-## Notes
+SvelteKit frontend for OLDAP administration and resource editing. Requires Node.js
+22.18 or later; development and Docker builds use Node.js 24.
 
-In order to add information about the api's such as the OLDAP api, the IIIF server or the upload server, a
-`config.json`-file must be generated that contains all the necessary information. This file will reside in the
-`static`-folder and is being load when the ZODIOS apiClient is first used
-the following steps must be followed. 
+## Development
 
-1. Add in `static/` a file called `config.json` with the following content (change the values according to Your
-   configuration:
-   ```json
-   {
-      "apiUrl": "http://127.0.0.1:8000",
-      "iiifUrl": "http://localhost:8182/iiif/",
-      "uploadUrl": "http://localhost:8080/upload"
-   }
-   ```
-   This file set's a default if everything else fails. It should be overwritten by the docker container.
+```sh
+npm ci
+cp .env.example .env
+npm run dev
+```
 
-2. In `src/lib`, add  a `config.ts` with the following content:
-   ```ts
-    export type AppConfig = {
-        apiUrl: string;
-        iiifUrl?: string;
-        uploadUrl?: string;
-        //mapDefaultCenter?: [number, number];
-        //featureFlags?: Record<string, boolean>;
-        [key: string]: unknown;
-    };
+Set `PUBLIC_API_URL` to the API origin reachable from the browser and
+`SERVER_API_URL` to the origin reachable from the frontend server. API transport
+uses these environment variables, not `static/config.json`. Optional media/upload
+settings are listed in `.env.example`. Never put secrets in `PUBLIC_*` variables.
 
-    let configPromise: Promise<AppConfig> | null = null;
+## API contract
 
-    export function getConfig(fetchFn: typeof fetch): Promise<AppConfig> {
-        if (!configPromise) {
-            configPromise = fetchFn('/config.json').then((res) => {
-                if (!res.ok) {
-                    throw new Error(`Failed to load config.json: ${res.status}`);
-                }
-                return res.json();
-            });
-        }
-        return configPromise;
-    }
+Keep the sibling `../oldap-api` checkout at the intended backend revision, then run:
 
-    export async function getConfigValue<T = unknown>(key: string): Promise<T | undefined> {
-        const config = await getConfig();
-        return config[key] as T | undefined;
-    }
-    ```
+```sh
+npm run zod
+```
 
-3. There must be a `docker-entrypoint.sh` e.g. as follows:
-   ```bash
-   #!/bin/sh
-   #
-   # Copyright (©) 2025. This software is licenced under the GNU General Public License v3.0 (https://www.gnu.org/licenses/gpl-3.0.en.html)
-   #
-   set -e
+The Hey API generator produces TypeScript SDK operations and Zod 4 validators from
+`../oldap-api/API-def/oldap-api.yaml`. Do not edit generated files manually.
+Application code accesses the SDK through `src/lib/shared/apiClient.ts`, which
+owns runtime origins, credentials and authenticated retry behavior.
 
-   # Debug logging
-   echo "[entrypoint] Starting oldap-app..."
-   echo "[entrypoint] Using API_URL=${API_URL}"
+## Verification
 
-    # Write runtime config.json (the frontend will fetch this at /config.json)
-    cat > /app/build/client/config.json <<EOF
-    {
-      "apiUrl": "$API_URL"
-      "iiifUrl": "$IIIF_URL"
-      "uploadUrl": $UPLOAD_URL"
-    }
-    EOF
+```sh
+npm run check
+npm run test:unit -- --run
+npm run test:e2e
+npm audit
+```
 
-   # Start the SvelteKit Node adapter server
-   exec node build
-   ```
+Playwright builds the app and uses mocked `https://oldap.test` API responses; it
+must not write to live services. `npm run build` creates the Node adapter output.
 
-4. The docker start command must give the API_URL:
-   ```bash
-   docker run --rm -it -e API_URL=http://127.0.0.1:8000 -p 3000:3000 oldap-app
-   ```
-   
-5. The frontend will now fetch the config.json from the server. The parameters can be accessed as follows:
-    ```sveltehtml
-    import type { PageData } from './$types';
+## Container
 
-    let {
-      children,
-      data
-	}: {
-      children: Snippet,
-      data: PageData
-   } = $props();
+The Dockerfile uses Node.js 24 for both stages. Supply both `PUBLIC_API_URL` and
+`SERVER_API_URL` at container startup; `docker-entrypoint.sh` validates them and
+starts `node build`. Publishing and deployment are separate release operations.
 
-    onMount(async () => {
-      // Automatisches Login für unbekannten Benutzer beim Anwendungsstart
-      if (!$userStore && !$authInfoStore) {
-        await loginUnknownUser();
-      }
-      console.log(data.config);
-    });
-    ```
-   `data.config.apiUrl` will return `http://127.0.0.1:8000` etc.
-   Alternative: Use the `getConfigValue` function to get the config value.
+## Dependency maintenance
+
+Use coordinated framework/client upgrades and review audit findings before changing
+major versions. `@hey-api/json-schema-ref-parser` currently pins an affected
+`js-yaml`; a scoped override selects patched `4.3.2`. Remove the override when the
+upstream dependency includes the fixes. Check `npm install-scripts ls` after
+updates. The optional macOS `fsevents` install hook is denied; the package ships its
+native binary. Vite 8 no longer requires the old esbuild install-script approval.

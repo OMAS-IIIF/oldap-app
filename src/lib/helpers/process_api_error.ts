@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { OldapError } from '$lib/oldap/errors/OldapError';
-import { OldapErrorApiFailure } from '$lib/oldap/errors/OldapErrorApiFailure';
+import { OldapError } from '#lib/oldap/errors/OldapError.ts';
+import { OldapErrorApiFailure } from '#lib/oldap/errors/OldapErrorApiFailure.ts';
 
 
 

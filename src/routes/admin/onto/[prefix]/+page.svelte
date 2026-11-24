@@ -1,33 +1,33 @@
 <script lang="ts">
 
 	import type { PageProps } from './$types';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { OldapUser } from '$lib/oldap/classes/user';
-	import { authInfoStore } from '$lib/stores/authinfo';
-	import * as m from '$lib/paraglide/messages';
-	import { goto_page } from '$lib/helpers/goto_page';
-	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
-	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
-	import LangstringfieldNew from '$lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
-	import Textfield from '$lib/components/basic_gui/inputs/Textfield.svelte';
-	import { ExternalOntology } from '$lib/oldap/classes/extonto';
-	import { extractLang, LangString } from '$lib/oldap/datatypes/langstring';
-	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
-	import { api_notget_config } from '$lib/helpers/api_config';
-	import { apiClient } from '$lib/shared/apiClient';
-	import { successInfoStore } from '$lib/stores/successinfo';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { process_api_error } from '$lib/helpers/process_api_error';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import { OldapUser } from '#lib/oldap/classes/user.ts';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
+	import * as m from '#lib/paraglide/messages.js';
+	import { goto_page } from '#lib/helpers/goto_page.ts';
+	import Button from '#lib/components/basic_gui/buttons/Button.svelte';
+	import Confirmation from '#lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import LangstringfieldNew from '#lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
+	import Textfield from '#lib/components/basic_gui/inputs/Textfield.svelte';
+	import { ExternalOntology } from '#lib/oldap/classes/extonto.ts';
+	import { extractLang, LangString } from '#lib/oldap/datatypes/langstring.ts';
+	import { convertToLanguage, Language } from '#lib/oldap/enums/language.ts';
+	import { api_notget_config } from '#lib/helpers/api_config.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import { successInfoStore } from '#lib/stores/successinfo.ts';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
 	import { onMount, tick } from 'svelte';
-	import { getLocale, locales } from '$lib/paraglide/runtime';
+	import { getLocale, locales } from '#lib/paraglide/runtime.js';
 	import { page } from '$app/state';
-	import { projectStore } from '$lib/stores/project';
-	import type { OldapProject } from '$lib/oldap/classes/project';
-	import { datamodelStore } from '$lib/stores/datamodel';
-	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
-	import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
-	import { RepeatableField } from '$lib/components/basic_gui/repeatable';
-	import { difference, setsEqual } from '$lib/helpers/setops';
+	import { projectStore } from '#lib/stores/project.ts';
+	import type { OldapProject } from '#lib/oldap/classes/project.ts';
+	import { datamodelStore } from '#lib/stores/datamodel.ts';
+	import { DatamodelClass } from '#lib/oldap/classes/datamodel.ts';
+	import { NCName } from '#lib/oldap/datatypes/xsd_ncname.ts';
+	import { RepeatableField } from '#lib/components/basic_gui/repeatable/index.ts';
+	import { difference, setsEqual } from '#lib/helpers/setops.ts';
 
 	let { data } : PageProps = $props();
 
@@ -134,7 +134,7 @@
 			project: project?.projectShortName.toString() || '',
 			prefix: prefix,
 		});
-		apiClient.putAdmindatamodelProjectextontoPrefix(extontodata, extonto_put).then(() => {
+		apiClient.putAdminDatamodelByProjectExtontoByPrefix({ ...extonto_put, body: extontodata }).then(() => {
 			successInfoStore.set(`External Ontology "${prefix}" added successfully!`);
 		}).catch((error: unknown) => {
 			errorInfoStore.set(process_api_error(error as Error));
@@ -215,7 +215,7 @@
 				project: project?.projectShortName.toString() || '',
 				prefix: prefix,
 			});
-			apiClient.postAdmindatamodelProjectextontoPrefix(extontodata, extonto_post).then(() => {
+			apiClient.postAdminDatamodelByProjectExtontoByPrefix({ ...extonto_post, body: extontodata }).then(() => {
 				successInfoStore.set(`External Ontology modified successfully!`);
 			}).catch((error) => {
 				errorInfoStore.set(process_api_error(error as Error));

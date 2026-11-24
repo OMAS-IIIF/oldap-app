@@ -2,7 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import { test, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import Page from './+page.svelte';
-import { windowsStore } from '$lib/stores/windows';
+import { windowsStore } from '#lib/stores/windows.ts';
 
 beforeEach(() => windowsStore.set([]));
 

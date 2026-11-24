@@ -1,23 +1,35 @@
-import type { AuthInfo } from '$lib/oldap/classes/authinfo';
-import type { DeepReadonlyObject } from '@zodios/core/lib/utils.types';
+import type { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
 
-export function api_config(authinfo: AuthInfo,
-													 params?: Record<string, string>,
-													 queries?: Record<string, string | string[] | boolean>) {
+type PathParameters = Record<string, string>;
+type QueryParameters = Record<string, string | string[] | number | boolean | undefined>;
+
+/** Build SDK options with raw path values; the transport performs URL encoding. */
+export function api_config<
+	const P extends PathParameters | undefined = undefined,
+	const Q extends QueryParameters | undefined = undefined
+>(authinfo: AuthInfo, path?: P, query?: Q) {
 	return {
 		headers: {
-			'Accept': 'application/json',
-			'Authorization': 'Bearer ' + authinfo.token,
+			Accept: 'application/json',
+			Authorization: 'Bearer ' + authinfo.token
 		},
-		...(params ? { params: params } : {}),
-		...(queries ? { queries: queries  } : {}),
-	} as DeepReadonlyObject<any>
+		path: path as P,
+		query: query as Q
+	};
 }
 
-export function api_get_config(authinfo: AuthInfo, queries?: Record<string, string>){
-	return api_config(authinfo, undefined, queries);
+/** Build options for a query-only endpoint without losing its inferred keys. */
+export function api_get_config<const Q extends QueryParameters | undefined = undefined>(
+	authinfo: AuthInfo,
+	query?: Q
+) {
+	return api_config(authinfo, undefined, query);
 }
 
-export function api_notget_config(authinfo: AuthInfo, params?: Record<string, string>) {
-	return api_config(authinfo, params, undefined);
+/** Build options for a path-based write; the caller supplies the body separately. */
+export function api_notget_config<const P extends PathParameters | undefined = undefined>(
+	authinfo: AuthInfo,
+	path?: P
+) {
+	return api_config(authinfo, path);
 }

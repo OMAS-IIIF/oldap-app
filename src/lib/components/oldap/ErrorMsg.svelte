@@ -1,7 +1,7 @@
 <script lang="ts">
-	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import type { OldapError } from '$lib/oldap/errors/OldapError';
+	import DialogWin from '#lib/components/basic_gui/dialogs/DialogWin.svelte';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import type { OldapError } from '#lib/oldap/errors/OldapError.ts';
 
 	let show_error = $state(false);
 	let errormsg = $state('');

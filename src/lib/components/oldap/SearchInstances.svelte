@@ -7,31 +7,31 @@
 	let { searchString, resourceClass }: { searchString: string; resourceClass: string } = $props();
 	let searchError = $state('');
 	let lastQuery = '';
-	import { searchResults, fulltextQueries } from '$lib/helpers/searchResults';
-	import { locales, getLocale } from '$lib/paraglide/runtime';
-	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
-	import type { OldapUser } from '$lib/oldap/classes/user';
-	import type { OldapProject } from '$lib/oldap/classes/project';
-	import { authInfoStore } from '$lib/stores/authinfo';
-	import { authenticatedFetch } from '$lib/auth/authenticatedFetch';
-	import { userStore } from '$lib/stores/user';
-	import { datamodelStore } from '$lib/stores/datamodel';
-	import { projectStore } from '$lib/stores/project';
-	import DropdownField from '$lib/components/basic_gui/inputs/DropdownField.svelte';
+	import { searchResults, fulltextQueries } from '#lib/helpers/searchResults.ts';
+	import { locales, getLocale } from '#lib/paraglide/runtime.js';
+	import { convertToLanguage, Language } from '#lib/oldap/enums/language.ts';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import { DatamodelClass } from '#lib/oldap/classes/datamodel.ts';
+	import type { OldapUser } from '#lib/oldap/classes/user.ts';
+	import type { OldapProject } from '#lib/oldap/classes/project.ts';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
+	import { authenticatedFetch } from '#lib/auth/authenticatedFetch.ts';
+	import { userStore } from '#lib/stores/user.ts';
+	import { datamodelStore } from '#lib/stores/datamodel.ts';
+	import { projectStore } from '#lib/stores/project.ts';
+	import DropdownField from '#lib/components/basic_gui/inputs/DropdownField.svelte';
 	import { Search, Pencil, Trash2 } from '@lucide/svelte';
-	import { api_config } from '$lib/helpers/api_config';
-	import { apiClient } from '$lib/shared/apiClient';
-	import SelectMutiple from '$lib/components/basic_gui/inputs/SelectMutiple.svelte';
-	import { extractLang, LangString } from '$lib/oldap/datatypes/langstring';
-	import { createWindow } from '$lib/stores/windows.js';
-	import InstanceEditor from '$lib/components/oldap/InstanceEditor.svelte';
-	import { is_mediaobject } from '$lib/helpers/is_mediaobject';
-	import { env as publicEnv } from '$env/dynamic/public';
-	import { MediaObject } from '$lib/oldap/classes/mediaobject';
-	import IIIFViewer from '$lib/components/basic_gui/IIIFViewer.svelte';
-	import { withMediaToken } from '$lib/shared/mediaUrl';
+	import { api_config } from '#lib/helpers/api_config.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import SelectMutiple from '#lib/components/basic_gui/inputs/SelectMutiple.svelte';
+	import { extractLang, LangString } from '#lib/oldap/datatypes/langstring.ts';
+	import { createWindow } from '#lib/stores/windows.ts';
+	import InstanceEditor from '#lib/components/oldap/InstanceEditor.svelte';
+	import { is_mediaobject } from '#lib/helpers/is_mediaobject.ts';
+	import * as publicEnv from '$app/env/public';
+	import { MediaObject } from '#lib/oldap/classes/mediaobject.ts';
+	import IIIFViewer from '#lib/components/basic_gui/IIIFViewer.svelte';
+	import { withMediaToken } from '#lib/shared/mediaUrl.ts';
 
 	type Values = (string | number | boolean | null)[];
 	type Result = Record<string, Record<string, Values | MediaObject | null>>;
@@ -115,11 +115,11 @@
 		if (!ok) return;
 
 		const delete_data = api_config(authinfo || new AuthInfo('unknown', ''), {
-			project: encodeURIComponent(project?.projectShortName?.toString() || ''),
-			instiri: encodeURIComponent(iri)
+			project: project?.projectShortName?.toString() || '',
+			instiri: iri
 		});
 		apiClient
-			.deleteDataProjectInstiri(undefined, delete_data)
+			.deleteDataByProjectByInstiri(delete_data)
 			.then(() => {
 				delete results[iri];
 				window.alert('Instance deleted successfully');
@@ -169,11 +169,11 @@
 			const searchstring_count_config = api_config(
 				authinfo,
 				{
-					project: encodeURIComponent(project?.projectShortName?.toString())
+					project: project?.projectShortName?.toString()
 				},
 				fulltextQueries(selres, searchstring, true)
 			);
-			const count_res = await apiClient.getDatatextsearchProject(searchstring_count_config);
+			const count_res = await apiClient.getDataTextsearchByProject(searchstring_count_config);
 			if (count_res && !Array.isArray(count_res) && 'count' in count_res) {
 				count = Number(count_res.count) || 0;
 			} else {
@@ -183,11 +183,11 @@
 			const searchstring_config = api_config(
 				authinfo,
 				{
-					project: encodeURIComponent(project?.projectShortName?.toString())
+					project: project?.projectShortName?.toString()
 				},
 				fulltextQueries(selres, searchstring)
 			);
-			const data = await apiClient.getDatatextsearchProject(searchstring_config);
+			const data = await apiClient.getDataTextsearchByProject(searchstring_config);
 			console.log(data);
 			results = searchResults(data as Record<string, unknown>[]);
 		} else {
@@ -200,14 +200,14 @@
 				const allofclass_count_config = api_config(
 					authinfo,
 					{
-						project: encodeURIComponent(project?.projectShortName?.toString())
+						project: project?.projectShortName?.toString()
 					},
 					{
 						resClass: selres,
 						countOnly: true
 					}
 				);
-				const count_res = await apiClient.getDataofclassProject(allofclass_count_config);
+				const count_res = await apiClient.getDataOfclassByProject(allofclass_count_config);
 				if (count_res && !Array.isArray(count_res) && 'count' in count_res) {
 					count = Number(count_res.count) || 0;
 				} else {
@@ -220,7 +220,7 @@
 				const allofclass_get_config = api_config(
 					authinfo,
 					{
-						project: encodeURIComponent(project?.projectShortName?.toString())
+						project: project?.projectShortName?.toString()
 					},
 					{
 						resClass: selres,
@@ -230,7 +230,7 @@
 				//
 				// data now is a Record<"iri", "propvalues"[]
 				//
-				const data = await apiClient.getDataofclassProject(allofclass_get_config);
+				const data = await apiClient.getDataOfclassByProject(allofclass_get_config);
 
 				// Normalize current scalar IDs and legacy list-valued IDs before rendering.
 				results = {};
@@ -238,10 +238,10 @@
 					let mediaobject: MediaObject | null = null;
 					if (is_mediaobject(datamodel?.resources.find((r) => r.iri.toString() === selres))) {
 						const get_mo_config = api_config(authinfo || new AuthInfo('unknown', ''), {
-							iri: encodeURIComponent(iri)
+							iri: iri
 						});
 						try {
-							const tmp = await apiClient.getDatamediaobjectiriIri(get_mo_config);
+							const tmp = await apiClient.getDataMediaobjectIriByIri(get_mo_config);
 							console.log('mediaobject', tmp);
 							mediaobject = MediaObject.fromOldapJson(tmp);
 						} catch (err) {

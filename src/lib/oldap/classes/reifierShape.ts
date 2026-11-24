@@ -1,8 +1,8 @@
 /** Named SHACL annotation shapes are independent of resource classes. Fields stay
  * plain API values so full-list replacement never loses constraints in conversion.
  */
-import { QName } from '$lib/oldap/datatypes/xsd_qname';
-import { Iri } from '$lib/oldap/datatypes/xsd_iri';
+import { QName } from '#lib/oldap/datatypes/xsd_qname.ts';
+import { Iri } from '#lib/oldap/datatypes/xsd_iri.ts';
 
 /** Supported read/write annotation-field constraints; unknown read keys are retained
  * so an unsupported constraint blocks replacement instead of disappearing silently.

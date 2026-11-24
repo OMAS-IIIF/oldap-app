@@ -1,4 +1,4 @@
-import { OldapError } from '$lib/oldap/errors/OldapError';
+import { OldapError } from '#lib/oldap/errors/OldapError.ts';
 
 export class OldapErrorInvalidValue  extends OldapError {
 	constructor(message: string) {

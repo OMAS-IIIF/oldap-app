@@ -1,11 +1,11 @@
-import type { InProject, OldapUser } from '$lib/oldap/classes/user';
-import { api_get_config } from '$lib/helpers/api_config';
-import { AuthInfo } from '$lib/oldap/classes/authinfo';
-import { apiClient } from '$lib/shared/apiClient';
-import { errorInfoStore } from '$lib/stores/errorinfo';
-import { process_api_error } from '$lib/helpers/process_api_error';
-import { AdminPermission } from '$lib/oldap/enums/admin_permissions';
-import { OldapProject } from '$lib/oldap/classes/project';
+import type { InProject, OldapUser } from '#lib/oldap/classes/user.ts';
+import { api_get_config } from '#lib/helpers/api_config.ts';
+import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+import { apiClient } from '#lib/shared/apiClient.ts';
+import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+import { process_api_error } from '#lib/helpers/process_api_error.ts';
+import { AdminPermission } from '#lib/oldap/enums/admin_permissions.ts';
+import { OldapProject } from '#lib/oldap/classes/project.ts';
 
 /*
 export const getProjectsOfUser = async (authinfo: AuthInfo, administrator: OldapUser) => {
@@ -15,7 +15,7 @@ export const getProjectsOfUser = async (authinfo: AuthInfo, administrator: Oldap
 		if (administrator.isRoot) {
 			const psearch_config = api_get_config(authinfo as AuthInfo);
 			try {
-				const projs = await apiClient.getAdminprojectsearch(psearch_config);
+				const projs = await apiClient.getAdminProjectSearch(psearch_config);
 				projs.forEach(p => {
 					if (p.projectIri) {
 						all_projects_iris.push(p.projectIri);
@@ -40,7 +40,7 @@ export const getProjectsOfUser = async (authinfo: AuthInfo, administrator: Oldap
 	//
 	const promises = all_projects_iris.map(async iri => {
 		const config_projectdata = api_get_config(authinfo as AuthInfo, { iri: iri });
-		const jsondata = await apiClient.getAdminprojectget(config_projectdata);
+		const jsondata = await apiClient.getAdminProjectGet(config_projectdata);
 		const project = OldapProject.fromOldapJson(jsondata);
 		return { iri: project.projectIri.toString(), project };
 	});
@@ -62,7 +62,7 @@ export const getProjectsOfUser = async (authinfo: AuthInfo, administrator: Oldap
 	let all_projects_iris: string[] = [];
 
 	if (administrator.isRoot) {
-		const projs = await apiClient.getAdminprojectsearch(api_get_config(authinfo));
+		const projs = await apiClient.getAdminProjectSearch(api_get_config(authinfo));
 		all_projects_iris = projs
 			.map(p => p.projectIri)
 			.filter((iri): iri is string => !!iri);
@@ -73,7 +73,7 @@ export const getProjectsOfUser = async (authinfo: AuthInfo, administrator: Oldap
 	}
 
 	const project_promises = all_projects_iris.map(async iri => {
-		const jsondata = await apiClient.getAdminprojectget(api_get_config(authinfo, { iri }));
+		const jsondata = await apiClient.getAdminProjectGet(api_get_config(authinfo, { iri }));
 		const project = OldapProject.fromOldapJson(jsondata);
 		return [project.projectIri.toString(), project] as const;
 	});

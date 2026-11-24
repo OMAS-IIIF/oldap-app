@@ -1,5 +1,5 @@
 <script lang="ts">
-	import * as m from '$lib/paraglide/messages';
+	import * as m from '#lib/paraglide/messages.js';
 
 	/** Edits local property-use policy only. Unknown existing references remain selectable
 	 * so an unrelated edit never silently clears them. Inherited policy is validated by the API.

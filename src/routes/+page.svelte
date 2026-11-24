@@ -1,5 +1,5 @@
 <script lang="ts">
-import WindowManager from '$lib/components/basic_gui/windowing/WindowManager.svelte';
+import WindowManager from '#lib/components/basic_gui/windowing/WindowManager.svelte';
 
 </script>
 

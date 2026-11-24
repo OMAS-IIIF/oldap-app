@@ -1,9 +1,9 @@
-import { Iri } from '$lib/oldap/datatypes/xsd_iri';
-import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
-import { LangString } from '$lib/oldap/datatypes/langstring';
-import { OldapObject } from '$lib/oldap/classes/object';
-import { XsdDate } from '$lib/oldap/datatypes/xsd_date';
-import { XsdDateTime } from '$lib/oldap/datatypes/xsd_datetime';
+import { Iri } from '#lib/oldap/datatypes/xsd_iri.ts';
+import { NCName } from '#lib/oldap/datatypes/xsd_ncname.ts';
+import { LangString } from '#lib/oldap/datatypes/langstring.ts';
+import { OldapObject } from '#lib/oldap/classes/object.ts';
+import { XsdDate } from '#lib/oldap/datatypes/xsd_date.ts';
+import { XsdDateTime } from '#lib/oldap/datatypes/xsd_datetime.ts';
 
 export class OldapProject extends OldapObject {
 	#projectIri: Iri;

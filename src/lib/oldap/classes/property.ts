@@ -1,11 +1,11 @@
-import { OldapObject } from '$lib/oldap/classes/object';
-import { Iri } from '$lib/oldap/datatypes/xsd_iri';
-import { xsdDatatypeFromString, XsdDatatypes } from '$lib/oldap/enums/xsd_datatypes';
-import { LangString } from '$lib/oldap/datatypes/langstring';
-import { convertToLanguage, Language } from '$lib/oldap/enums/language';
-import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
-import { QName } from '$lib/oldap/datatypes/xsd_qname';
-import { XsdDateTime } from '$lib/oldap/datatypes/xsd_datetime';
+import { OldapObject } from '#lib/oldap/classes/object.ts';
+import { Iri } from '#lib/oldap/datatypes/xsd_iri.ts';
+import { xsdDatatypeFromString, XsdDatatypes } from '#lib/oldap/enums/xsd_datatypes.ts';
+import { LangString } from '#lib/oldap/datatypes/langstring.ts';
+import { convertToLanguage, Language } from '#lib/oldap/enums/language.ts';
+import { NCName } from '#lib/oldap/datatypes/xsd_ncname.ts';
+import { QName } from '#lib/oldap/datatypes/xsd_qname.ts';
+import { XsdDateTime } from '#lib/oldap/datatypes/xsd_datetime.ts';
 
 export enum OwlPropertyType {
 	AnnotationProperty = 'owl:AnnotationProperty',

@@ -6,34 +6,34 @@
 		instanceFormValues,
 		instanceFormChanges,
 		instanceEditableProperties
-	} from '$lib/helpers/instanceForm';
+	} from '#lib/helpers/instanceForm.ts';
 	let originalValues: Record<string, string[]> = {};
 	let saveError = $state('');
 	let saving = $state(false);
-	import { locales, getLocale } from '$lib/paraglide/runtime';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { authInfoStore } from '$lib/stores/authinfo';
-	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
-	import { datamodelStore } from '$lib/stores/datamodel';
-	import type { OldapUser } from '$lib/oldap/classes/user';
-	import { userStore } from '$lib/stores/user';
-	import DropdownField from '$lib/components/basic_gui/inputs/DropdownField.svelte';
+	import { locales, getLocale } from '#lib/paraglide/runtime.js';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
+	import { DatamodelClass } from '#lib/oldap/classes/datamodel.ts';
+	import { datamodelStore } from '#lib/stores/datamodel.ts';
+	import type { OldapUser } from '#lib/oldap/classes/user.ts';
+	import { userStore } from '#lib/stores/user.ts';
+	import DropdownField from '#lib/components/basic_gui/inputs/DropdownField.svelte';
 	import { getContext, onMount, untrack } from 'svelte';
-	import { ResourceClass } from '$lib/oldap/classes/resource';
-	import type { PropertyClass } from '$lib/oldap/classes/property';
-	import TextFieldData from '$lib/components/basic_gui/inputs/TextFieldData.svelte';
-	import { XsdDatatypes } from '$lib/oldap/enums/xsd_datatypes';
-	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
-	import DatePickerData from '$lib/components/basic_gui/inputs/DatePickerData.svelte';
-	import { XsdDate } from '$lib/oldap/datatypes/xsd_date';
-	import { apiClient } from '$lib/shared/apiClient';
-	import { api_config, api_get_config, api_notget_config } from '$lib/helpers/api_config';
-	import { projectStore } from '$lib/stores/project';
-	import type { OldapProject } from '$lib/oldap/classes/project';
-	import { LangString } from '$lib/oldap/datatypes/langstring';
-	import LangstringfieldNew from '$lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
-	import { OldapList } from '$lib/oldap/classes/list';
-	import HlistSelectorData from '$lib/components/basic_gui/inputs/HlistSelectorData.svelte';
+	import { ResourceClass } from '#lib/oldap/classes/resource.ts';
+	import type { PropertyClass } from '#lib/oldap/classes/property.ts';
+	import TextFieldData from '#lib/components/basic_gui/inputs/TextFieldData.svelte';
+	import { XsdDatatypes } from '#lib/oldap/enums/xsd_datatypes.ts';
+	import { convertToLanguage, Language } from '#lib/oldap/enums/language.ts';
+	import DatePickerData from '#lib/components/basic_gui/inputs/DatePickerData.svelte';
+	import { XsdDate } from '#lib/oldap/datatypes/xsd_date.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import { api_config, api_get_config, api_notget_config } from '#lib/helpers/api_config.ts';
+	import { projectStore } from '#lib/stores/project.ts';
+	import type { OldapProject } from '#lib/oldap/classes/project.ts';
+	import { LangString } from '#lib/oldap/datatypes/langstring.ts';
+	import LangstringfieldNew from '#lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
+	import { OldapList } from '#lib/oldap/classes/list.ts';
+	import HlistSelectorData from '#lib/components/basic_gui/inputs/HlistSelectorData.svelte';
 
 	let lang = $state(getLocale());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
@@ -158,7 +158,7 @@
 
 		try {
 			const cfg = api_get_config(authinfo || new AuthInfo('', ''), { iri: token });
-			const meta = await apiClient.getAdminhlistget(cfg);
+			const meta = await apiClient.getAdminHlistGet(cfg);
 			const hlistId = (meta as any)?.hlistId || (meta as any)?.oldapListId;
 			if (hlistId) return hlistId.toString();
 		} catch {
@@ -195,7 +195,7 @@
 				const config_hlist_search = api_get_config(authinfo || new AuthInfo('', ''), {
 					project: projectShortName
 				});
-				const hlist_iris = await apiClient.getAdminhlistsearch(config_hlist_search);
+				const hlist_iris = await apiClient.getAdminHlistSearch(config_hlist_search);
 				const hlist_promises = (hlist_iris || []).map(async (hliri: string) => {
 					const hlist_id = await resolveHlistId(hliri);
 					if (!hlist_id) return null;
@@ -203,7 +203,7 @@
 						project: projectShortName,
 						hlistid: hlist_id
 					});
-					const hlist_data = await apiClient.getAdminhlistProjectHlistid(config_hlist_full);
+					const hlist_data = await apiClient.getAdminHlistByProjectByHlistid(config_hlist_full);
 					const hlist_obj = OldapList.fromOldapJson(normalizeHlistPayload(hlist_data), false);
 					return hlist_obj;
 				});
@@ -224,10 +224,10 @@
 			values = {};
 			const get_data = api_config(authinfo || new AuthInfo('unknown', ''), {
 				project: project?.projectShortName.toString() || '',
-				instiri: encodeURIComponent(propertyIri.toString() || '')
+				instiri: propertyIri.toString() || ''
 			});
 			apiClient
-				.getDataProjectInstiri(get_data)
+				.getDataByProjectByInstiri(get_data)
 				.then((data) => {
 					selres = data && data['rdf:type'] ? data['rdf:type'][0]?.toString() : '';
 					hasprops = instanceEditableProperties(resources[selres]?.properties || []);
@@ -338,12 +338,12 @@
 			}
 		});
 		const put_config = api_notget_config(authinfo || new AuthInfo('unknown', ''), {
-			project: encodeURIComponent(project?.projectIri?.toString() || ''),
-			resclass: encodeURIComponent(selres || '')
+			project: project?.projectIri?.toString() || '',
+			resclass: selres || ''
 		});
 		console.log('PUT DATA:', data);
 		apiClient
-			.putDataProjectResclass(data, put_config)
+			.putDataByProjectByResclass({ ...put_config, body: data })
 			.then((res) => {
 				console.log('add_resource success', res);
 				success = true;
@@ -362,10 +362,10 @@
 		saving = true;
 		saveError = '';
 		try {
-			await apiClient.postDataProjectInstiri(changes, api_notget_config(authinfo, {
+			await apiClient.postDataByProjectByInstiri({ ...api_notget_config(authinfo, {
 				project: project.projectShortName.toString(),
-				instiri: encodeURIComponent(propertyIri)
-			}));
+				instiri: propertyIri
+			}), body: changes });
 			success = true;
 		} catch (error) {
 			saveError = error instanceof Error ? error.message : String(error);

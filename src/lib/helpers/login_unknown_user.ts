@@ -2,11 +2,11 @@
  * Copyright (©) 2025. This software is licenced under the GNU General Public License v3.0 (https://www.gnu.org/licenses/gpl-3.0.en.html)
  */
 
-import { apiClient } from '$lib/shared/apiClient';
-import { userStore } from '$lib/stores/user';
-import { authInfoStore } from '$lib/stores/authinfo';
-import { OldapUser } from '$lib/oldap/classes/user';
-import { setAccessToken } from '$lib/auth/accessToken';
+import { apiClient } from '#lib/shared/apiClient.ts';
+import { userStore } from '#lib/stores/user.ts';
+import { authInfoStore } from '#lib/stores/authinfo.ts';
+import { OldapUser } from '#lib/oldap/classes/user.ts';
+import { setAccessToken } from '#lib/auth/accessToken.ts';
 
 export async function loginUnknownUser(): Promise<void> {
 	try {
@@ -16,12 +16,12 @@ export async function loginUnknownUser(): Promise<void> {
 				Accept: 'application/json',
 				'Content-Type': 'application/json; utf-8'
 			},
-			params: { userId: 'unknown' }
+			path: { userId: 'unknown' }
 		};
 
 		const data = { password: '' }; // oder entsprechendes anonymes Passwort
 
-		const authdata = await apiClient.postAdminauthUserId(data, config_auth);
+		const authdata = await apiClient.postAdminAuthByUserId({ ...config_auth, body: data });
 
 		const accessToken = authdata.accessToken;
 		if (!accessToken) {
@@ -32,14 +32,14 @@ export async function loginUnknownUser(): Promise<void> {
 
 		// Benutzerdaten laden
 		const config_user = {
-			params: { userId: 'unknown' },
+			path: { userId: 'unknown' },
 			headers: {
 				Accept: 'application/json',
 				Authorization: 'Bearer ' + accessToken
 			}
 		};
 
-		const userdata = await apiClient.getAdminuserUserId(config_user);
+		const userdata = await apiClient.getAdminUserByUserId(config_user);
 		const user = OldapUser.fromOldapJson(userdata);
 		userStore.set(user);
 

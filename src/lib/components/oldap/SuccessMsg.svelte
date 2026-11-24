@@ -1,7 +1,7 @@
 <script lang="ts">
 
-import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
-import { successInfoStore } from '$lib/stores/successinfo';
+import DialogWin from '#lib/components/basic_gui/dialogs/DialogWin.svelte';
+import { successInfoStore } from '#lib/stores/successinfo.ts';
 
 let show_success = $state(false);
 let successmsg = $state('');

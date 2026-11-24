@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
+	import Button from '#lib/components/basic_gui/buttons/Button.svelte';
 
 	let {
 		children,

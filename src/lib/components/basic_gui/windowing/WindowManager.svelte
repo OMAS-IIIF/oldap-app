@@ -1,11 +1,11 @@
 <script lang="ts">
 	import Window from './Window.svelte';
-	import { projectStore } from '$lib/stores/project';
+	import { projectStore } from '#lib/stores/project.ts';
 
-	import { OldapProject } from '$lib/oldap/classes/project';
-	import type { OldapUser } from '$lib/oldap/classes/user';
-	import { userStore } from '$lib/stores/user';
-  import type { WindowData, WindowGeometry } from '$lib/helpers/WindowData';
+	import { OldapProject } from '#lib/oldap/classes/project.ts';
+	import type { OldapUser } from '#lib/oldap/classes/user.ts';
+	import { userStore } from '#lib/stores/user.ts';
+  import type { WindowData, WindowGeometry } from '#lib/helpers/WindowData.ts';
   import {
       closeWindow,
       createWindow,
@@ -13,7 +13,7 @@
       updatePos,
       updateSize,
       windowsStore
-  } from '$lib/stores/windows.js';
+  } from '#lib/stores/windows.ts';
   import { onMount, tick } from 'svelte';
 	import type { Snippet } from 'svelte';
 

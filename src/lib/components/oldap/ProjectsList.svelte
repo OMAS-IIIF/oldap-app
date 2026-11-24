@@ -1,26 +1,26 @@
 <script lang="ts">
 
-	import * as m from '$lib/paraglide/messages';
-	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
-	import { goto_page } from '$lib/helpers/goto_page';
-	import Table from '$lib/components/basic_gui/table/Table.svelte';
-	import { OldapProject } from '$lib/oldap/classes/project';
-	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
-	import TableHeader from '$lib/components/basic_gui/table/TableHeader.svelte';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import TableBody from '$lib/components/basic_gui/table/TableBody.svelte';
-	import { apiClient } from '$lib/shared/apiClient';
-	import { api_get_config, api_notget_config } from '$lib/helpers/api_config';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { process_api_error } from '$lib/helpers/process_api_error';
-	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
-	import TableItem from '$lib/components/basic_gui/table/TableItem.svelte';
-	import { getLocale } from '$lib/paraglide/runtime';
-	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
-	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
-	import { authInfoStore } from '$lib/stores/authinfo';
+	import * as m from '#lib/paraglide/messages.js';
+	import Button from '#lib/components/basic_gui/buttons/Button.svelte';
+	import { goto_page } from '#lib/helpers/goto_page.ts';
+	import Table from '#lib/components/basic_gui/table/Table.svelte';
+	import { OldapProject } from '#lib/oldap/classes/project.ts';
+	import TableColumnTitle from '#lib/components/basic_gui/table/TableColumnTitle.svelte';
+	import TableHeader from '#lib/components/basic_gui/table/TableHeader.svelte';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import TableBody from '#lib/components/basic_gui/table/TableBody.svelte';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import { api_get_config, api_notget_config } from '#lib/helpers/api_config.ts';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
+	import TableRow from '#lib/components/basic_gui/table/TableRow.svelte';
+	import TableItem from '#lib/components/basic_gui/table/TableItem.svelte';
+	import { getLocale } from '#lib/paraglide/runtime.js';
+	import { convertToLanguage, Language } from '#lib/oldap/enums/language.ts';
+	import Confirmation from '#lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
 	import { Pencil, Plus, Trash2 } from '@lucide/svelte';
-	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
+	import Tooltip from '#lib/components/basic_gui/tooltip/Tooltip.svelte';
 
 	let { table_height }: {
 		table_height: number,
@@ -45,11 +45,11 @@
 		project_list = [];
 		if (authinfo) {
 			const config_data = api_get_config(authinfo);
-			apiClient.getAdminprojectsearch(config_data).then(pdata => {
+			apiClient.getAdminProjectSearch(config_data).then(pdata => {
 				projects = {} as Record<string, OldapProject>;
 				const promises = pdata.map(p => {
 					const config_projectdata = api_get_config(authinfo as AuthInfo, { iri: p.projectIri || '' });
-					return apiClient.getAdminprojectget(config_projectdata);
+					return apiClient.getAdminProjectGet(config_projectdata);
 				});
 				Promise.all(promises)
 					.then((results) => {
@@ -77,7 +77,7 @@
 
 		if (ok && authinfo) {
 			const project_delete = api_notget_config(authinfo, { projectId: sname })
-			apiClient.deleteAdminprojectProjectId(undefined, project_delete).then(() => {
+			apiClient.deleteAdminProjectByProjectId(project_delete).then(() => {
 				delete projects[sname];
 				project_list = project_list.filter((id) => id !== sname);
 			}).catch((err) => {

@@ -1,28 +1,28 @@
 <script lang="ts">
-	import * as m from '$lib/paraglide/messages';
+	import * as m from '#lib/paraglide/messages.js';
 	import { Plus } from '@lucide/svelte';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { OldapError } from '$lib/oldap/errors/OldapError';
-	import { datamodelStore } from '$lib/stores/datamodel';
-	import { datamodelSharedStore } from '$lib/stores/datamodel_shared';
-	import { datamodelOldapStore } from '$lib/stores/datamodel_oldap';
-	import { projectStore } from '$lib/stores/project';
-	import { userStore } from '$lib/stores/user';
-	import { authInfoStore } from '$lib/stores/authinfo';
-	import { api_config, api_notget_config } from '$lib/helpers/api_config';
-	import { apiClient } from '$lib/shared/apiClient';
-	import { process_api_error } from '$lib/helpers/process_api_error';
-	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
-	import type { OldapProject } from '$lib/oldap/classes/project';
-	import type { ReifierShape } from '$lib/oldap/classes/reifierShape';
-	import { AdminPermission } from '$lib/oldap/enums/admin_permissions';
-	import Table from '$lib/components/basic_gui/table/Table.svelte';
-	import TableHeader from '$lib/components/basic_gui/table/TableHeader.svelte';
-	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
-	import TableBody from '$lib/components/basic_gui/table/TableBody.svelte';
-	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
-	import TableItem from '$lib/components/basic_gui/table/TableItem.svelte';
-	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { OldapError } from '#lib/oldap/errors/OldapError.ts';
+	import { datamodelStore } from '#lib/stores/datamodel.ts';
+	import { datamodelSharedStore } from '#lib/stores/datamodel_shared.ts';
+	import { datamodelOldapStore } from '#lib/stores/datamodel_oldap.ts';
+	import { projectStore } from '#lib/stores/project.ts';
+	import { userStore } from '#lib/stores/user.ts';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
+	import { api_config, api_notget_config } from '#lib/helpers/api_config.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
+	import { DatamodelClass } from '#lib/oldap/classes/datamodel.ts';
+	import type { OldapProject } from '#lib/oldap/classes/project.ts';
+	import type { ReifierShape } from '#lib/oldap/classes/reifierShape.ts';
+	import { AdminPermission } from '#lib/oldap/enums/admin_permissions.ts';
+	import Table from '#lib/components/basic_gui/table/Table.svelte';
+	import TableHeader from '#lib/components/basic_gui/table/TableHeader.svelte';
+	import TableColumnTitle from '#lib/components/basic_gui/table/TableColumnTitle.svelte';
+	import TableBody from '#lib/components/basic_gui/table/TableBody.svelte';
+	import TableRow from '#lib/components/basic_gui/table/TableRow.svelte';
+	import TableItem from '#lib/components/basic_gui/table/TableItem.svelte';
+	import Confirmation from '#lib/components/basic_gui/dialogs/Confirmation.svelte';
 	import ReifierShapeEditor from './ReifierShapeEditor.svelte';
 
 	/** Project-owned definitions plus shared read-only definitions; no instance annotations are loaded. */
@@ -64,7 +64,7 @@
 		const owners = [...new Set([active, 'shared'])].filter(Boolean);
 		const results = await Promise.allSettled(
 			owners.map(async (owner) => {
-				const json = await apiClient.getAdmindatamodelProject(api_config(auth, { project: owner }));
+				const json = await apiClient.getAdminDatamodelByProject(api_config(auth, { project: owner }));
 				const model = DatamodelClass.fromOldapJson(json);
 				if (owner === 'shared') datamodelSharedStore.set(model);
 				if (owner === 'oldap') datamodelOldapStore.set(model);
@@ -94,9 +94,7 @@
 		notice = '';
 		let removed = false;
 		try {
-			await apiClient.deleteAdmindatamodelProjectreifierShapeShape(
-				undefined,
-				api_notget_config(auth, { project: owner, shape: shape.iri })
+			await apiClient.deleteAdminDatamodelByProjectReifierShapeByShape(api_notget_config(auth, { project: owner, shape: shape.iri })
 			);
 			removed = true;
 			await refreshModels();

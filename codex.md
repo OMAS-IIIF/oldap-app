@@ -1,5 +1,9 @@
 # OLDAP App Context
 
+- Release 0.2.11 preparation (2026-11-24): user authorized patch publication and home-only deployment of the security migration. Production remains 0.2.10 until separately requested. See `docs/release-0.2.11.md`.
+
+- Security migration (2026-11-24): SvelteKit 3 / Vite 8 / TypeScript 6, Node >=22.18 (Docker Node 24). Hey API generates the Axios SDK and Zod 4 validators; Zodios and Zod 3 are removed. This supersedes the accepted Zod 3 limitation in historical release notes below. No release/deployment in this step. See docs/dependency-security-review-20261124.md.
+
 - Release 0.2.10 live (2026-11-19): published v0.2.10 and multi-platform image 47cbd36466e6; deployed only oldap-app on production. Seven sibling containers unchanged; image/runtime, public browser/HTTP and API health checks pass. Backend API 1.2.3/library 1.2.2 supports the model editors. Home unchanged. Evidence/rollback: ../oldap-setup/docs/oldap-app-0.2.10-release.md.
 
 - Multiple superproperties (2026-11-18): library/API preserve complete direct parent sets, including imported DCTERMS hierarchies. Property and reifier editors support multiple parents with lossless drafts and owner-only hierarchy writes. Legacy scalar API input/singleton output remains supported; coordinated sibling deployment required. See docs/property-editor.md and docs/reifier-shapes.md.
@@ -13,7 +17,7 @@
 - Release 0.2.9 (2026-11-10): owner explicitly accepts publishing/deploying the current implementation with known functional gaps. Multi-platform image 0a5bd7223775 built from f67cbc2, both architectures pass startup/version/HTML checks, production deployment and public browser shell pass. Only oldap-app replaced; seven sibling container IDs unchanged. Home now runs the same digest with HTTP/API health and browser shell checks passing; other containers unchanged. Evidence/rollback: ../oldap-setup/docs/oldap-app-0.2.9-release.md.
 
 - Consolidation (2026-11-10): `OLDAP/oldap-app` on `main` is the primary development checkout, now including the previously published 0.2.8 Jena/security history. PropertyClass retains/clones SHACL inversePath metadata; instance create/edit excludes derived reverse fields (inversePath and legacy inverseOf) without modifying shared model ordering. 21 unit/component tests, four mocked browser workflows, build/typecheck and eleven read-only production Jena API probes pass. No new release/deployment in this step.
-- Product review remains open (owner confirmed 2026-11-10): the application has known usability/functional defects and incomplete administrative workflows. Compatibility checks are not whole-product acceptance. Review workflows with the owner, inventory concrete defects/missing capabilities, prioritize and address them separately. Fulltext configuration remains an API/oldap-tools operation; the model UI does not yet provide inversePath authoring. Keep the accepted Zod 3 limitation documented until that dependency boundary is deliberately replaced.
+- Product review remains open (owner confirmed 2026-11-10): the application has known usability/functional defects and incomplete administrative workflows. Compatibility checks are not whole-product acceptance. Review workflows with the owner, inventory concrete defects/missing capabilities, prioritize and address them separately. Fulltext configuration remains an API/oldap-tools operation; the model UI does not yet provide inversePath authoring. The former Zod 3 limitation is resolved by the 2026-11-24 client migration.
 
 - Final release live (2026-11-09): oldap-app 0.2.8 is released; core PyPI wheels and immutable Docker tags are verified. Production API/library 1.0.0 and app 0.2.8 are active. Tools is an operator image; Jena retains its byte-identical existing JAR and namespace. Exact evidence/rollback: ../oldap-setup/docs/oldap-1.0.0-release.md. This supersedes earlier pending-release entries. Home is unchanged; accepted Zod 3 risk and intermittent browser timeout observation remain documented.
 
@@ -33,7 +37,7 @@
 
 ## Repository State
 
-- The application uses Svelte 5, SvelteKit, TypeScript, Tailwind CSS, and a generated Zodios client for the sibling `oldap-api` OpenAPI contract.
+- The application uses Svelte 5, SvelteKit, TypeScript, Tailwind CSS, and a generated Hey API Axios client with Zod 4 request/response validation for the sibling `oldap-api` OpenAPI contract.
 - Browser API origins come from `PUBLIC_API_URL`; server-side requests use `SERVER_API_URL` with the public URL as fallback.
 - Authentication work package 6 is implemented: short-lived access tokens remain in the non-persistent `authInfoStore`, named sessions are restored with the API-managed HttpOnly refresh cookie, concurrent `401` responses share one refresh, and requests retry at most once.
 - Protected media delivery uses the purpose-specific, short-lived media JWT returned with each MediaObject. The token is appended only to image, video, derivative, and IIIF URLs; uploads, deletes, and API calls continue to use the access JWT.
@@ -54,7 +58,8 @@
 - `src/lib/stores/authinfo.ts`: in-memory authentication state.
 - `src/lib/components/oldap/User.svelte`: named-user login/logout UI.
 - `src/lib/helpers/login_unknown_user.ts`: anonymous OLDAP bootstrap.
-- `src/lib/apischema/zod.ts`: generated OpenAPI client; regenerate with `npm run zod`.
+- `src/lib/apischema/generated/`: generated SDK, types and validators; regenerate with `npm run zod` using `openapi-ts.config.ts`.
+- `vite.config.ts`: framework configuration and test projects. `src/env.ts` declares public runtime origins. Local imports use `#lib/*` with explicit extensions.
 
 ## Roadmap
 
@@ -72,6 +77,6 @@
 - Local completion passes build, typecheck (zero errors/warnings), 20 unit/component tests and four mocked Chromium workflows. Eleven administration GET probes pass against home.org. Real deployed write/upload acceptance remains a release check.
 - See `docs/jena-compatibility.md` for evidence, limitations and required browser/write acceptance before release. No oldap-app Jena image has been published or deployed in this step.
 
-- `tools/fix-generated-schema.mjs` runs after API generation to preserve explicit InstanceData properties that openapi-zod-client 1.18 omits for this record schema.
+- `openapi-ts.config.ts` preserves named fields plus typed additional RDF properties and binary Zod intersections. `tools/fix-generated-schema.mjs` restores the contract's exclusive PropertyCreate datatype/class choice after generation and fails if the expected generator output changes.
 - `instanceForm.ts` serializes editable values and computes content-only deltas; ordinary content editing must never replace unseen fields or role assignments.
 - Header search creates a result window; identical query/context effects do not repeat HTTP requests. Project/session restoration loads the selected model automatically.

@@ -1,32 +1,32 @@
 <script lang="ts">
-	import type { OldapProject } from '$lib/oldap/classes/project';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { api_config, api_get_config } from '$lib/helpers/api_config';
-	import { apiClient } from '$lib/shared/apiClient';
-	import { authenticatedFetch } from '$lib/auth/authenticatedFetch';
-	import { env as publicEnv } from '$env/dynamic/public';
-	import { OldapList } from '$lib/oldap/classes/list';
-	import * as m from '$lib/paraglide/messages';
+	import type { OldapProject } from '#lib/oldap/classes/project.ts';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import { api_config, api_get_config } from '#lib/helpers/api_config.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import { authenticatedFetch } from '#lib/auth/authenticatedFetch.ts';
+	import * as publicEnv from '$app/env/public';
+	import { OldapList } from '#lib/oldap/classes/list.ts';
+	import * as m from '#lib/paraglide/messages.js';
 	import { Pencil, Trash2, Plus, Upload, Download } from '@lucide/svelte';
-	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
-	import { goto_page } from '$lib/helpers/goto_page';
-	import Table from '$lib/components/basic_gui/table/Table.svelte';
-	import TableHeader from '$lib/components/basic_gui/table/TableHeader.svelte';
-	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
-	import TableBody from '$lib/components/basic_gui/table/TableBody.svelte';
-	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
-	import TableItem from '$lib/components/basic_gui/table/TableItem.svelte';
-	import { getLocale } from '$lib/paraglide/runtime';
-	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { process_api_error } from '$lib/helpers/process_api_error';
-	import { authInfoStore } from '$lib/stores/authinfo';
-	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
-	import FileUpload, { type UploadFunc } from '$lib/components/basic_gui/inputs/FileUpload.svelte';
-	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
-	import { spinnerStore } from '$lib/stores/spinner';
-	import { refreshHlistsListNow, refreshHlistsList } from '$lib/stores/refresh_hlistslist.svelte';
-	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
+	import Button from '#lib/components/basic_gui/buttons/Button.svelte';
+	import { goto_page } from '#lib/helpers/goto_page.ts';
+	import Table from '#lib/components/basic_gui/table/Table.svelte';
+	import TableHeader from '#lib/components/basic_gui/table/TableHeader.svelte';
+	import TableColumnTitle from '#lib/components/basic_gui/table/TableColumnTitle.svelte';
+	import TableBody from '#lib/components/basic_gui/table/TableBody.svelte';
+	import TableRow from '#lib/components/basic_gui/table/TableRow.svelte';
+	import TableItem from '#lib/components/basic_gui/table/TableItem.svelte';
+	import { getLocale } from '#lib/paraglide/runtime.js';
+	import { convertToLanguage, Language } from '#lib/oldap/enums/language.ts';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
+	import Confirmation from '#lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import FileUpload, { type UploadFunc } from '#lib/components/basic_gui/inputs/FileUpload.svelte';
+	import DialogWin from '#lib/components/basic_gui/dialogs/DialogWin.svelte';
+	import { spinnerStore } from '#lib/stores/spinner.ts';
+	import { refreshHlistsListNow, refreshHlistsList } from '#lib/stores/refresh_hlistslist.svelte.ts';
+	import Tooltip from '#lib/components/basic_gui/tooltip/Tooltip.svelte';
 
 	let {
 		table_height,
@@ -63,11 +63,11 @@
 			let hlistsearch = api_get_config(authinfo, {
 				project: project?.projectIri?.toString() || ''
 			});
-			apiClient.getAdminhlistsearch(hlistsearch).then((hldata) => {
+			apiClient.getAdminHlistSearch(hlistsearch).then((hldata) => {
 				hlists = {} as Record<string, OldapList>;
 				const promises = hldata.map((hl) => {
 					const config_hlistdata = api_get_config(authinfo as AuthInfo, { iri: hl });
-					return apiClient.getAdminhlistget(config_hlistdata);
+					return apiClient.getAdminHlistGet(config_hlistdata);
 				});
 				Promise.all(promises)
 					.then((results) => {
@@ -80,7 +80,7 @@
 								project: project?.projectIri?.toString() || '',
 								hlistid: id
 							});
-							apiClient.getAdminhlistProjectHlistidin_use(config_hlist_in_use).then((result2) => {
+							apiClient.getAdminHlistByProjectByHlistidInUse(config_hlist_in_use).then((result2) => {
 								hlist_in_use[id] = result2['in_use'] === undefined ? false : result2['in_use'];
 							});
 						});
@@ -104,7 +104,7 @@
 			hlistid: hlist_id
 		});
 		apiClient
-			.deleteAdminhlistProjectHlistid(undefined, config_hlistdata)
+			.deleteAdminHlistByProjectByHlistid(config_hlistdata)
 			.then((result) => {
 				console.log(result);
 				refreshHlistsListNow();
@@ -121,7 +121,7 @@
 			project: project?.projectIri?.toString() || ''
 		});
 		apiClient
-			.postAdminhlistProjectupload({ yamlfile: f }, config_upload)
+			.postAdminHlistByProjectUpload({ ...config_upload, body: { yamlfile: f } })
 			.then((result) => {
 				spinnerStore.set(null);
 				uploadIsOpen = false;
@@ -147,7 +147,7 @@
 		if (!baseUrl) throw new Error('PUBLIC_API_URL is not set');
 		const url = `${baseUrl}/admin/hlist/${encodeURIComponent(project?.projectIri?.toString() || '')}/${hlist_id}/download?format=YAML`; // or JSON
 		authenticatedFetch(url, {
-			method: config_download.method,
+			method: 'GET',
 			headers: config_download.headers
 		})
 			.then(async (res) => {

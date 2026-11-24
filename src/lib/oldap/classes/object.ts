@@ -1,5 +1,5 @@
-import { Iri } from '$lib/oldap/datatypes/xsd_iri';
-import type { XsdDateTime } from '$lib/oldap/datatypes/xsd_datetime';
+import { Iri } from '#lib/oldap/datatypes/xsd_iri.ts';
+import type { XsdDateTime } from '#lib/oldap/datatypes/xsd_datetime.ts';
 
 export class OldapObject {
 	#creator?: Iri;

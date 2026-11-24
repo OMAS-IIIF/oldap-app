@@ -1,27 +1,32 @@
 <script lang="ts">
 	import '../app.css';
-	import MainWin from '$lib/components/oldap/MainWin.svelte';
-	import { userStore } from '$lib/stores/user';
-	import { authInfoStore } from '$lib/stores/authinfo';
+	import MainWin from '#lib/components/oldap/MainWin.svelte';
+	import { userStore } from '#lib/stores/user.ts';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
 	import { afterNavigate } from '$app/navigation';
-	import { localeStore } from '$lib/stores/locale';
-	import { getLocale } from '$lib/paraglide/runtime.js';
+	import { localeStore } from '#lib/stores/locale.ts';
+	import { getLocale } from '#lib/paraglide/runtime.js';
 	import { onMount, type Snippet } from 'svelte';
-	import { loginUnknownUser } from '$lib/helpers/login_unknown_user';
-	import { api_config } from '$lib/helpers/api_config';
-	import { apiClient } from '$lib/shared/apiClient';
-	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { process_api_error } from '$lib/helpers/process_api_error';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { datamodelOldapStore } from '$lib/stores/datamodel_oldap';
-	import { datamodelSharedStore } from '$lib/stores/datamodel_shared';
-	import { restoreAuthenticatedSession } from '$lib/auth/session';
-	import { AUTH_SESSION_EXPIRED_EVENT } from '$lib/auth/accessToken';
+	import { loginUnknownUser } from '#lib/helpers/login_unknown_user.ts';
+	import { api_config } from '#lib/helpers/api_config.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import { DatamodelClass } from '#lib/oldap/classes/datamodel.ts';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import { datamodelOldapStore } from '#lib/stores/datamodel_oldap.ts';
+	import { datamodelSharedStore } from '#lib/stores/datamodel_shared.ts';
+	import { restoreAuthenticatedSession } from '#lib/auth/session.ts';
+	import { AUTH_SESSION_EXPIRED_EVENT } from '#lib/auth/accessToken.ts';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 
 	let { children }: { children: Snippet } = $props();
+
+	// Client-side locale navigation does not rerun the server HTML transform.
+	$effect(() => {
+		document.documentElement.lang = $localeStore;
+	});
 
 	onMount(() => {
 		// changing the locale if necessary...
@@ -51,7 +56,7 @@
 			const dmlist = ['oldap', 'shared'];
 			const promises = dmlist.map((dm) => {
 				const dm_config = api_config(authinfo, { project: dm });
-				return apiClient.getAdmindatamodelProject(dm_config);
+				return apiClient.getAdminDatamodelByProject(dm_config);
 			});
 
 			Promise.all(promises)

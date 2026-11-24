@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { contentAreaHeight } from '$lib/stores/contentarea_h';
+	import { contentAreaHeight } from '#lib/stores/contentarea_h.ts';
 
 	let { children } = $props();
 

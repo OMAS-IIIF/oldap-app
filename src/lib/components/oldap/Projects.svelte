@@ -1,33 +1,33 @@
 <script lang="ts">
 
-	import DropdownLinkItem from '$lib/components/basic_gui/dropdown/DropdownLinkItem.svelte';
-	import DropdownMenu from '$lib/components/basic_gui/dropdown/DropdownMenu.svelte';
-	import DropdownLabel from '$lib/components/basic_gui/dropdown/DropdownLabel.svelte';
-	import { process_api_error } from '$lib/helpers/process_api_error';
-	import { apiClient } from '$lib/shared/apiClient';
-	import { userStore } from '$lib/stores/user';
-	import type { OldapUser } from '$lib/oldap/classes/user';
-	import { api_config } from '$lib/helpers/api_config';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { OldapProject } from '$lib/oldap/classes/project';
-	import { getLocale } from '$lib/paraglide/runtime';
-	import { projectStore } from '$lib/stores/project';
-	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
-	import { authInfoStore } from '$lib/stores/authinfo';
-	import { refreshProjectsList } from '$lib/stores/refresh_projectslist.svelte';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { refreshResourcesListNow } from '$lib/stores/refresh_resourceslist.svelte';
-	import { refreshPropertiesList, refreshPropertiesListNow } from '$lib/stores/refresh_propertieslist.svelte';
-	import { spinnerStore } from '$lib/stores/spinner';
-	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
-	import { datamodelStore } from '$lib/stores/datamodel';
+	import DropdownLinkItem from '#lib/components/basic_gui/dropdown/DropdownLinkItem.svelte';
+	import DropdownMenu from '#lib/components/basic_gui/dropdown/DropdownMenu.svelte';
+	import DropdownLabel from '#lib/components/basic_gui/dropdown/DropdownLabel.svelte';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import { userStore } from '#lib/stores/user.ts';
+	import type { OldapUser } from '#lib/oldap/classes/user.ts';
+	import { api_config } from '#lib/helpers/api_config.ts';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import { OldapProject } from '#lib/oldap/classes/project.ts';
+	import { getLocale } from '#lib/paraglide/runtime.js';
+	import { projectStore } from '#lib/stores/project.ts';
+	import { convertToLanguage, Language } from '#lib/oldap/enums/language.ts';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
+	import { refreshProjectsList } from '#lib/stores/refresh_projectslist.svelte.ts';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { refreshResourcesListNow } from '#lib/stores/refresh_resourceslist.svelte.ts';
+	import { refreshPropertiesList, refreshPropertiesListNow } from '#lib/stores/refresh_propertieslist.svelte.ts';
+	import { spinnerStore } from '#lib/stores/spinner.ts';
+	import { DatamodelClass } from '#lib/oldap/classes/datamodel.ts';
+	import { datamodelStore } from '#lib/stores/datamodel.ts';
 
 	let projectsIsOpen = $state(false);
 	let current_project_id = $state<string | null>(null);
 	let lang = $state(getLocale());
 	let langobj = $derived(convertToLanguage(lang) ?? Language.EN);
-	import * as m from '$lib/paraglide/messages';
-	import { read_projects } from '$lib/helpers/read_projects';
+	import * as m from '#lib/paraglide/messages.js';
+	import { read_projects } from '#lib/helpers/read_projects.ts';
 
 	let projects: Record<string, OldapProject> = $state<Record<string, OldapProject>>({});
 
@@ -74,7 +74,7 @@
 		projectStore.set(projects[project_id]);
 		const dm_config = api_config(authinfo || new AuthInfo('', ''), { project:  project_id});
 		spinnerStore.set(m.retrieve_dm());
-		apiClient.getAdmindatamodelProject(dm_config).then((jsonresult) => {
+		apiClient.getAdminDatamodelByProject(dm_config).then((jsonresult) => {
 			if (current_project_id !== project_id || !$userStore) return;
 			const datamodel = DatamodelClass.fromOldapJson(jsonresult);
 			datamodelStore.set(datamodel);

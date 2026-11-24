@@ -1,10 +1,10 @@
-import { Iri } from '$lib/oldap/datatypes/xsd_iri';
-import { OldapObject } from '$lib/oldap/classes/object';
-import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
-import { AdminPermission, stringToAdminPermission } from '$lib/oldap/enums/admin_permissions';
-import { OldapErrorInvalidValue } from '$lib/oldap/errors/OldapErrorInvalidValue';
-import { type DataPermission, stringToDataPermission } from '$lib/oldap/enums/data_permissions';
-import { XsdDateTime } from '$lib/oldap/datatypes/xsd_datetime';
+import { Iri } from '#lib/oldap/datatypes/xsd_iri.ts';
+import { OldapObject } from '#lib/oldap/classes/object.ts';
+import { NCName } from '#lib/oldap/datatypes/xsd_ncname.ts';
+import { AdminPermission, stringToAdminPermission } from '#lib/oldap/enums/admin_permissions.ts';
+import { OldapErrorInvalidValue } from '#lib/oldap/errors/OldapErrorInvalidValue.ts';
+import { type DataPermission, stringToDataPermission } from '#lib/oldap/enums/data_permissions.ts';
+import { XsdDateTime } from '#lib/oldap/datatypes/xsd_datetime.ts';
 
 
 export interface InProject {

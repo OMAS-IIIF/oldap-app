@@ -1,8 +1,8 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
-	import { Language, getLanguageShortname, convertToLanguage } from '$lib/oldap/enums/language';
-	import { LangString } from '$lib/oldap/datatypes/langstring';
+	import { Language, getLanguageShortname, convertToLanguage } from '#lib/oldap/enums/language.ts';
+	import { LangString } from '#lib/oldap/datatypes/langstring.ts';
 	import { type Snippet } from 'svelte';
 
 	type InputType = 'input' | 'textarea';

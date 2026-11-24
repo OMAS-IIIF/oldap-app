@@ -1,30 +1,30 @@
 <script lang="ts">
 
-	import { OldapUser } from '$lib/oldap/classes/user';
-	import type { OldapProject } from '$lib/oldap/classes/project';
-	import { getLocale } from '$lib/paraglide/runtime';
-	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { authInfoStore } from '$lib/stores/authinfo';
-	import { OldapRole } from '$lib/oldap/classes/role';
-	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
-	import { refreshRolesList, refreshRolesListNow } from '$lib/stores/refresh_roleslist.svelte.js';
-	import { api_config, api_get_config } from '$lib/helpers/api_config';
-	import { apiClient } from '$lib/shared/apiClient';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { process_api_error } from '$lib/helpers/process_api_error';
-	import { goto_page } from '$lib/helpers/goto_page';
-	import * as m from '$lib/paraglide/messages';
-	import Checkbox from '$lib/components/basic_gui/checkbox/Checkbox.svelte';
-	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
-	import TableItem from '$lib/components/basic_gui/table/TableItem.svelte';
-	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
+	import { OldapUser } from '#lib/oldap/classes/user.ts';
+	import type { OldapProject } from '#lib/oldap/classes/project.ts';
+	import { getLocale } from '#lib/paraglide/runtime.js';
+	import { convertToLanguage, Language } from '#lib/oldap/enums/language.ts';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
+	import { OldapRole } from '#lib/oldap/classes/role.ts';
+	import Confirmation from '#lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import { refreshRolesList, refreshRolesListNow } from '#lib/stores/refresh_roleslist.svelte.ts';
+	import { api_config, api_get_config } from '#lib/helpers/api_config.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
+	import { goto_page } from '#lib/helpers/goto_page.ts';
+	import * as m from '#lib/paraglide/messages.js';
+	import Checkbox from '#lib/components/basic_gui/checkbox/Checkbox.svelte';
+	import Button from '#lib/components/basic_gui/buttons/Button.svelte';
+	import TableItem from '#lib/components/basic_gui/table/TableItem.svelte';
+	import TableRow from '#lib/components/basic_gui/table/TableRow.svelte';
 	import { Pencil, Plus, Trash2 } from '@lucide/svelte';
-	import Table from '$lib/components/basic_gui/table/Table.svelte';
-	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
-	import TableHeader from '$lib/components/basic_gui/table/TableHeader.svelte';
-	import TableBody from '$lib/components/basic_gui/table/TableBody.svelte';
-	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
+	import Table from '#lib/components/basic_gui/table/Table.svelte';
+	import TableColumnTitle from '#lib/components/basic_gui/table/TableColumnTitle.svelte';
+	import TableHeader from '#lib/components/basic_gui/table/TableHeader.svelte';
+	import TableBody from '#lib/components/basic_gui/table/TableBody.svelte';
+	import Tooltip from '#lib/components/basic_gui/tooltip/Tooltip.svelte';
 
 	let { table_height, administrator = null, project = null }: {
 		table_height: number,
@@ -57,15 +57,12 @@
 		const _ = $refreshRolesList;
 		role_list = [];
 		if (authinfo) {
-			let rolesearch = api_get_config(authinfo);
-			if (!show_all_roles) {
-				rolesearch = { ...rolesearch, queries: { definedByProject: project?.projectIri?.toString() } };
-			}
-			apiClient.getAdminrolesearch(rolesearch).then((psdata) => {
+			const rolesearch = api_get_config(authinfo, { definedByProject: show_all_roles ? undefined : project?.projectIri?.toString() });
+			apiClient.getAdminRoleSearch(rolesearch).then((psdata) => {
 				roles = {} as Record<string, OldapRole>;
 				const promises = psdata.map(hl => {
 					const config_plistdata = api_get_config(authinfo as AuthInfo, { iri: hl });
-					return apiClient.getAdminroleget(config_plistdata);
+					return apiClient.getAdminRoleGet(config_plistdata);
 				});
 				Promise.all(promises).then((results) => {
 					results.forEach((roledata) => {
@@ -78,10 +75,10 @@
 						role_projs[roleid] = new URLSearchParams({ projectid: role.definedByProject.toString() || 'XXX' });
 
 						const config_role_in_use = api_config(authinfo as AuthInfo, {
-							definedByProject: encodeURIComponent(role.definedByProject.toString()),
+							definedByProject: role.definedByProject.toString(),
 							roleId: roleid
 						});
-						apiClient.getAdminroleDefinedByProjectRoleIdin_use(config_role_in_use).then((result2) => {
+						apiClient.getAdminRoleByDefinedByProjectByRoleIdInUse(config_role_in_use).then((result2) => {
 							role_in_use[roleid] = result2['in_use'] === undefined ? false : result2['in_use'];
 						});
 					});
@@ -103,11 +100,11 @@
 			return;
 		}
 		const config_role_delete = api_config(authinfo as AuthInfo, {
-			definedByProject: encodeURIComponent(roles[role_id].definedByProject.toString()),
-			permissionSetId: role_id
+			definedByProject: roles[role_id].definedByProject.toString(),
+			roleId: role_id
 		});
 		console.log(config_role_delete);
-		apiClient.deleteAdminroleDefinedByProjectRoleId(undefined, config_role_delete).then((res) => {
+		apiClient.deleteAdminRoleByDefinedByProjectByRoleId(config_role_delete).then((res) => {
 			console.log(res);
 			refreshRolesListNow();
 		}).catch((error) => {

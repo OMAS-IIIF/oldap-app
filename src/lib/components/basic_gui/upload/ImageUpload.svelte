@@ -3,44 +3,44 @@
   -->
 
 <script lang="ts">
-	import { getLocale, locales } from '$lib/paraglide/runtime';
-	import { authInfoStore } from '$lib/stores/authinfo';
-	import { authenticatedFetch } from '$lib/auth/authenticatedFetch';
-	import { authenticatedXhrUpload } from '$lib/auth/authenticatedXhr';
-	import { projectStore } from '$lib/stores/project';
-	import RadioButton from '$lib/components/basic_gui/buttons/RadioButton.svelte';
+	import { getLocale, locales } from '#lib/paraglide/runtime.js';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
+	import { authenticatedFetch } from '#lib/auth/authenticatedFetch.ts';
+	import { authenticatedXhrUpload } from '#lib/auth/authenticatedXhr.ts';
+	import { projectStore } from '#lib/stores/project.ts';
+	import RadioButton from '#lib/components/basic_gui/buttons/RadioButton.svelte';
 	import { onMount, untrack } from 'svelte';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { OldapRole } from '$lib/oldap/classes/role';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { process_api_error } from '$lib/helpers/process_api_error';
-	import { convertToLanguage, getLanguageShortname, Language } from '$lib/oldap/enums/language';
-	import { fetchRolesForProject } from '$lib/helpers/get_roles';
-	import { apiClient } from '$lib/shared/apiClient';
-	import { api_config, api_get_config } from '$lib/helpers/api_config';
-	import { browser } from '$app/environment';
-	import { env as publicEnv } from '$env/dynamic/public';
-	import { datamodelStore } from '$lib/stores/datamodel';
-	import { is_mediaobject } from '$lib/helpers/is_mediaobject';
-	import { DataPermission } from '$lib/oldap/enums/data_permissions';
-	import { userStore } from '$lib/stores/user';
-	import * as m from '$lib/paraglide/messages';
-	import TableBody from '$lib/components/basic_gui/table/TableBody.svelte';
-	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
-	import Checkbox from '$lib/components/basic_gui/checkbox/Checkbox.svelte';
-	import TableHeader from '$lib/components/basic_gui/table/TableHeader.svelte';
-	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
-	import Table from '$lib/components/basic_gui/table/Table.svelte';
-	import TableItem from '$lib/components/basic_gui/table/TableItem.svelte';
-	import type { PropertyClass } from '$lib/oldap/classes/property';
-	import { XsdDate } from '$lib/oldap/datatypes/xsd_date';
-	import { LangString } from '$lib/oldap/datatypes/langstring';
-	import { XsdDatatypes } from '$lib/oldap/enums/xsd_datatypes';
-	import TextFieldData from '$lib/components/basic_gui/inputs/TextFieldData.svelte';
-	import DatePickerData from '$lib/components/basic_gui/inputs/DatePickerData.svelte';
-	import LangstringfieldNew from '$lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
-	import { OldapList } from '$lib/oldap/classes/list';
-	import HlistSelectorData from '$lib/components/basic_gui/inputs/HlistSelectorData.svelte';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import { OldapRole } from '#lib/oldap/classes/role.ts';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
+	import { convertToLanguage, getLanguageShortname, Language } from '#lib/oldap/enums/language.ts';
+	import { fetchRolesForProject } from '#lib/helpers/get_roles.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import { api_config, api_get_config } from '#lib/helpers/api_config.ts';
+	import { browser } from '$app/env';
+	import * as publicEnv from '$app/env/public';
+	import { datamodelStore } from '#lib/stores/datamodel.ts';
+	import { is_mediaobject } from '#lib/helpers/is_mediaobject.ts';
+	import { DataPermission } from '#lib/oldap/enums/data_permissions.ts';
+	import { userStore } from '#lib/stores/user.ts';
+	import * as m from '#lib/paraglide/messages.js';
+	import TableBody from '#lib/components/basic_gui/table/TableBody.svelte';
+	import TableRow from '#lib/components/basic_gui/table/TableRow.svelte';
+	import Checkbox from '#lib/components/basic_gui/checkbox/Checkbox.svelte';
+	import TableHeader from '#lib/components/basic_gui/table/TableHeader.svelte';
+	import TableColumnTitle from '#lib/components/basic_gui/table/TableColumnTitle.svelte';
+	import Table from '#lib/components/basic_gui/table/Table.svelte';
+	import TableItem from '#lib/components/basic_gui/table/TableItem.svelte';
+	import type { PropertyClass } from '#lib/oldap/classes/property.ts';
+	import { XsdDate } from '#lib/oldap/datatypes/xsd_date.ts';
+	import { LangString } from '#lib/oldap/datatypes/langstring.ts';
+	import { XsdDatatypes } from '#lib/oldap/enums/xsd_datatypes.ts';
+	import TextFieldData from '#lib/components/basic_gui/inputs/TextFieldData.svelte';
+	import DatePickerData from '#lib/components/basic_gui/inputs/DatePickerData.svelte';
+	import LangstringfieldNew from '#lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
+	import { OldapList } from '#lib/oldap/classes/list.ts';
+	import HlistSelectorData from '#lib/components/basic_gui/inputs/HlistSelectorData.svelte';
 
 	type SuccessHandler = (result: unknown) => void;
 	type ErrorHandler = (error: unknown) => void;
@@ -290,7 +290,7 @@
 
 		try {
 			const cfg = api_get_config(authinfo || new AuthInfo('', ''), { iri: token });
-			const meta = await apiClient.getAdminhlistget(cfg);
+			const meta = await apiClient.getAdminHlistGet(cfg);
 			const hlistId = (meta as any)?.hlistId || (meta as any)?.oldapListId;
 			if (hlistId) return hlistId.toString();
 		} catch {
@@ -343,7 +343,7 @@
 				const config_hlist_search = api_get_config(authinfo || new AuthInfo('', ''), {
 					project: projectShortName
 				});
-				const hlist_search_results = await apiClient.getAdminhlistsearch(config_hlist_search);
+				const hlist_search_results = await apiClient.getAdminHlistSearch(config_hlist_search);
 				const hlist_promises = (hlist_search_results || []).map(async (rawResult: string) => {
 					const hlistId = await resolveHlistId(rawResult);
 					if (!hlistId) return null;
@@ -351,7 +351,7 @@
 						project: projectShortName,
 						hlistid: hlistId
 					});
-					const hlist_data = await apiClient.getAdminhlistProjectHlistid(config_hlist_full);
+					const hlist_data = await apiClient.getAdminHlistByProjectByHlistid(config_hlist_full);
 					return OldapList.fromOldapJson(normalizeHlistPayload(hlist_data), false);
 				});
 				const hlist_results = await Promise.all(hlist_promises);
@@ -608,7 +608,7 @@
 				const config_mediaobj = api_config(authinfo || new AuthInfo('', ''), {
 					iri: result.iri.toString()
 				});
-				apiClient.getDatamediaobjectiriIri(config_mediaobj).then((res) => {
+				apiClient.getDataMediaobjectIriByIri(config_mediaobj).then((res) => {
 					console.log(res);
 					onSuccess?.(res);
 				});

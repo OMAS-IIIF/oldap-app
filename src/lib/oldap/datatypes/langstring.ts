@@ -1,6 +1,6 @@
-import { convertToLanguage, getLanguageShortname, Language } from '$lib/oldap/enums/language';
-import { OldapErrorInvalidValue } from '$lib/oldap/errors/OldapErrorInvalidValue';
-import { difference } from '$lib/helpers/setops';
+import { convertToLanguage, getLanguageShortname, Language } from '#lib/oldap/enums/language.ts';
+import { OldapErrorInvalidValue } from '#lib/oldap/errors/OldapErrorInvalidValue.ts';
+import { difference } from '#lib/helpers/setops.ts';
 
 
 export function extractLang(value: string): string | null {

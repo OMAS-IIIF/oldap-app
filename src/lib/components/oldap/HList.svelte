@@ -1,24 +1,24 @@
 <script lang="ts">
 
-	import * as m from '$lib/paraglide/messages';
-	import Textfield from '$lib/components/basic_gui/inputs/Textfield.svelte';
-	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
-	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
-	import LangstringField from '$lib/components/basic_gui/inputs/LangstringField.svelte';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { LangString } from '$lib/oldap/datatypes/langstring';
-	import { api_config } from '$lib/helpers/api_config';
-	import { authInfoStore } from '$lib/stores/authinfo';
-	import { projectStore } from '$lib/stores/project';
-	import { apiClient } from '$lib/shared/apiClient';
-	import { convertToLanguage, getLanguageShortname, Language } from '$lib/oldap/enums/language';
-	import { successInfoStore } from '$lib/stores/successinfo';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { process_api_error } from '$lib/helpers/process_api_error';
-	import { refreshHlistsListNow } from '$lib/stores/refresh_hlistslist.svelte';
-	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
-	import LangstringfieldNew from '$lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
-	import { locales } from '$lib/paraglide/runtime';
+	import * as m from '#lib/paraglide/messages.js';
+	import Textfield from '#lib/components/basic_gui/inputs/Textfield.svelte';
+	import Button from '#lib/components/basic_gui/buttons/Button.svelte';
+	import Confirmation from '#lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import LangstringField from '#lib/components/basic_gui/inputs/LangstringField.svelte';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import { LangString } from '#lib/oldap/datatypes/langstring.ts';
+	import { api_config } from '#lib/helpers/api_config.ts';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
+	import { projectStore } from '#lib/stores/project.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import { convertToLanguage, getLanguageShortname, Language } from '#lib/oldap/enums/language.ts';
+	import { successInfoStore } from '#lib/stores/successinfo.ts';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
+	import { refreshHlistsListNow } from '#lib/stores/refresh_hlistslist.svelte.ts';
+	import DialogWin from '#lib/components/basic_gui/dialogs/DialogWin.svelte';
+	import LangstringfieldNew from '#lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
+	import { locales } from '#lib/paraglide/runtime.js';
 
 	const ncname_pattern: RegExp = /^[A-Za-z_][A-Za-z0-9._-]*$/;
 
@@ -58,9 +58,9 @@
 			}
 			const hlist_put = api_config(authinfo, {
 				project: current_project?.projectShortName.toString() || '',
-				hlistid: encodeURIComponent(hlistid),
+				hlistid: hlistid,
 			});
-			apiClient.putAdminhlistProjectHlistid(hlistdata, hlist_put).then((res) => {
+			apiClient.putAdminHlistByProjectByHlistid({ ...hlist_put, body: hlistdata }).then((res) => {
 				successInfoStore.set(`!${res.message}`);
 				refreshHlistsListNow();
 			}).catch((error) => {

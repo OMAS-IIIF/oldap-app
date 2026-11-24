@@ -1,18 +1,18 @@
 <script lang="ts">
-	import DropdownAvatar from '$lib/components/basic_gui/dropdown/DropdownAvatar.svelte';
-	import DropdownLinkItem from '$lib/components/basic_gui/dropdown/DropdownLinkItem.svelte';
-	import DropdownMenu from '$lib/components/basic_gui/dropdown/DropdownMenu.svelte';
-	import Login from '$lib/components/basic_gui/login/Login.svelte';
-	import DialogWin from '$lib/components/basic_gui/dialogs/DialogWin.svelte';
-	import AvatarButton from '$lib/components/basic_gui/buttons/AvatarButton.svelte';
-	import { OldapUser } from '$lib/oldap/classes/user';
-	import { getGravatarUrl } from '$lib/helpers/getgravatar';
-	import { process_api_error } from '$lib/helpers/process_api_error';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
+	import DropdownAvatar from '#lib/components/basic_gui/dropdown/DropdownAvatar.svelte';
+	import DropdownLinkItem from '#lib/components/basic_gui/dropdown/DropdownLinkItem.svelte';
+	import DropdownMenu from '#lib/components/basic_gui/dropdown/DropdownMenu.svelte';
+	import Login from '#lib/components/basic_gui/login/Login.svelte';
+	import DialogWin from '#lib/components/basic_gui/dialogs/DialogWin.svelte';
+	import AvatarButton from '#lib/components/basic_gui/buttons/AvatarButton.svelte';
+	import { OldapUser } from '#lib/oldap/classes/user.ts';
+	import { getGravatarUrl } from '#lib/helpers/getgravatar.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { loginUnknownUser } from '$lib/helpers/login_unknown_user';
-	import { loginAuthenticatedUser, logoutAuthenticatedSession } from '$lib/auth/session';
+	import { loginUnknownUser } from '#lib/helpers/login_unknown_user.ts';
+	import { loginAuthenticatedUser, logoutAuthenticatedSession } from '#lib/auth/session.ts';
 
 	let { user = $bindable() }: { user: OldapUser | null } = $props();
 

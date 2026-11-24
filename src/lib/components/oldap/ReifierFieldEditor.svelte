@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import * as m from '$lib/paraglide/messages';
-	import { projectStore } from '$lib/stores/project';
-	import { datamodelStore } from '$lib/stores/datamodel';
-	import { datamodelOldapStore } from '$lib/stores/datamodel_oldap';
-	import { datamodelSharedStore } from '$lib/stores/datamodel_shared';
-	import { getLocale, locales } from '$lib/paraglide/runtime';
-	import { XsdDatatypes } from '$lib/oldap/enums/xsd_datatypes';
+	import * as m from '#lib/paraglide/messages.js';
+	import { projectStore } from '#lib/stores/project.ts';
+	import { datamodelStore } from '#lib/stores/datamodel.ts';
+	import { datamodelOldapStore } from '#lib/stores/datamodel_oldap.ts';
+	import { datamodelSharedStore } from '#lib/stores/datamodel_shared.ts';
+	import { getLocale, locales } from '#lib/paraglide/runtime.js';
+	import { XsdDatatypes } from '#lib/oldap/enums/xsd_datatypes.ts';
 	import AllowedValues from './AllowedValues.svelte';
 	import AllowedLangSelector from './AllowedLangSelector.svelte';
-	import type { ReifierField } from '$lib/oldap/classes/reifierShape';
+	import type { ReifierField } from '#lib/oldap/classes/reifierShape.ts';
 
 	/** Edit a detached shape field. Bound constraints change only through user events;
 	 * untouched metadata survives complete shape replacement. Read-only viewers may

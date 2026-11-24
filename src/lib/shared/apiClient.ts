@@ -7,32 +7,41 @@
  * - Do NOT use import.meta.env.VITE_* for runtime URLs
  */
 
-import { createApiClient } from '$lib/apischema/zod';
-import { browser } from '$app/environment';
+import * as sdk from '#lib/apischema/generated/sdk.gen.ts';
+import { createClient, type Client } from '#lib/apischema/generated/client/index.ts';
+import { browser } from '$app/env';
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import {
 	currentAuthInfo,
 	expireAuthenticatedSession,
 	hasRefreshableSession,
 	refreshAccessToken
-} from '$lib/auth/accessToken';
-import { getApiBaseUrl } from '$lib/shared/apiBaseUrl';
+} from '#lib/auth/accessToken.ts';
+import { getApiBaseUrl } from '#lib/shared/apiBaseUrl.ts';
 
-type ApiClient = ReturnType<typeof createApiClient>;
+type Sdk = typeof sdk;
+/** The application receives validated response bodies and rejects HTTP failures. */
+export type ApiClient = {
+	[K in keyof Sdk]: (
+		options: Omit<Parameters<Sdk[K]>[0], 'client' | 'throwOnError'>
+	) => Promise<Exclude<Awaited<ReturnType<Sdk[K]>>['data'], undefined>>;
+};
 
 let clientPromise: Promise<ApiClient> | null = null;
 
-export { getApiBaseUrl } from '$lib/shared/apiBaseUrl';
+export { getApiBaseUrl } from '#lib/shared/apiBaseUrl.ts';
 
-function isAuthenticationEndpoint(url?: string): boolean {
-	return Boolean(url?.startsWith('/admin/auth/'));
+function isAuthenticationEndpoint(url: string | undefined, baseURL: string): boolean {
+	if (!url) return false;
+	const basePath = new URL(baseURL).pathname.replace(/\/$/, '');
+	return new URL(url, baseURL).pathname.startsWith(`${basePath}/admin/auth/`);
 }
 
-function installBrowserAuthentication(client: ApiClient): void {
+function installBrowserAuthentication(client: Client): void {
 	if (!browser) return;
 
-	client.axios.defaults.withCredentials = true;
-	client.axios.interceptors.request.use((config) => {
+	client.instance.defaults.withCredentials = true;
+	client.instance.interceptors.request.use((config) => {
 		const authorization = config.headers.get('Authorization');
 		const token = currentAuthInfo()?.token;
 		if (token && typeof authorization === 'string' && authorization.startsWith('Bearer ')) {
@@ -41,16 +50,15 @@ function installBrowserAuthentication(client: ApiClient): void {
 		return config;
 	});
 
-	client.axios.interceptors.response.use(undefined, async (error: unknown) => {
+	client.instance.interceptors.response.use(undefined, async (error: unknown) => {
 		const axiosError = error as AxiosError;
 		const config = axiosError.config as
-			| (InternalAxiosRequestConfig & { _oldapAuthRetry?: boolean })
-			| undefined;
+			(InternalAxiosRequestConfig & { _oldapAuthRetry?: boolean }) | undefined;
 		if (
 			axiosError.response?.status !== 401 ||
 			!config ||
 			config._oldapAuthRetry ||
-			isAuthenticationEndpoint(config.url) ||
+			isAuthenticationEndpoint(config.url, client.getConfig().baseURL || 'http://localhost') ||
 			!hasRefreshableSession()
 		) {
 			return Promise.reject(error);
@@ -60,7 +68,7 @@ function installBrowserAuthentication(client: ApiClient): void {
 		try {
 			const token = await refreshAccessToken();
 			config.headers?.set('Authorization', `Bearer ${token}`);
-			return client.axios.request(config);
+			return client.instance.request(config);
 		} catch {
 			expireAuthenticatedSession();
 			return Promise.reject(error);
@@ -68,32 +76,51 @@ function installBrowserAuthentication(client: ApiClient): void {
 	});
 }
 
+/**
+ * Bind the generated SDK to one transport instance. Requests and responses are
+ * validated by the generated Zod 4 validators; Axios retains error identity and
+ * the browser's single-refresh, single-retry authentication behavior.
+ */
+export function createApiClient(baseURL: string): ApiClient {
+	const client = createClient({
+		baseURL,
+		throwOnError: true,
+		// OLDAP accepts Axios-style bracketed arrays (includeProperties[], sortBy[]).
+		// Setting this delegates query serialization to Axios rather than Hey API.
+		paramsSerializer: { indexes: false }
+	});
+	installBrowserAuthentication(client);
+	return new Proxy({} as ApiClient, {
+		get(_, property: string) {
+			if (!(property in sdk)) return undefined;
+			return async (options: Record<string, unknown>) => {
+				// SDK operations have different input types; the mapped public
+				// interface preserves them, while dispatch only injects transport.
+				const operation = sdk[property as keyof Sdk] as unknown as (
+					options: Record<string, unknown>
+				) => Promise<{ data: unknown }>;
+				const response = await operation({ ...options, client, throwOnError: true });
+				return response.data;
+			};
+		}
+	});
+}
+
+/** Resolve browser/server environment configuration before the first API call. */
 async function getClient(): Promise<ApiClient> {
-	if (!clientPromise) {
-		clientPromise = getApiBaseUrl().then((baseUrl) => {
-			const client = createApiClient(baseUrl);
-			installBrowserAuthentication(client);
-			return client;
-		});
-	}
+	if (!clientPromise) clientPromise = getApiBaseUrl().then(createApiClient);
 	return clientPromise;
 }
 
-type AsyncApiClient = {
-	[K in keyof ApiClient]: ApiClient[K] extends (...args: infer A) => infer R
-		? (...args: A) => Promise<Awaited<R>>
-		: never;
-};
-
-export const apiClient: AsyncApiClient = new Proxy({} as AsyncApiClient, {
-	get(_, prop: string) {
-		return async (...args: unknown[]) => {
+export const apiClient: ApiClient = new Proxy({} as ApiClient, {
+	get(_, property: string) {
+		if (!(property in sdk)) return undefined;
+		return async (options: Record<string, unknown>) => {
 			const client = await getClient();
-			const fn = (client as unknown as Record<string, unknown>)[prop];
-			if (typeof fn !== 'function') {
-				throw new Error(`${prop} is not a function on ApiClient`);
-			}
-			return Reflect.apply(fn, client, args);
+			const operation = client[property as keyof ApiClient] as (
+				options: Record<string, unknown>
+			) => Promise<unknown>;
+			return operation(options);
 		};
 	}
 });

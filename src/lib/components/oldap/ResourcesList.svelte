@@ -3,33 +3,33 @@
   -->
 
 <script lang="ts">
-	import type { OldapProject } from '$lib/oldap/classes/project';
-	import { ResourceClass } from '$lib/oldap/classes/resource';
-	import { getLocale } from '$lib/paraglide/runtime';
-	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
-	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
-	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
-	import { datamodelStore } from '$lib/stores/datamodel';
-	import * as m from '$lib/paraglide/messages';
-	import { goto_page } from '$lib/helpers/goto_page';
-	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
-	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
+	import type { OldapProject } from '#lib/oldap/classes/project.ts';
+	import { ResourceClass } from '#lib/oldap/classes/resource.ts';
+	import { getLocale } from '#lib/paraglide/runtime.js';
+	import { convertToLanguage, Language } from '#lib/oldap/enums/language.ts';
+	import { DatamodelClass } from '#lib/oldap/classes/datamodel.ts';
+	import Confirmation from '#lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import { datamodelStore } from '#lib/stores/datamodel.ts';
+	import * as m from '#lib/paraglide/messages.js';
+	import { goto_page } from '#lib/helpers/goto_page.ts';
+	import Tooltip from '#lib/components/basic_gui/tooltip/Tooltip.svelte';
+	import Button from '#lib/components/basic_gui/buttons/Button.svelte';
 	import { Pencil, Plus, Trash2 } from '@lucide/svelte';
-	import Table from '$lib/components/basic_gui/table/Table.svelte';
-	import TableHeader from '$lib/components/basic_gui/table/TableHeader.svelte';
-	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
-	import TableBody from '$lib/components/basic_gui/table/TableBody.svelte';
-	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
-	import TableItem from '$lib/components/basic_gui/table/TableItem.svelte';
-	import { refreshResourcesList } from '$lib/stores/refresh_resourceslist.svelte';
-	import { projectStore } from '$lib/stores/project';
-	import { datamodelSharedStore } from '$lib/stores/datamodel_shared';
-	import { api_notget_config } from '$lib/helpers/api_config';
-	import { apiClient } from '$lib/shared/apiClient';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { process_api_error } from '$lib/helpers/process_api_error';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { authInfoStore } from '$lib/stores/authinfo';
+	import Table from '#lib/components/basic_gui/table/Table.svelte';
+	import TableHeader from '#lib/components/basic_gui/table/TableHeader.svelte';
+	import TableColumnTitle from '#lib/components/basic_gui/table/TableColumnTitle.svelte';
+	import TableBody from '#lib/components/basic_gui/table/TableBody.svelte';
+	import TableRow from '#lib/components/basic_gui/table/TableRow.svelte';
+	import TableItem from '#lib/components/basic_gui/table/TableItem.svelte';
+	import { refreshResourcesList } from '#lib/stores/refresh_resourceslist.svelte.ts';
+	import { projectStore } from '#lib/stores/project.ts';
+	import { datamodelSharedStore } from '#lib/stores/datamodel_shared.ts';
+	import { api_notget_config } from '#lib/helpers/api_config.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
 
 	let { table_height, project = null }: {
 		table_height: number,
@@ -99,7 +99,7 @@
 				project: project?.projectShortName.toString() || '',
 				resource: resiri
 			})
-			apiClient.deleteAdmindatamodelProjectResource(undefined, res_delete).then(() => {
+			apiClient.deleteAdminDatamodelByProjectByResource(res_delete).then(() => {
 				delete resources[resiri];
 				res_list = res_list.filter((id) => id !== resiri);
 			}).catch((err) => {

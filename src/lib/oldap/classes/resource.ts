@@ -1,10 +1,10 @@
-import { OldapObject } from '$lib/oldap/classes/object';
-import { Iri } from '$lib/oldap/datatypes/xsd_iri';
-import { LangString } from '$lib/oldap/datatypes/langstring';
-import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
-import { PropertyClass } from '$lib/oldap/classes/property';
-import { XsdDateTime } from '$lib/oldap/datatypes/xsd_datetime';
-import { QName } from '$lib/oldap/datatypes/xsd_qname';
+import { OldapObject } from '#lib/oldap/classes/object.ts';
+import { Iri } from '#lib/oldap/datatypes/xsd_iri.ts';
+import { LangString } from '#lib/oldap/datatypes/langstring.ts';
+import { NCName } from '#lib/oldap/datatypes/xsd_ncname.ts';
+import { PropertyClass } from '#lib/oldap/classes/property.ts';
+import { XsdDateTime } from '#lib/oldap/datatypes/xsd_datetime.ts';
+import { QName } from '#lib/oldap/datatypes/xsd_qname.ts';
 
 export type ResourceClassOptions = {
 	creator?: Iri,

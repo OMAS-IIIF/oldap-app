@@ -3,9 +3,9 @@
 
 // Regular expression for basic IRI validation (can be expanded for stricter rules)
 
-import { QName } from '$lib/oldap/datatypes/xsd_qname';
-import { NCName } from '$lib/oldap/datatypes/xsd_ncname';
-import { OldapErrorInvalidValue } from '$lib/oldap/errors/OldapErrorInvalidValue';
+import { QName } from '#lib/oldap/datatypes/xsd_qname.ts';
+import { NCName } from '#lib/oldap/datatypes/xsd_ncname.ts';
+import { OldapErrorInvalidValue } from '#lib/oldap/errors/OldapErrorInvalidValue.ts';
 
 export class Iri {
 	#iri: string | QName | null = null;

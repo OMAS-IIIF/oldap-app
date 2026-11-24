@@ -21,7 +21,8 @@ const prop = {
 	...metadata,
 	projectid: 'test',
 	iri: 'test:title',
-	type: ['owl:DatatypeProperty'],
+	// The API omits the implicit datatype/object property kinds from type.
+	type: [],
 	datatype: 'xsd:string',
 	name: ['Title@en'],
 	order: 0
@@ -238,7 +239,11 @@ for (const status of [200, 403]) {
 				else if (status === 403)
 					await route.fulfill({ status, json: { message: 'Permission denied' } });
 				else {
-					Object.assign(editable, patch);
+					// The real serializer omits constraints removed by a null patch.
+					for (const [key, value] of Object.entries(patch)) {
+						if (value === null) delete (editable as Record<string, unknown>)[key];
+						else (editable as Record<string, unknown>)[key] = value;
+					}
 					await route.fulfill({ json: { message: 'Updated' } });
 				}
 			} else await route.fallback();
@@ -403,7 +408,11 @@ test('multiple superproperties open intact and survive unrelated property edits'
 		) {
 			const patch = route.request().postDataJSON();
 			patches.push(patch);
-			Object.assign(editable, patch);
+			// The real serializer omits constraints removed by a null patch.
+					for (const [key, value] of Object.entries(patch)) {
+						if (value === null) delete (editable as Record<string, unknown>)[key];
+						else (editable as Record<string, unknown>)[key] = value;
+					}
 			await route.fulfill({ json: { message: 'Updated' } });
 		} else await route.fallback();
 	});
@@ -445,4 +454,20 @@ test('multiple superproperties open intact and survive unrelated property edits'
 	await page.getByRole('button', { name: 'OK', exact: true }).click();
 	await expect.poll(() => patches.length).toBe(3);
 	expect(patches[2]).toEqual({ subPropertyOf: 'dc:coverage' });
+});
+
+test('locale navigation and reload preserve the restored session', async ({ page }) => {
+	const failures: string[] = [];
+	page.on('pageerror', (error) => failures.push(error.message));
+	await page.goto('/en');
+	await expect(page.locator('img.avatar')).toBeVisible();
+	await page.locator('button.lang-menu').click();
+	await page.getByRole('menuitem', { name: 'de', exact: true }).click();
+	await expect(page).toHaveURL(/\/de\/?$/);
+	await expect(page.locator('html')).toHaveAttribute('lang', 'de');
+	await expect(page.locator('img.avatar')).toBeVisible();
+	await page.reload();
+	await expect(page.locator('html')).toHaveAttribute('lang', 'de');
+	await expect(page.locator('img.avatar')).toBeVisible();
+	expect(failures).toEqual([]);
 });

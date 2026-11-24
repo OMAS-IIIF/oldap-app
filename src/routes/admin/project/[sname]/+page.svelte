@@ -1,29 +1,29 @@
 <script lang="ts">
-	import * as m from '$lib/paraglide/messages';
+	import * as m from '#lib/paraglide/messages.js';
 	import type { PageProps } from './$types';
-	import Textfield from '$lib/components/basic_gui/inputs/Textfield.svelte';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { OldapUser } from '$lib/oldap/classes/user';
-	import { userStore } from '$lib/stores/user';
+	import Textfield from '#lib/components/basic_gui/inputs/Textfield.svelte';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import { OldapUser } from '#lib/oldap/classes/user.ts';
+	import { userStore } from '#lib/stores/user.ts';
 	import { onMount, tick } from 'svelte';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { OldapError } from '$lib/oldap/errors/OldapError';
-	import { apiClient } from '$lib/shared/apiClient';
-	import { OldapProject } from '$lib/oldap/classes/project';
-	import { api_notget_config } from '$lib/helpers/api_config.js';
-	import { LangString } from '$lib/oldap/datatypes/langstring';
-	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
-	import { XsdDate } from '$lib/oldap/datatypes/xsd_date';
-	import { successInfoStore } from '$lib/stores/successinfo';
-	import { process_api_error } from '$lib/helpers/process_api_error';
-	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
-	import { authInfoStore } from '$lib/stores/authinfo';
-	import { getLocale, locales } from '$lib/paraglide/runtime';
-	import { goto_page } from '$lib/helpers/goto_page';
-	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
-	import { refreshProjectsListNow } from '$lib/stores/refresh_projectslist.svelte';
-	import NativeDatePicker from '$lib/components/basic_gui/inputs/NativeDatePicker.svelte';
-	import LangstringfieldNew from '$lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { OldapError } from '#lib/oldap/errors/OldapError.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import { OldapProject } from '#lib/oldap/classes/project.ts';
+	import { api_notget_config } from '#lib/helpers/api_config.ts';
+	import { LangString } from '#lib/oldap/datatypes/langstring.ts';
+	import Button from '#lib/components/basic_gui/buttons/Button.svelte';
+	import { XsdDate } from '#lib/oldap/datatypes/xsd_date.ts';
+	import { successInfoStore } from '#lib/stores/successinfo.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
+	import { convertToLanguage, Language } from '#lib/oldap/enums/language.ts';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
+	import { getLocale, locales } from '#lib/paraglide/runtime.js';
+	import { goto_page } from '#lib/helpers/goto_page.ts';
+	import Confirmation from '#lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import { refreshProjectsListNow } from '#lib/stores/refresh_projectslist.svelte.ts';
+	import NativeDatePicker from '#lib/components/basic_gui/inputs/NativeDatePicker.svelte';
+	import LangstringfieldNew from '#lib/components/basic_gui/inputs/LangstringfieldNew.svelte';
 
 
 	let { data }: PageProps = $props();
@@ -79,7 +79,7 @@
 			if (administrator.isRoot) {
 				if (data?.sname !== 'new') {
 					const config_projectdata = api_notget_config(authinfo, { projectId: data?.sname});
-					const jsondata = await apiClient.getAdminprojectProjectId(config_projectdata);
+					const jsondata = await apiClient.getAdminProjectByProjectId(config_projectdata);
 					project = OldapProject.fromOldapJson(jsondata);
 					if (project) {
 						projectIri = project.projectIri.toString();
@@ -130,9 +130,9 @@
 			projectEnd: projectEnd?.toApi() || undefined
 		};
 		const project_put = api_notget_config(authinfo, {projectId: sname});
-		apiClient.putAdminprojectProjectId(projectdata, project_put).then(() => {
+		apiClient.putAdminProjectByProjectId({ ...project_put, body: projectdata }).then(() => {
 			const empty_dm = api_notget_config(authinfo || new AuthInfo('unknown', ''), {project: sname});
-			return apiClient.putAdmindatamodelProject(undefined, empty_dm);
+			return apiClient.putAdminDatamodelByProject(empty_dm);
 		}).then(() => {
 			successInfoStore.set(`Project ${sname} added successfully!`);
 			refreshProjectsListNow();
@@ -165,8 +165,8 @@
 
 		if (projectdata) {
 			const project_post = api_notget_config(authinfo || new AuthInfo('unknown', ''), {projectId: project?.projectShortName.toString() || ''});
-			apiClient.postAdminprojectProjectId(projectdata, project_post).then((res) => {
-				successInfoStore.set(`Project "${res.projectId}" modified successfully!`);
+			apiClient.postAdminProjectByProjectId({ ...project_post, body: projectdata }).then((res) => {
+				successInfoStore.set(`Project "${project?.projectShortName}" modified successfully!`);
 			}).catch((error) => {
 				errorInfoStore.set(process_api_error(error as Error));
 			});

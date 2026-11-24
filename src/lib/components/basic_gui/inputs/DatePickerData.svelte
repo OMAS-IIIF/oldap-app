@@ -11,7 +11,7 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
 	import NativeDatePicker from './NativeDatePicker.svelte';
-	import { XsdDate } from '$lib/oldap/datatypes/xsd_date';
+	import { XsdDate } from '#lib/oldap/datatypes/xsd_date.ts';
 
 	// Type of the NativeDatePicker component instance (so we can call get_value())
 	type NativeDatePickerInstance = {

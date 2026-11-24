@@ -1,30 +1,30 @@
 <script lang="ts">
 
-	import type { OldapProject } from '$lib/oldap/classes/project';
-	import { getLocale } from '$lib/paraglide/runtime';
-	import { convertToLanguage, Language } from '$lib/oldap/enums/language';
-	import { DatamodelClass } from '$lib/oldap/classes/datamodel';
-	import { datamodelStore } from '$lib/stores/datamodel';
-	import * as m from '$lib/paraglide/messages';
-	import { goto_page } from '$lib/helpers/goto_page';
-	import Tooltip from '$lib/components/basic_gui/tooltip/Tooltip.svelte';
-	import Button from '$lib/components/basic_gui/buttons/Button.svelte';
+	import type { OldapProject } from '#lib/oldap/classes/project.ts';
+	import { getLocale } from '#lib/paraglide/runtime.js';
+	import { convertToLanguage, Language } from '#lib/oldap/enums/language.ts';
+	import { DatamodelClass } from '#lib/oldap/classes/datamodel.ts';
+	import { datamodelStore } from '#lib/stores/datamodel.ts';
+	import * as m from '#lib/paraglide/messages.js';
+	import { goto_page } from '#lib/helpers/goto_page.ts';
+	import Tooltip from '#lib/components/basic_gui/tooltip/Tooltip.svelte';
+	import Button from '#lib/components/basic_gui/buttons/Button.svelte';
 	import { Pencil, Plus, Trash2 } from '@lucide/svelte';
-	import Table from '$lib/components/basic_gui/table/Table.svelte';
-	import TableColumnTitle from '$lib/components/basic_gui/table/TableColumnTitle.svelte';
-	import TableItem from '$lib/components/basic_gui/table/TableItem.svelte';
-	import TableBody from '$lib/components/basic_gui/table/TableBody.svelte';
-	import TableHeader from '$lib/components/basic_gui/table/TableHeader.svelte';
-	import TableRow from '$lib/components/basic_gui/table/TableRow.svelte';
-	import { ExternalOntology } from '$lib/oldap/classes/extonto';
-	import { projectStore } from '$lib/stores/project';
-	import { api_notget_config } from '$lib/helpers/api_config';
-	import { apiClient } from '$lib/shared/apiClient';
-	import { errorInfoStore } from '$lib/stores/errorinfo';
-	import { process_api_error } from '$lib/helpers/process_api_error';
-	import Confirmation from '$lib/components/basic_gui/dialogs/Confirmation.svelte';
-	import { AuthInfo } from '$lib/oldap/classes/authinfo';
-	import { authInfoStore } from '$lib/stores/authinfo';
+	import Table from '#lib/components/basic_gui/table/Table.svelte';
+	import TableColumnTitle from '#lib/components/basic_gui/table/TableColumnTitle.svelte';
+	import TableItem from '#lib/components/basic_gui/table/TableItem.svelte';
+	import TableBody from '#lib/components/basic_gui/table/TableBody.svelte';
+	import TableHeader from '#lib/components/basic_gui/table/TableHeader.svelte';
+	import TableRow from '#lib/components/basic_gui/table/TableRow.svelte';
+	import { ExternalOntology } from '#lib/oldap/classes/extonto.ts';
+	import { projectStore } from '#lib/stores/project.ts';
+	import { api_notget_config } from '#lib/helpers/api_config.ts';
+	import { apiClient } from '#lib/shared/apiClient.ts';
+	import { errorInfoStore } from '#lib/stores/errorinfo.ts';
+	import { process_api_error } from '#lib/helpers/process_api_error.ts';
+	import Confirmation from '#lib/components/basic_gui/dialogs/Confirmation.svelte';
+	import { AuthInfo } from '#lib/oldap/classes/authinfo.ts';
+	import { authInfoStore } from '#lib/stores/authinfo.ts';
 
 	let { table_height, project = null }: {
 		table_height: number,
@@ -81,7 +81,7 @@
 				project: project?.projectShortName.toString() || '',
 				prefix: prefix
 			})
-			apiClient.deleteAdmindatamodelProjectextontoPrefix(undefined, extonto_delete).then(() => {
+			apiClient.deleteAdminDatamodelByProjectExtontoByPrefix(extonto_delete).then(() => {
 				delete ontologies[prefix];
 				onto_list = onto_list.filter((id) => id !== prefix);
 			}).catch((err) => {

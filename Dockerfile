@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # ---- Build stage ----
-FROM --platform=$BUILDPLATFORM node:20-bookworm AS build
+FROM --platform=$BUILDPLATFORM node:24-bookworm AS build
 
 # Install build tools
 #RUN apk add --no-cache libc6-compat
@@ -23,7 +23,7 @@ RUN GOMAXPROCS=1 npm run build
 
 
 # ---- Runtime stage ----
-FROM node:20-alpine AS runtime
+FROM node:24-alpine AS runtime
 
 WORKDIR /app
 
