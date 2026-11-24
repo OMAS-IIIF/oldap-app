@@ -1,6 +1,6 @@
 # OLDAP App Context
 
-- Release 0.2.11 preparation (2026-11-24): user authorized patch publication and home-only deployment of the security migration. Production remains 0.2.10 until separately requested. See `docs/release-0.2.11.md`.
+- Release 0.2.11 published (2026-11-24): source/tag c6338c3/v0.2.11 and accepted AMD64/ARM64 image 3e084fe78b30 are pushed. Home activation is coordinated separately; production remains 0.2.10. Evidence: `docs/release-0.2.11.md`.
 
 - Security migration (2026-11-24): SvelteKit 3 / Vite 8 / TypeScript 6, Node >=22.18 (Docker Node 24). Hey API generates the Axios SDK and Zod 4 validators; Zodios and Zod 3 are removed. This supersedes the accepted Zod 3 limitation in historical release notes below. No release/deployment in this step. See docs/dependency-security-review-20261124.md.
 

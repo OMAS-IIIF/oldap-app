@@ -1,0 +1,51 @@
+{
+  "version": "0.2.11",
+  "source_commit": "c6338c3d1bcedec114d234d2376c55422380e83f",
+  "git_tag": "v0.2.11",
+  "image": "lrosenth/oldap-app@sha256:3e084fe78b30b27867e0d916fe2104b73936e05078e87615e82c0e91d0397333",
+  "platform_manifests": {
+    "linux/amd64": "sha256:b0fd4f79f3ac8b5fc1e7c6bf9f515fb58ae964cdf3d027118bad6b5295f89eda",
+    "linux/arm64": "sha256:9b28de80674f1f3b74402219bca32b309d2a78b9dc2e251bac72c63b72af6d13"
+  },
+  "checks": {
+    "typecheck_errors": 0,
+    "typecheck_warnings": 0,
+    "unit_component_tests_passed": 65,
+    "mocked_browser_workflows_passed": 29,
+    "npm_audit_findings": 0,
+    "build": "passed",
+    "latest_unchanged": true,
+    "containers_removed": true
+  },
+  "image_smoke": [
+    {
+      "version": "0.2.11",
+      "node": "v24.22.3",
+      "arch": "x64",
+      "platform": "linux/amd64",
+      "image_id": "sha256:3e084fe78b30b27867e0d916fe2104b73936e05078e87615e82c0e91d0397333",
+      "checks": [
+        "startup",
+        "package-version",
+        "english-german-html",
+        "runtime-public-env",
+        "private-env-not-exposed"
+      ]
+    },
+    {
+      "version": "0.2.11",
+      "node": "v24.22.3",
+      "arch": "arm64",
+      "platform": "linux/arm64",
+      "image_id": "sha256:3e084fe78b30b27867e0d916fe2104b73936e05078e87615e82c0e91d0397333",
+      "checks": [
+        "startup",
+        "package-version",
+        "english-german-html",
+        "runtime-public-env",
+        "private-env-not-exposed"
+      ]
+    }
+  ],
+  "deployment": "home activation coordinated separately; production not authorized"
+}

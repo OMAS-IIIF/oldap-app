@@ -1,3 +1,9 @@
+### Update 2026-11-24 23:45
+- Decisions: Complete authorized 0.2.11 source/tag and version-only Docker publication; home activation is coordinated by the parent deployment task.
+- Implementation: Pushed c6338c3/tag v0.2.11 and immutable multi-platform image 3e084fe78b30. Both architectures pass startup/version/English-German HTML/runtime-env isolation checks on Node 24.22.3. Added sanitized image receipt and release evidence.
+- Open: Home deployment acceptance; production remains unchanged and is not authorized in this task.
+- Risks/Assumptions: 65 unit/component tests, 29 mocked browser workflows, zero-error typecheck/build/audit pass. Existing latest manifest unchanged; temporary smoke containers removed. No live backend writes.
+
 ### Update 2026-11-24 23:43
 - Decisions: Release the reviewed security migration as 0.2.11, push source/tag and version-only Docker images, and deploy to home first as explicitly requested.
 - Implementation: Prepare the Kit 3/Vite 8/TypeScript 6 and generated Axios/Zod 4 client changes for release. Typecheck has zero errors/warnings; 65 unit/component tests, 29 mocked browser workflows and production build pass. Image acceptance is recorded in the release receipt.
